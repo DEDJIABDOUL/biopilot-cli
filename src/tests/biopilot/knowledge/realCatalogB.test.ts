@@ -44,12 +44,12 @@ describe("real Catalog, part B: bwa, minimap2, samtools, bcftools, blastn", () =
   });
 
   test("bwa index takes a FASTA reference; bwa mem takes the index prefix, then read 1 and read 2", () => {
-    expect(catalog.listArguments(command("bwa", "index"))[0].value).toMatchObject({ type: "file", format: "fasta" });
+    expect(catalog.listArguments(command("bwa", "index"))[0].value).toMatchObject({ type: "file", formats: ["fasta"] });
     const mem = catalog.listArguments(command("bwa", "mem"));
     expect(mem.map((argument) => argument.name)).toEqual(["idxbase", "in1.fq", "in2.fq"]);
-    expect(mem[0].value).toMatchObject({ format: "bwa-index" });
-    expect(mem[1].value).toMatchObject({ format: "fastq", readRole: 1, optional: false });
-    expect(mem[2].value).toMatchObject({ format: "fastq", readRole: 2, optional: true });
+    expect(mem[0].value).toMatchObject({ formats: ["bwa-index"] });
+    expect(mem[1].value).toMatchObject({ formats: ["fastq"], readRole: 1, optional: false });
+    expect(mem[2].value).toMatchObject({ formats: ["fastq"], readRole: 2, optional: true });
     expect(catalog.findOption(command("bwa", "mem"), "-t")?.rank).toBeGreaterThanOrEqual(70);
   });
 
@@ -71,17 +71,17 @@ describe("real Catalog, part B: bwa, minimap2, samtools, bcftools, blastn", () =
     const preset = catalog.findOption(command("minimap2"), "-x")!;
     expect(preset.value?.type).toBe("enum");
     expect(preset.value?.values.map((v) => v.value)).toEqual(expect.arrayContaining(["map-ont", "map-hifi", "sr", "splice", "asm5", "lr:hq"]));
-    expect(catalog.findOption(command("minimap2"), "-d")?.value?.format).toBe("minimap2-index");
+    expect(catalog.findOption(command("minimap2"), "-d")?.value?.formats).toEqual(["minimap2-index"]);
   });
 
   test("samtools lists its subcommands, and sort has -o for a BAM", () => {
     expect(subcommands("samtools")).toEqual(expect.arrayContaining(["view", "sort", "index", "faidx", "flagstat", "merge", "depth", "markdup"]));
     const sort = command("samtools", "sort");
     const output = catalog.findOption(sort, "-o")!;
-    expect(output.value).toMatchObject({ type: "file", format: "bam" });
+    expect(output.value).toMatchObject({ type: "file", formats: ["bam"] });
     expect(output.rank).toBeGreaterThanOrEqual(90);
     expect(catalog.listOptions(sort)[0].canonicalName).toBe("-o");
-    expect(catalog.listArguments(sort)[0].value?.format).toBe("bam");
+    expect(catalog.listArguments(sort)[0].value?.formats[0]).toBe("bam");
     expect(catalog.findOption(sort, "-@")?.canonicalName).toBe("--threads");
   });
 
@@ -97,7 +97,7 @@ describe("real Catalog, part B: bwa, minimap2, samtools, bcftools, blastn", () =
     const call = command("bcftools", "call");
     expect(catalog.findOption(call, "-m")?.canonicalName).toBe("--multiallelic-caller");
     expect(catalog.findOption(call, "-v")?.canonicalName).toBe("--variants-only");
-    expect(catalog.findOption(command("bcftools", "view"), "-o")?.value?.format).toBe("vcf");
+    expect(catalog.findOption(command("bcftools", "view"), "-o")?.value?.formats).toEqual(["vcf"]);
     const config = catalog.findOption(command("bcftools", "mpileup"), "-X")!;
     expect(config.rules).toEqual([{ when: expect.objectContaining({ platform: "nanopore" }), boost: 25 }]);
   });
@@ -105,7 +105,7 @@ describe("real Catalog, part B: bwa, minimap2, samtools, bcftools, blastn", () =
   test("blastn: single-dash options, -query first, -db a BLAST database", () => {
     const root = command("blastn");
     expect(catalog.listOptions(root)[0].canonicalName).toBe("-query");
-    expect(catalog.findOption(root, "-db")?.value?.format).toBe("blast-nucl-db");
+    expect(catalog.findOption(root, "-db")?.value?.formats).toEqual(["blast-nucl-db"]);
     expect(catalog.findOption(root, "-task")?.value?.values.map((v) => v.value)).toContain("megablast");
   });
 

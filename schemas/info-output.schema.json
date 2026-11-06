@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/DEDJIABDOUL/biopilot-cli/schemas/info-output.schema.json",
   "title": "biopilot info --json output, format 1",
-  "description": "Contract of `biopilot info --json`. Adding a field does not change `format`; removing or renaming one increments it. Errors are reported on stderr with exit code 1 and nothing on stdout. `command.subcommands` and `command.arguments` were added in format 1 (ticket #6). Value details, version ranges, option forms, mates and derived outputs were added in format 1 (ticket #7). `option.rules` was added in format 1 (ticket #8).",
+  "description": "Contract of `biopilot info --json`. Adding a field does not change `format`; removing or renaming one increments it. Errors are reported on stderr with exit code 1 and nothing on stdout. `command.subcommands` and `command.arguments` were added in format 1 (ticket #6). Value details, version ranges, option forms, mates and derived outputs were added in format 1 (ticket #7). `option.rules` was added in format 1 (ticket #8). `value.formats` and argument `mate` were added in format 1 (ticket #25).",
   "type": "object",
   "required": ["format"],
   "properties": {
@@ -118,7 +118,7 @@
           "description": "Positional arguments, in order.",
           "items": {
             "type": "object",
-            "required": ["name", "description", "variadic", "value", "default", "since", "until"],
+            "required": ["name", "description", "variadic", "value", "default", "since", "until", "mate"],
             "properties": {
               "name": {
                 "type": "string"
@@ -141,6 +141,10 @@
               },
               "until": {
                 "type": ["string", "null"]
+              },
+              "mate": {
+                "type": ["string", "null"],
+                "description": "Name of the read-pair mate argument, in either direction."
               }
             }
           }
@@ -281,14 +285,14 @@
         },
         {
           "type": "object",
-          "required": ["type", "format", "optional", "multiple", "values", "read_role"],
+          "required": ["type", "format", "optional", "multiple", "values", "read_role", "formats"],
           "properties": {
             "type": {
               "enum": ["int", "float", "string", "file", "dir", "enum"]
             },
             "format": {
               "type": ["string", "null"],
-              "description": "Declared file format, for type file or dir."
+              "description": "First accepted format (kept for format-1 consumers); see `formats`."
             },
             "optional": {
               "type": "boolean",
@@ -317,6 +321,13 @@
             "read_role": {
               "enum": [1, 2, null],
               "description": "Read 1 or read 2 of a read pair."
+            },
+            "formats": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Every accepted format, most common first."
             }
           }
         }

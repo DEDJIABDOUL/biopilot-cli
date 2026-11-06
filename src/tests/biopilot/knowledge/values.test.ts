@@ -17,11 +17,11 @@ describe("Catalog reader: values, formats and mates", () => {
   const option = (alias: string) => catalog.findOption(root, alias)!;
 
   test("a file option carries its format and read role", () => {
-    expect(option("--in1").value).toEqual({ type: "file", format: "fastq", optional: false, multiple: false, values: [], readRole: 1 });
+    expect(option("--in1").value).toEqual({ type: "file", formats: ["fastq"], optional: false, multiple: false, values: [], readRole: 1 });
   });
 
   test("a folder option carries its folder format", () => {
-    expect(option("--index").value).toMatchObject({ type: "dir", format: "salmon-index" });
+    expect(option("--index").value).toMatchObject({ type: "dir", formats: ["salmon-index"] });
   });
 
   test("enum values come in order, with descriptions", () => {
@@ -69,19 +69,21 @@ describe("Catalog reader: values, formats and mates", () => {
         name: "reference",
         description: null,
         variadic: false,
-        value: { type: "file", format: "fasta", optional: false, multiple: false, values: [], readRole: null },
+        value: { type: "file", formats: ["fasta"], optional: false, multiple: false, values: [], readRole: null },
         defaultValue: null,
         since: null,
         until: null,
+        mate: null,
       },
       {
         name: "reads",
         description: null,
         variadic: true,
-        value: { type: "file", format: "fastq", optional: false, multiple: false, values: [], readRole: 1 },
+        value: { type: "file", formats: ["fastq"], optional: false, multiple: false, values: [], readRole: 1 },
         defaultValue: "reads.fq",
         since: "1.0",
         until: null,
+        mate: null,
       },
     ]);
   });

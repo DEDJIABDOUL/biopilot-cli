@@ -247,7 +247,7 @@ CREATE TABLE usage (
 1. **Sources :** un fichier YAML par outil dans `knowledge/tools/`, versionné dans Git et relu comme du code (format en annexe B).
    - **Barème des rangs :** 90–100 entrées et sorties principales, référence ; 70–89 options réglées très souvent (threads, preset, format de sortie) ; 50 par défaut ; 30–49 réglages fins ; 10–29 options rares, de débogage ou obsolètes. Les rangs proposés sont relus par un expert du domaine avant fusion.
    - **Descriptions :** reformulées, jamais copiées du `--help` (licences GPL de certains outils).
-   - **`--help` de référence :** enregistrés depuis un environnement conda dédié `biopilot-tools` (bioconda + conda-forge, linux-64), avec outil, version, commande et date, et une attribution par licence. Version la plus récente à l'enregistrement, sauf fastp en 0.23.4.
+   - **`--help` de référence :** enregistrés depuis un environnement conda dédié `biopilot-tools` (bioconda + conda-forge, linux-64), avec outil, version, commande et date, et une attribution par licence. Le catalogue est rédigé d'après la version la plus récente à l'enregistrement (fastp 1.4.0 au 6 novembre 2026). Les versions anciennes utiles aux scénarios de l'annexe C (fastp 0.23.4 et 0.20.1) sont enregistrées en plus, comme données de test seulement.
 2. **Compilation :** `npm run build:db` valide chaque fichier YAML avec un schéma, puis produit `knowledge.db`. La CI refuse un YAML invalide.
 3. **Import local :** `biopilot learn <outil>` lance le `--help`, l'analyse et enregistre le résultat dans `user.db`. Les sous-commandes listées dans l'aide racine sont découvertes automatiquement (`<outil> <sub> --help`), sur un seul niveau et au plus 50. La version est cherchée dans `conda-meta/`, sinon par les sondes `--version`, `-V` puis `version` (2,5 s, entrée standard fermée), sinon le profil est indexé par l'empreinte ; la méthode retenue est enregistrée dans `learned_tools`.
 4. **Usage :** chaque option acceptée par l'utilisateur incrémente `usage`, sous son nom canonique (`-i` et `--in1` comptent pour `--in1`). L'usage est global à la machine, pas par projet. Ces données ne quittent jamais la machine.
@@ -348,12 +348,13 @@ threads = 8
 |---|---|
 | `biopilot` | Ouvre une session d'autocomplétion dans le shell courant |
 | `biopilot init <shell>` | Affiche la ligne à ajouter au fichier de démarrage du shell |
+| `biopilot reinit` | Remplace les ressources installées, dont le catalogue, après une mise à jour ; ne touche jamais aux données de l'utilisateur |
 | `biopilot doctor` | Vérifie l'installation, la base, le shell et l'environnement |
 | `biopilot status` | Affiche l'environnement, le projet et les versions détectés |
 | `biopilot learn <outil>` | Importe un outil depuis son `--help` |
 | `biopilot sync` | Calcule à l'avance les profils des outils de l'environnement actif |
 | `biopilot search "<texte>"` | Recherche une option par sa description (FTS5) |
-| `biopilot info <outil> [option]` | Affiche la fiche d'un outil ou d'une option |
+| `biopilot info [--json] [outil] [sous-commande…] [option]` | Affiche la fiche d'un outil, d'une sous-commande ou d'une option. Les options de BioPilot se placent avant le nom de l'outil ; tout ce qui suit est lu comme chemin de sous-commande et nom d'option (fastp a lui-même une option `--json`). |
 | `biopilot reset-usage` | Efface les statistiques d'usage |
 | `biopilot uninstall` | Supprime la configuration, les données et la ligne de démarrage |
 
@@ -395,8 +396,8 @@ conda install -c conda-forge biopilot-cli   # cible à moyen terme, très utilis
 | Étapes manuelles après le script | Une seule : ajouter la ligne d'initialisation du shell |
 | Droits administrateur | Jamais |
 | Compilation chez l'utilisateur | Jamais |
-| Prérequis | Aucun pour le binaire autonome ; Node 22 pour la variante npm (plancher imposé par `better-sqlite3`, plafond `<23` hérité d'Inshellisense) |
-| Mise à jour | `biopilot update`, ou relance du script |
+| Prérequis | Aucun pour le binaire autonome. Variante npm : un Node récent suffit, car le paquet ne fait que lancer le binaire autonome, qui embarque Node 22. Développement et installation depuis les sources : Node 22 (plancher imposé par `better-sqlite3`, plafond `<23` hérité d'Inshellisense) |
+| Mise à jour | Relance du script (ou `npm`/`conda`), puis `biopilot reinit`, que la session réclame d'elle-même tant que les ressources sont d'une autre version |
 | Désinstallation | `biopilot uninstall` laisse le système dans son état initial |
 
 ---
@@ -505,12 +506,12 @@ Prévue pour l'architecture, non développée en version 1.
 17. **Usage global :** compté pour toute la machine, pas par projet (section 6.4).
 18. **Version d'un outil appris :** `conda-meta/`, puis sondes `--version`, `-V`, `version`, puis empreinte (section 6.4).
 
-19. **Plancher Node 22 pour la variante npm** (section 10.2) : `better-sqlite3` exige Node 22+ ; l'argument de l'ADR-0001 contre `node:sqlite` fondé sur Node 18 était faux et a été corrigé. Le binaire autonome embarque déjà Node 22.
+19. **Plancher Node 22 pour le développement** (section 10.2) : `better-sqlite3` exige Node 22+ ; l'argument de l'ADR-0001 contre `node:sqlite` fondé sur Node 18 était faux et a été corrigé. *(Précisé le 6 novembre 2026 : la variante npm n'est qu'un lanceur du binaire autonome, qui embarque Node 22 ; le plancher ne concerne que le développement et l'installation depuis les sources.)*
 20. **Schéma du catalogue aligné sur l'annexe B** (section 6.2) : ajout de `canonical_name`, `mate_of`, `derive` et d'une table `metadata` portant la version du schéma.
 
 21. **JSON de `biopilot info` :** contrat versionné (`"format": 1`), champs nommés d'après le glossaire en snake_case, publié comme JSON Schema. Ajouter un champ ne casse rien ; retirer ou renommer un champ incrémente `format`.
-22. **Emplacement du catalogue :** `BIOPILOT_CATALOG`, puis `~/.local/share/biopilot/knowledge.db`, puis le catalogue compilé à côté du build ; sinon indisponible.
-23. **`--help` de référence :** environnement `biopilot-tools`, version la plus récente sauf fastp 0.23.4, linux-64, avec métadonnées (section 6.4).
+22. **Emplacement du catalogue :** `BIOPILOT_CATALOG`, puis `knowledge.db` dans le dossier de données de BioPilot (`~/.local/share/biopilot/` par défaut, selon `XDG_DATA_HOME`), puis le catalogue compilé à côté du build ; sinon indisponible.
+23. **`--help` de référence :** environnement `biopilot-tools`, linux-64, avec métadonnées. Le catalogue suit la version la plus récente de chaque outil ; fastp 0.23.4 et 0.20.1 sont enregistrés en plus comme données de test (section 6.4). *(Corrigé le 6 novembre 2026 : la première version faisait suivre au catalogue fastp 0.23.4.)*
 24. **Barème des rangs** (section 6.4), relu par un expert du domaine.
 25. **Index de référence :** formats de genre `prefix` (bwa) ou `dir` (salmon) ; `.mmi` et `.fai` restent des formats `file` (section 6.2).
 26. **Formes d'options :** `optional`, `multiple`, `repeatable`, `hidden`, `deprecated` ; `--x` et `--no-x` sont deux options distinctes.
@@ -519,6 +520,10 @@ Prévue pour l'architecture, non développée en version 1.
 29. **`boost` :** de −100 à +100.
 30. **Version du schéma :** entier, accepté seulement à l'identique ; sinon catalogue indisponible, signalé par `biopilot doctor`.
 31. **Licences :** descriptions reformulées ; `--help` bruts conservés comme données de test avec attribution (avis juridique à prendre avant de rendre le dépôt public).
+32. **Syntaxe de `biopilot info` :** les options de BioPilot avant le nom de l'outil ; après, tout est chemin de sous-commande et nom d'option (section 9).
+33. **Remplacement du catalogue :** la décompression des ressources écrase le catalogue (les autres ressources de l'amont ne sont copiées que si absentes) ; `biopilot reinit` le remplace sans toucher aux données de l'utilisateur. Il n'y a pas de commande `biopilot update` (section 10.2).
+34. **Reconnaissance des index :** un index de genre `prefix` ou `dir` se reconnaît à partir de la liste des fichiers d'un dossier, pas d'un nom seul.
+35. **Condition `platform` d'une règle :** vraie si les plateformes du projet contiennent la valeur donnée.
 
 ### Décisions encore ouvertes
 

@@ -612,7 +612,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments to sort (standard input when absent)
-        value: { type: file, format: bam, optional: true }
+        value: { type: file, format: [bam, sam, cram], optional: true }
 
   - name: split
     help: ["split", "--help"]

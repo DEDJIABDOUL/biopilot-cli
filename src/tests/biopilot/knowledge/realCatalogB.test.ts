@@ -53,6 +53,20 @@ describe("real Catalog, part B: bwa, minimap2, samtools, bcftools, blastn", () =
     expect(catalog.findOption(command("bwa", "mem"), "-t")?.rank).toBeGreaterThanOrEqual(70);
   });
 
+  test("bwa mem's two read files are mates; bwa's help and version run it bare", () => {
+    const [, in1, in2] = catalog.listArguments(command("bwa", "mem"));
+    expect([in1.mate, in2.mate]).toEqual([in2.name, in1.name]);
+    expect(catalog.getTool("bwa")).toBeDefined();
+  });
+
+  test("samtools sort reads BAM, SAM or CRAM (annex C, scenario 9: BAM and SAM first)", () => {
+    expect(catalog.listArguments(command("samtools", "sort"))[0].value?.formats).toEqual(["bam", "sam", "cram"]);
+  });
+
+  test("the minimap2 target is a FASTA reference or a prebuilt index", () => {
+    expect(catalog.listArguments(command("minimap2"))[0].value?.formats).toEqual(["fasta", "minimap2-index"]);
+  });
+
   test("minimap2 presets are the closed values of -x", () => {
     const preset = catalog.findOption(command("minimap2"), "-x")!;
     expect(preset.value?.type).toBe("enum");

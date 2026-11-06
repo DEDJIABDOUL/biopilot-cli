@@ -2,13 +2,13 @@
 # bwa 0.7.19, written from the help recorded in knowledge/help/bwa/0.7.19/ (ticket #12).
 # Descriptions are in our own words (spec decision 31); bwa is GPL-3.0-or-later.
 # bwa has no --help nor --version: the root prints its usage and version only when run
-# without arguments, and each subcommand prints its usage when run without arguments.
-# The format requires at least one argument for `version.args` and `help`, so the root
-# help is left out and the version probe below cannot succeed (reported in ticket #12).
+# without arguments (empty `help` and `version.args`, ticket #25), and each subcommand
+# prints its usage when run without arguments.
 name: bwa
 description: Short-read aligner based on the Burrows-Wheeler transform
 platforms: [illumina]
-version: { args: ["--version"], regex: 'Version: (\d[\w.-]*)' }
+version: { args: [], regex: 'Version: (\d[\w.-]*)' }
+help: []
 commands:
   - name: index
     help: ["index"]
@@ -227,7 +227,7 @@ commands:
         value: { type: file, format: fastq, read_role: 1 }
       - name: in2.fq
         description: read 2 of the pairs, for paired-end data
-        value: { type: file, format: fastq, read_role: 2, optional: true }
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq, optional: true }
 
   - name: fastmap
     help: ["fastmap"]

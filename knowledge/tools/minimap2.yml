@@ -221,10 +221,9 @@ options:
     description: print the version and exit
     rank: 10
 arguments:
-  # The target may also be a prebuilt .mmi index; the format allows one format per value.
   - name: target.fa
     description: reference sequences, or an index saved with -d
-    value: { type: file, format: fasta }
+    value: { type: file, format: [fasta, minimap2-index] }
   - name: query.fa
     description: reads or sequences to align
     variadic: true

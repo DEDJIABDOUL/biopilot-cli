@@ -1,0 +1,43 @@
+consensus: unrecognized option '--help'
+
+About: Create consensus sequence by applying VCF variants to a reference fasta
+       file. By default, the program will apply all ALT variants. Using the
+       --samples (and, optionally, --haplotype) option will apply genotype
+       (or haplotype) calls from FORMAT/GT. The program ignores allelic depth
+       information, such as INFO/AD or FORMAT/AD.
+Usage: bcftools consensus [OPTIONS] <file.vcf.gz>
+Options:
+    -c, --chain FILE               Write a chain file for liftover
+    -a, --absent CHAR              Replace positions absent from VCF with CHAR
+    -e, --exclude EXPR             Exclude sites for which the expression is true (see man page for details)
+    -f, --fasta-ref FILE           Reference sequence in fasta format
+    -H, --haplotype WHICH          Choose which allele to use from the FORMAT/GT field, note
+                                   the codes are case-insensitive:
+                                       N: N={1,2,3,..} is the index of the allele from GT, regardless of phasing (e.g. "2")
+                                       R: REF allele in het genotypes
+                                       A: ALT allele
+                                       I: IUPAC code for all genotypes
+                                       LR,LA: longer allele and REF/ALT if equal length
+                                       SR,SA: shorter allele and REF/ALT if equal length
+                                       NpIu: index of the allele for phased and IUPAC code for unphased GTs (e.g. "2pIu")
+    -i, --include EXPR             Select sites for which the expression is true (see man page for details)
+    -I, --iupac-codes              Output IUPAC codes based on FORMAT/GT, use -s/-S to subset samples
+        --mark-del CHAR            Instead of removing sequence, insert character CHAR for deletions
+        --mark-ins uc|lc|CHAR      Highlight insertions in uppercase (uc), lowercase (lc), or use CHAR, leaving the rest as is
+        --mark-snv uc|lc|CHAR      Highlight substitutions in uppercase (uc), lowercase (lc), or use CHAR, leaving the rest as is
+    -m, --mask FILE                Replace regions according to the next --mask-with option. The default is --mask-with N
+        --mask-with CHAR|uc|lc     Replace with CHAR (skips overlapping variants); change to uppercase (uc) or lowercase (lc)
+    -M, --missing CHAR             Output CHAR instead of skipping a missing genotype "./."
+    -o, --output FILE              Write output to a file [standard output]
+    -p, --prefix STRING            Prefix to add to output sequence names
+        --regions-overlap 0|1|2    Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+    -s, --samples LIST             Comma-separated list of samples to include, "-" to ignore samples and use REF,ALT
+    -S, --samples-file FILE        File of samples to include
+    -v, --verbosity INT            Verbosity level
+Examples:
+   # Get the consensus for one region. The fasta header lines are then expected
+   # in the form ">chr:from-to".
+   samtools faidx ref.fa 8:11870-11890 | bcftools consensus in.vcf.gz > out.fa
+
+   # See also http://samtools.github.io/bcftools/howtos/consensus-sequence.html
+

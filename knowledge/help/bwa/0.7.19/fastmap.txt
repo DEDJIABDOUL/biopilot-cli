@@ -1,0 +1,9 @@
+
+Usage:   bwa fastmap [options] <idxbase> <in.fq>
+
+Options: -l INT    min SMEM length to output [17]
+         -w INT    max interval size to find coordiantes [20]
+         -i INT    min SMEM interval size [1]
+         -L INT    max MEM length [2147483647]
+         -I INT    stop if MEM is longer than -l with a size less than INT [0]
+

@@ -1,0 +1,9 @@
+
+Usage:   bwa pemerge [-mu] <read1.fq> [read2.fq]
+
+Options: -m       output merged reads only
+         -u       output unmerged reads only
+         -t INT   number of threads [1]
+         -T INT   minimum end overlap [10]
+         -Q INT   max sum of errors [70]
+

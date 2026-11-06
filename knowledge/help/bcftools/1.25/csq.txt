@@ -1,0 +1,62 @@
+
+About: Haplotype-aware consequence caller.
+Usage: bcftools csq [OPTIONS] in.vcf
+
+Required options:
+   -f, --fasta-ref FILE              Reference file in fasta format
+   -g, --gff-annot FILE              GFF3 annotation file
+
+CSQ options:
+   -B, --trim-protein-seq INT        Abbreviate protein-changing predictions to max INT aminoacids
+   -C, --genetic-code INT|l          Specify the genetic code table to use, 'l' to print a list [0]
+   -c, --custom-tag STRING           Use this tag instead of the default BCSQ
+   -F, --format LIST                 Additional fields to output (all coordinates are 1-based):
+                                       cds_position: position in the coding sequence and CDS length
+                                       exon: exon number and the number of exons in the transcript
+                                       exon_position: position within the exon and exon length
+                                       all: all of the above
+   -G, --greedy 0|1                  Also check transcript-level consequences after feature hits [0]
+   -l, --local-csq                   Localized predictions, consider only one VCF record at a time
+   -n, --ncsq INT                    Maximum number of per-haplotype consequences to consider for each site [15]
+   -p, --phase a|m|r|R|s             How to handle unphased heterozygous genotypes: [r]
+                                       a: take GTs as is, create haplotypes regardless of phase (0/1 -> 0|1)
+                                       m: merge *all* GTs into a single haplotype (0/1 -> 1, 1/2 -> 1)
+                                       r: require phased GTs, throw an error on unphased het GTs
+                                       R: create non-reference haplotypes if possible (0/1 -> 1|1, 1/2 -> 1|2)
+                                       s: skip unphased hets
+Parsing and validation options:
+       --allow LIST                  Run even if these sanity checks fail (case insensitive)
+                                       mif, missing-in-FASTA     .. skip records w/o fasta reference
+                                       mig, missing-in-GFF       .. skip contigs w/o GFF annotations
+                                       cds-oop, CDS-out-of-phase .. skip transcripts with phase errors
+                                       ref-mm, ref-mismatch      .. skip records with REF mismatch in VCF and FASTA
+       --dump-gff FILE.gz            Dump the parsed GFF file (for debugging purposes)
+       --force                       Run even if some sanity checks fail
+       --unify-chr-names 0|LIST      Unify chromosome naming by stripping a prefix in VCF,GFF,fasta, respectively [0]
+                                     (e.g., "chr,Chr,-" trims "chr" in VCF and "Chr" in GFF, fasta is unchanged)
+General options:
+   -e, --exclude EXPR                Exclude sites for which the expression is true
+   -i, --include EXPR                Select sites for which the expression is true
+       --no-version                  Do not append version and command line to the header
+   -o, --output FILE                 Write output to a file [standard output]
+   -O, --output-type b|u|z|v|t[0-9]  b: compressed BCF, u: uncompressed BCF, z: compressed VCF
+                                     v: uncompressed VCF, t: plain tab-delimited text output, 0-9: compression level [v]
+   -r, --regions REGION              Restrict to comma-separated list of regions
+   -R, --regions-file FILE           Restrict to regions listed in a file
+       --regions-overlap 0|1|2       Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+   -s, --samples -|LIST              Samples to include or "-" to apply all variants and ignore samples
+   -S, --samples-file FILE           Samples to include
+   -t, --targets REGION              Similar to -r but streams rather than index-jumps
+   -T, --targets-file FILE           Similar to -R but streams rather than index-jumps
+       --targets-overlap 0|1|2       Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+       --threads INT                 Use multithreading with <int> worker threads [0]
+   -v, --verbosity INT               Verbosity level 0-6 [1]
+   -W, --write-index[=FMT]           Automatically index the output files [off]
+
+Example:
+   bcftools csq -f hs37d5.fa -g Homo_sapiens.GRCh37.87.gff3.gz in.vcf
+
+   # GFF3 annotation files can be downloaded from Ensembl. e.g. for human:
+   http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/
+   http://ftp.ensembl.org/pub/grch37/current/gff3/homo_sapiens/
+

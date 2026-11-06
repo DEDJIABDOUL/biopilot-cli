@@ -1,0 +1,230 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# minimap2 2.31, written from the help recorded in knowledge/help/minimap2/2.31/ (ticket #12).
+# Descriptions are in our own words (spec decision 31); minimap2 is MIT.
+# Covers the options of `minimap2 --help`; the man page documents more advanced long options.
+name: minimap2
+description: Fast aligner for long reads, assemblies and spliced transcripts
+platforms: [nanopore]
+version: { args: ["--version"], regex: '^(\d[\w.]*)' }
+help: ["--help"]
+options:
+  # Preset and main output choices.
+  - names: ["-x"]
+    description: preset for the kind of data, applied before the other options
+    value:
+      type: enum
+      values:
+        - { value: map-ont, description: Nanopore reads against a reference }
+        - { value: map-hifi, description: PacBio HiFi reads against a reference }
+        - { value: map-pb, description: PacBio CLR reads against a reference }
+        - { value: lr:hq, description: accurate long reads (under 1% error) against a reference }
+        - { value: sr, description: short reads against a reference }
+        - { value: splice, description: spliced alignment of long RNA reads }
+        - { value: splice:hq, description: spliced alignment of accurate long RNA reads }
+        - { value: splice:sr, description: spliced alignment of short RNA-seq reads }
+        - { value: asm5, description: "assembly against a reference, about 0.1% divergence" }
+        - { value: asm10, description: "assembly against a reference, about 1% divergence" }
+        - { value: asm20, description: "assembly against a reference, about 5% divergence" }
+        - { value: map-iclr, description: Illumina Complete Long Reads against a reference }
+        - { value: ava-ont, description: all-against-all overlaps of Nanopore reads }
+        - { value: ava-pb, description: all-against-all overlaps of PacBio CLR reads }
+    rank: 88
+  - names: ["-a"]
+    description: write SAM instead of PAF
+    rank: 85
+  - names: ["-o"]
+    description: file to write the alignments to (standard output by default)
+    value: { type: file }
+    rank: 90
+  - names: ["-t"]
+    description: number of threads
+    value: { type: int }
+    default: 3
+    rank: 82
+  - names: ["-d"]
+    description: save the index built from the target to this file, for reuse
+    value: { type: file, format: minimap2-index }
+    rank: 70
+  - names: ["-R"]
+    description: read group header line for SAM, e.g. '@RG\tID:s1\tSM:s1'
+    value: { type: string }
+    rank: 60
+    rules:
+      - when: { assay: variant-calling }
+        boost: 15
+  - names: ["-c"]
+    description: compute the base-level alignment and put the CIGAR in the PAF output
+    rank: 60
+  # Indexing.
+  - names: ["-H"]
+    description: index homopolymer-compressed k-mers (helps with PacBio CLR)
+    rank: 30
+  - names: ["-k"]
+    description: k-mer size, 28 at most
+    value: { type: int }
+    default: 15
+    rank: 40
+  - names: ["-w"]
+    description: window size of the minimizers
+    value: { type: int }
+    default: 10
+    rank: 40
+  - names: ["-I"]
+    description: start a new index part every this many target bases (e.g. 8G)
+    value: { type: string }
+    default: 8G
+    rank: 35
+  # Mapping.
+  - names: ["-f"]
+    description: fraction of the most repetitive minimizers to ignore
+    value: { type: float }
+    default: 0.0002
+    rank: 30
+  - names: ["-g"]
+    description: stop extending a chain after a gap without minimizers this long
+    value: { type: string }
+    default: "5000"
+    rank: 30
+  - names: ["-G"]
+    description: longest intron, with the splice presets (e.g. 200k)
+    value: { type: string }
+    default: 200k
+    rank: 35
+    rules:
+      - when: { assay: rna-seq }
+        boost: 20
+  - names: ["-F"]
+    description: longest fragment, with -x sr or paired reads
+    value: { type: string }
+    default: "800"
+    rank: 30
+  - names: ["-r"]
+    description: chaining and alignment bandwidth, and long-join bandwidth
+    value: { type: string }
+    default: "500,20000"
+    rank: 30
+  - names: ["-n"]
+    description: fewest minimizers on a chain
+    value: { type: int }
+    default: 3
+    rank: 30
+  - names: ["-m"]
+    description: lowest chaining score
+    value: { type: int }
+    default: 40
+    rank: 30
+  - names: ["-X"]
+    description: skip self and dual mappings, for all-against-all overlaps
+    rank: 35
+  - names: ["-p"]
+    description: lowest ratio of secondary to primary score kept
+    value: { type: float }
+    default: 0.8
+    rank: 35
+  - names: ["-N"]
+    description: secondary alignments kept, at most
+    value: { type: int }
+    default: 5
+    rank: 40
+  # Alignment.
+  - names: ["-A"]
+    description: match score
+    value: { type: int }
+    default: 2
+    rank: 30
+  - names: ["-B"]
+    description: mismatch penalty (raise it for less divergent sequences)
+    value: { type: int }
+    default: 4
+    rank: 30
+  - names: ["-O"]
+    description: gap open penalties of the two-piece gap model
+    value: { type: string }
+    default: "4,24"
+    rank: 30
+  - names: ["-E"]
+    description: gap extension penalties of the two-piece gap model
+    value: { type: string }
+    default: "2,1"
+    rank: 30
+  - names: ["-z"]
+    description: Z-drop score, and inversion Z-drop score
+    value: { type: string }
+    default: "400,200"
+    rank: 30
+  - names: ["-s"]
+    description: lowest peak score of the dynamic-programming alignment
+    value: { type: int }
+    default: 80
+    rank: 30
+  - names: ["-u"]
+    description: how to look for GT-AG splice signals
+    value:
+      type: enum
+      values:
+        - { value: f, description: on the transcript strand }
+        - { value: b, description: on both strands }
+        - { value: n, description: do not look for them }
+    default: n
+    rank: 35
+    rules:
+      - when: { assay: rna-seq }
+        boost: 15
+  - names: ["-J"]
+    description: splice model
+    value:
+      type: enum
+      values:
+        - { value: "0", description: original minimap2 model }
+        - { value: "1", description: miniprot model }
+    default: "1"
+    rank: 25
+  - names: ["-j"]
+    description: known junctions (BED12) that help align short RNA-seq reads
+    value: { type: file, format: bed }
+    rank: 35
+    rules:
+      - when: { assay: rna-seq }
+        boost: 15
+  # Output details.
+  - names: ["-L"]
+    description: move CIGARs longer than 65535 operations to the CG tag
+    rank: 25
+  - names: ["--cs"]
+    description: add the cs difference tag, short form unless long is given
+    value:
+      type: enum
+      optional: true
+      values: [short, long]
+    rank: 40
+  - names: ["--ds"]
+    description: add the ds tag, an extended cs tag
+    rank: 25
+  - names: ["--MD"]
+    description: add the MD tag
+    rank: 40
+  - names: ["--eqx"]
+    description: use = and X instead of M in CIGARs
+    rank: 30
+  - names: ["-Y"]
+    description: soft-clip supplementary alignments
+    rank: 35
+  - names: ["-y"]
+    description: copy the FASTA/FASTQ comment of each read into the SAM output
+    rank: 35
+  - names: ["-K"]
+    description: bases loaded per mapping batch (e.g. 500M)
+    value: { type: string }
+    default: 500M
+    rank: 30
+  - names: ["--version"]
+    description: print the version and exit
+    rank: 10
+arguments:
+  - name: target.fa
+    description: reference sequences, or an index saved with -d
+    value: { type: file, format: [fasta, minimap2-index] }
+  - name: query.fa
+    description: reads or sequences to align
+    variadic: true
+    value: { type: file, format: fastq, optional: true }

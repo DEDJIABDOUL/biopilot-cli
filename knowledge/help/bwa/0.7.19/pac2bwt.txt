@@ -1,0 +1,1 @@
+Usage: bwa pac2bwt [-d] <in.pac> <out.bwt>

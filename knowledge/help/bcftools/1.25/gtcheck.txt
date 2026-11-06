@@ -1,0 +1,43 @@
+
+About:   Check sample identity. With no -g BCF given, multi-sample cross-check is performed.
+Usage:   bcftools gtcheck [options] [-g <genotypes.vcf.gz>] <query.vcf.gz>
+
+Options:
+        --distinctive-sites            Find sites that can distinguish between at least NUM sample pairs.
+                  NUM[,MEM[,TMP]]          If the number is smaller or equal to 1, it is interpreted as the fraction of pairs.
+                                           The optional MEM string sets the maximum memory used for in-memory sorting [500M]
+                                           and TMP is a prefix of temporary files used by external sorting [/tmp/bcftools.XXXXXX]
+        --dry-run                      Stop after first record to estimate required time
+    -E, --error-probability INT        Phred-scaled probability of genotyping error, 0 for faster but less accurate results [40]
+    -e, --exclude [qry|gt]:EXPR        Exclude sites for which the expression is true
+    -g, --genotypes FILE               Genotypes to compare against
+    -H, --homs-only                    Homozygous genotypes only, useful with low coverage data (requires -g)
+    -i, --include [qry|gt]:EXPR        Include sites for which the expression is true
+        --keep-refs                    Keep monoallelic sites with no alternate allele
+        --n-matches INT                Print only top INT matches for each sample (sorted by average score), 0 for unlimited.
+                                           Use negative value to sort by HWE probability rather than by discordance [0]
+        --no-HWE-prob                  Disable calculation of HWE probability
+    -o, --output FILE                  Write output to a file [standard output]
+    -O, --output-type t|z              t: plain tab-delimited text output, z: compressed [t]
+    -p, --pairs LIST                   Comma-separated sample pairs to compare (qry,gt[,qry,gt..] with -g or qry,qry[,qry,qry..] w/o)
+    -P, --pairs-file FILE              File with tab-delimited sample pairs to compare (qry,gt with -g or qry,qry w/o)
+    -r, --regions REGION               Restrict to comma-separated list of regions
+    -R, --regions-file FILE            Restrict to regions listed in a file
+        --regions-overlap 0|1|2        Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+    -s, --samples [qry|gt]:LIST        List of query or -g samples, "-" to select all samples (by default all samples are compared)
+    -S, --samples-file [qry|gt]:FILE   File with the query or -g samples to compare
+    -t, --targets REGION               Similar to -r but streams rather than index-jumps
+    -T, --targets-file FILE            Similar to -R but streams rather than index-jumps
+        --targets-overlap 0|1|2        Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+    -u, --use TAG1[,TAG2]              Which tag to use in the query file (TAG1) and the -g file (TAG2) [PL,GT]
+    -v, --verbosity INT                Verbosity level
+Examples:
+   # Check discordance of all samples from B against all samples in A
+   bcftools gtcheck -g A.bcf B.bcf
+
+   # Limit comparisons to the given list of samples
+   bcftools gtcheck -s gt:a1,a2,a3 -s qry:b1,b2 -g A.bcf B.bcf
+
+   # Compare only two pairs a1,b1 and a1,b2
+   bcftools gtcheck -p a1,b1,a1,b2 -g A.bcf B.bcf
+

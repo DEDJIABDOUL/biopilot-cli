@@ -62,3 +62,29 @@ formats:
     description: salmon quant result folder
     kind: dir
     marker: quant.sf
+  # part B (ticket #12)
+  - name: paf
+    description: pairwise alignments, text (minimap2)
+    pattern: '\.paf(\.gz)?$'
+  - name: sai
+    description: bwa aln intermediate alignments
+    pattern: '\.sai$'
+  - name: bai
+    description: BAM index
+    pattern: '\.bai$'
+  - name: csi
+    description: coordinate-sorted index (BAM, VCF, BCF)
+    pattern: '\.csi$'
+  - name: crai
+    description: CRAM index
+    pattern: '\.crai$'
+  - name: tbi
+    description: tabix index of a compressed text file
+    pattern: '\.tbi$'
+  - name: dict
+    description: sequence dictionary of a reference
+    pattern: '\.dict$'
+  - name: blast-nucl-db
+    description: BLAST nucleotide database, named by its prefix
+    kind: prefix
+    suffixes: [".nhr", ".nin", ".nsq"]

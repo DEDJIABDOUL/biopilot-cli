@@ -1,0 +1,34 @@
+checksum: unrecognized option '--help'
+Usage: samtools checksum [options] [file.bam ...]
+or     samtools checksum [options] -m [file.chk ...]
+
+Options:
+  -F, --exclude-flags FLAG    Filter if any FLAGs are present [0x900]
+  -f, --require-flags FLAG    Filter unless all FLAGs are present [0]
+  -b, --flag-mask FLAG        BAM FLAGs to use in checksums [0x0c1]
+  -c, --no-rev-comp           Do not reverse-complement sequences [off]
+  -t, --tags STR[,STR]        Select tags to checksum [BC,FI,QT,RT,TC]
+  -O, --in-order              Use order-specific checksumming [off]
+  -P, --check-pos             Also checksum CHR / POS [off]
+  -C, --check-cigar           Also checksum MAPQ / CIGAR [off]
+  -M, --check-mate            Also checksum PNEXT / RNEXT / TLEN [off]
+  -z, --sanitize FLAGS        Perform sanity checks and fix records [off]
+  -N, --count INT             Stop after INT number of records [0]
+  -o, --output FILE           Write report to FILE [stdout]
+  -q, --show-qc               Also show QC pass/fail lines
+  -v, --verbose               Increase verbosity: show lines with 0 counts
+  -a, --all                   Check all: -PCMOc -b 0xfff -f0 -F0 -z all,cigarx
+  -T, --tabs                  Format output as tab delimited text
+  -m, --merge FILE            Merge checksum output (-o opt) files
+  -B, --bamseqchksum          Report in bamseqchksum format
+  -V  --version-1             Use version 1 checksums
+
+Global options:
+      --input-fmt-option OPT[=VAL]
+               Specify a single input file format option in the form
+               of OPTION or OPTION=VALUE
+  -@, --threads INT
+               Number of additional threads to use [0]
+
+See https://www.htslib.org/doc/samtools.html#GLOBAL_COMMAND_OPTIONS
+for more details.

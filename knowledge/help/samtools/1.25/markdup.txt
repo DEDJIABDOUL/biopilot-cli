@@ -1,0 +1,53 @@
+markdup: unrecognized option '--help'
+
+Usage:  samtools markdup <input.bam> <output.bam>
+
+Option: 
+  -r                 Remove duplicate reads
+  -l INT             Max read length (default 300 bases)
+  -S                 Mark supplementary alignments of duplicates as duplicates (slower).
+  -s                 Report stats.
+  -f NAME            Write stats to named file.  Implies -s.
+  --json             Output stats in JSON.  Also implies -s
+  -T PREFIX          Write temporary files to PREFIX.samtools.nnnn.nnnn.tmp.
+  -d INT             Optical distance (if set, marks with dt tag)
+  -c                 Clear previous duplicate settings and tags.
+  -m --mode TYPE     Duplicate decision method for paired reads.
+                     TYPE = t measure positions based on template start/end (default).
+                            s measure positions based on sequence start.
+  -u                 Output uncompressed data
+  --include-fails    Include quality check failed reads.
+  --no-PG            Do not add a PG line
+  --no-multi-dup     Reduced duplicates of duplicates checking.
+  --read-coords STR  Regex for coords from read name.
+  --coords-order STR Order of regex elements. txy (default).  With t being a part of
+                     the read names that must be equal and x/y being coordinates.
+  --barcode-tag STR  Use barcode a tag that duplicates much match.
+  --barcode-name     Use the UMI/barcode in the read name (eighth colon-delimited part).
+  --barcode-rgx STR  Regex for barcode in the readname (alternative to --barcode-name).
+  --move-umi-to-tag  Move UMI from read name to RX tag (use with --barcode-name/--barcode-rgx).
+  --umi-separator CHAR   Separator for UMI (default ':').
+  --use-read-groups  Use the read group tags in duplicate matching.
+  -t                 Mark primary duplicates with the name of the original in a 'do' tag. Mainly for information and debugging.
+  --duplicate-count  Record the original primary read duplication count(include itself) in a 'dc' tag.
+      --input-fmt-option OPT[=VAL]
+               Specify a single input file format option in the form
+               of OPTION or OPTION=VALUE
+  -O, --output-fmt FORMAT[,OPT[=VAL]]...
+               Specify output format (SAM, BAM, CRAM)
+      --output-fmt-option OPT[=VAL]
+               Specify a single output file format option in the form
+               of OPTION or OPTION=VALUE
+      --reference FILE
+               Reference sequence FASTA FILE [null]
+  -@, --threads INT
+               Number of additional threads to use [0]
+      --write-index
+               Automatically index the output files [off]
+      --verbosity INT
+               Set level of verbosity
+
+See https://www.htslib.org/doc/samtools.html#GLOBAL_COMMAND_OPTIONS
+for more details.
+
+The input file must be coordinate sorted and must have gone through fixmates with the mate scoring option on.

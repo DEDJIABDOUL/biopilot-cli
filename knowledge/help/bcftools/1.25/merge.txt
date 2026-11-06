@@ -1,0 +1,32 @@
+
+About:   Merge multiple VCF/BCF files from non-overlapping sample sets to create one multi-sample file.
+         Note that only records from different files can be merged, never from the same file. For
+         "vertical" merge take a look at "bcftools norm" instead.
+Usage:   bcftools merge [options] <A.vcf.gz> <B.vcf.gz> [...]
+
+Options:
+        --force-no-index              Merge unindexed files, synonymous to --no-index
+        --force-samples               Resolve duplicate sample names
+        --force-single                Run even if there is only one file on input
+        --print-header                Print only the merged header and exit
+        --use-header FILE             Use the provided header
+    -0  --missing-to-ref              Assume genotypes at missing sites are 0/0
+    -f, --apply-filters LIST          Require at least one of the listed FILTER strings (e.g. "PASS,.")
+    -F, --filter-logic x|+            Remove filters if some input is PASS ("x"), or apply all filters ("+") [+]
+    -g, --gvcf -|REF.FA               Merge gVCF blocks, INFO/END tag is expected. Implies -i QS:sum,MinDP:min,MIN_DP:min,I16:sum,IDV:max,IMF:max -M PL:max,AD:0
+    -i, --info-rules TAG:METHOD,..    Rules for merging INFO fields (method is one of sum,avg,min,max,join) or "-" to turn off the default [DP:sum,DP4:sum]
+    -l, --file-list FILE              Read file names from the file
+    -L, --local-alleles INT           If more than INT alt alleles are encountered, drop FMT/PL and output LAA+LPL instead; 0=unlimited [0]
+    -m, --merge STRING[*|**]          Allow multiallelic records for snps,indels,both,snp-ins-del,all,exact,none,id,*,**; see man page for details [both]
+    -M, --missing-rules TAG:METHOD    Rules for replacing missing values in numeric vectors (.,0,max) when unknown allele <*> is not present [.]
+        --no-index                    Merge unindexed files, the same chromosomal order is required and -r/-R are not allowed
+        --no-version                  Do not append version and command line to the header
+    -o, --output FILE                 Write output to a file [standard output]
+    -O, --output-type u|b|v|z[0-9]    u/b: un/compressed BCF, v/z: un/compressed VCF, 0-9: compression level [v]
+    -r, --regions REGION              Restrict to comma-separated list of regions
+    -R, --regions-file FILE           Restrict to regions listed in a file
+        --regions-overlap 0|1|2       Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+        --threads INT                 Use multithreading with INT worker threads [0]
+    -v, --verbosity INT               Verbosity level
+    -W, --write-index[=FMT]           Automatically index the output files [off]
+

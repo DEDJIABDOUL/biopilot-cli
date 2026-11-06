@@ -1,0 +1,12 @@
+# Raw help recordings, kept as test data only, never edited (spec decision 31).
+# The Catalog YAML is written from them in our own words.
+tool: minimap2
+package: minimap2
+version: "2.31"
+licence: MIT
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: biopilot-tools (bioconda + conda-forge)
+files:
+  - file: root.txt
+    command: "minimap2 --help"

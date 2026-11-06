@@ -1,0 +1,2 @@
+reference: unrecognized option '--help'
+Usage: samtools reference [-@ N] [-r region] [-e] [-q] [-o out.fa] [in.cram]

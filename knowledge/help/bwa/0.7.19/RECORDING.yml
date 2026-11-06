@@ -1,0 +1,40 @@
+# Raw help recordings, kept as test data only, never edited (spec decision 31).
+# The Catalog YAML is written from them in our own words.
+tool: bwa
+package: bwa
+version: "0.7.19"
+licence: GPL-3.0-or-later
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: biopilot-tools (bioconda + conda-forge)
+files:
+  - file: root.txt
+    command: "bwa"
+  - file: index.txt
+    command: "bwa index"
+  - file: mem.txt
+    command: "bwa mem"
+  - file: fastmap.txt
+    command: "bwa fastmap"
+  - file: pemerge.txt
+    command: "bwa pemerge"
+  - file: aln.txt
+    command: "bwa aln"
+  - file: samse.txt
+    command: "bwa samse"
+  - file: sampe.txt
+    command: "bwa sampe"
+  - file: bwasw.txt
+    command: "bwa bwasw"
+  - file: shm.txt
+    command: "bwa shm"
+  - file: fa2pac.txt
+    command: "bwa fa2pac"
+  - file: pac2bwt.txt
+    command: "bwa pac2bwt"
+  - file: pac2bwtgen.txt
+    command: "bwa pac2bwtgen"
+  - file: bwtupdate.txt
+    command: "bwa bwtupdate"
+  - file: bwt2sa.txt
+    command: "bwa bwt2sa"

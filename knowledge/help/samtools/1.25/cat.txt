@@ -1,0 +1,28 @@
+cat: unrecognized option '--help'
+Usage: samtools cat [options] <in1.bam>  [... <inN.bam>]
+       samtools cat [options] <in1.cram> [... <inN.cram>]
+
+Concatenate BAM or CRAM files, first those in <bamlist.fofn>, then those
+on the command line.
+
+Options: -b FILE  list of input BAM/CRAM file names, one per line
+         -h FILE  copy the header from FILE [default is 1st input file]
+         -o FILE  output BAM/CRAM
+         --no-PG  do not add a PG line
+
+CRAM only options for filtering:
+         -r REG   filter to region REG.
+                  REG can also be #:cstart-cend for specific container numbers
+         -p N/M   Specify part N of M (where N is 1 to M inclusive)
+         -f       Fast mode: don't filter containers to exactly match region
+         -q       Query the total number of indexed containers
+
+Standard options:
+      --output-fmt-option OPT[=VAL]
+               Specify a single output file format option in the form
+               of OPTION or OPTION=VALUE
+      --verbosity INT
+               Set level of verbosity
+
+See https://www.htslib.org/doc/samtools.html#GLOBAL_COMMAND_OPTIONS
+for more details.

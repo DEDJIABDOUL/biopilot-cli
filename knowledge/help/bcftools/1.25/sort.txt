@@ -1,0 +1,13 @@
+
+About:   Sort VCF/BCF file.
+Usage:   bcftools sort [OPTIONS] <FILE.vcf>
+
+Options:
+    -m, --max-mem FLOAT[kMG]       Maximum memory to use [768M]
+    -o, --output FILE              Output file name [stdout]
+    -O, --output-type u|b|v|z[0-9] u/b: un/compressed BCF, v/z: un/compressed VCF, 0-9: compression level [v]
+    -T, --temp-dir DIR             Temporary files [/tmp/bcftools.XXXXXX]
+        --threads INT              Use multithreading with INT worker threads [0]
+    -v, --verbosity INT            Verbosity level [3]
+    -W, --write-index[=FMT]        Automatically index the output files [off]
+

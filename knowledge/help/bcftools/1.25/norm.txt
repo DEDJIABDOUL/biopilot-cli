@@ -1,0 +1,54 @@
+
+About:   Left-align and normalize indels; check if REF alleles match the reference;
+         split multiallelic sites into multiple rows; recover multiallelics from
+         multiple rows.
+Usage:   bcftools norm [options] <in.vcf.gz>
+
+Options:
+    -a, --atomize                   Decompose complex variants (e.g. MNVs become consecutive SNVs)
+        --atom-overlaps '*'|.       Use the star allele (*) for overlapping alleles or set to missing (.) [*]
+    -c, --check-ref ACTION          Check REF and control allele case [e]
+                                       e .. exit on bad sites
+                                       s .. set to match the reference
+                                       w .. warn on bad sites
+                                       x .. exclude
+                                     Letter-case handling; if unspecified, retain existing case
+                                       c .. match REF case to FASTA; ALT follows anchor case
+                                       C .. uppercase REF and ALT sequence
+    -D, --remove-duplicates         Remove duplicate lines of the same type.
+    -d, --rm-dup TYPE               Remove duplicate snps|indels|both|all|exact
+    -e, --exclude EXPR              Do not normalize records for which the expression is true (see man page for details)
+    -f, --fasta-ref FILE            Reference sequence
+        --force                     Try to proceed even if malformed tags are encountered. Experimental, use at your own risk
+    -g, --gff-annot FILE            Follow HGVS 3'rule and right-align variants in transcripts on the forward strand
+    -i, --include EXPR              Normalize only records for which the expression is true (see man page for details)
+        --keep-sum TAG,..           Keep vector sum constant when splitting multiallelics (see github issue #360)
+    -m, --multiallelics -|+TYPE     Split multiallelics (-) or join biallelics (+), type: snps|indels|both|any [both]
+        --multi-overlaps 0|.        Fill in the reference (0) or missing (.) allele when splitting multiallelics [0]
+        --no-version                Do not append version and command line to the header
+    -N, --no-realign [NUM]          Skip realignment; optionally only for events longer than NUM bp (e.g. -N1000, no space)
+        --no-update LIST            Do not recalculate INFO tags from GT; supported tags: AC,AN
+        --old-rec-tag STR           Annotate modified records with INFO/STR indicating the original variant
+    -o, --output FILE               Write output to a file [standard output]
+    -O, --output-type u|b|v|z[0-9]  u/b: un/compressed BCF, v/z: un/compressed VCF, 0-9: compression level [v]
+        --progress[=INT]            Print the current position (CHR:POS) to stderr every INT seconds [60]
+    -r, --regions REGION            Restrict to comma-separated list of regions
+    -R, --regions-file FILE         Restrict to regions listed in a file
+        --regions-overlap 0|1|2     Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+    -s, --strict-filter             When merging (-m+), merged site is PASS only if all sites being merged PASS
+    -S, --sort METHOD               Sort order: chr_pos,lex [chr_pos]
+    -t, --targets REGION            Similar to -r but streams rather than index-jumps
+    -T, --targets-file FILE         Similar to -R but streams rather than index-jumps
+        --targets-overlap 0|1|2     Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+        --threads INT               Use multithreading with INT worker threads [0]
+    -v, --verbosity INT             Verbosity level
+    -w, --site-win INT              Buffer for sorting lines which changed position during realignment [1000]
+    -W, --write-index[=FMT]         Automatically index the output files [off]
+
+Examples:
+   # normalize and left-align indels
+   bcftools norm -f ref.fa in.vcf
+
+   # split multi-allelic sites
+   bcftools norm -m- in.vcf
+

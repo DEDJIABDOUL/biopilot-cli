@@ -1,0 +1,25 @@
+reheader: unrecognized option '--help'
+
+About:   Modify header of VCF/BCF files, change sample names.
+Usage:   bcftools reheader [OPTIONS] <in.vcf.gz>
+
+Options:
+    -f, --fai FILE             Update sequences and their lengths from the .fai file
+    -h, --header FILE          New header
+    -o, --output FILE          Write output to a file [standard output]
+    -n, --samples-list LIST    New sample names given as a comma-separated list
+    -N, --samples-file FILE    New sample names in a file, see the man page for details
+    -T, --temp-prefix PATH     Ignored; was template for temporary file name
+        --threads INT          Use multithreading with INT worker threads (BCF only) [0]
+    -v, --verbosity INT        Verbosity level
+
+Example:
+   # Write out the header to be modified
+   bcftools view -h old.bcf > header.txt
+
+   # Edit the header using your favorite text editor
+   vi header.txt
+
+   # Reheader the file
+   bcftools reheader -h header.txt -o new.bcf old.bcf
+

@@ -1,0 +1,1149 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# bcftools 1.25, written from the help recorded in knowledge/help/bcftools/1.25/ (ticket #12).
+# Descriptions are in our own words (spec decision 31); bcftools is GPL-3.0-or-later.
+# Every subcommand of the root help is listed, in its order. Options are described in full for
+# the commonly used ones; the others only have their positional arguments for now.
+# The options shared by many subcommands are written once, with a YAML anchor (&name) at their
+# first use, and repeated with an alias (*name).
+name: bcftools
+description: Toolkit to call, filter, normalise, merge and query variants in VCF and BCF files
+version: { args: ["--version-only"], regex: '^(\d[\w.]*)' }
+help: ["--help"]
+options:
+  - names: ["--version"]
+    description: print the version of bcftools and htslib, and exit
+    rank: 10
+  - names: ["--version-only"]
+    description: print the version number only, and exit
+    rank: 10
+  - names: ["--help"]
+    description: print the list of subcommands and exit
+    rank: 10
+commands:
+  # -- Indexing
+  - name: index
+    help: ["index", "--help"]
+    description: index a bgzip-compressed VCF or a BCF, or print statistics from its index
+    options:
+      - names: ["-t", "--tbi"]
+        description: write a TBI index (VCF only) instead of CSI
+        rank: 70
+      - names: ["-c", "--csi"]
+        description: write a CSI index (the default)
+        rank: 55
+      - names: ["-f", "--force"]
+        description: overwrite an existing index
+        rank: 65
+      - names: ["-o", "--output"]
+        description: index file to write (next to the input by default)
+        value: { type: file, format: csi }
+        rank: 50
+      - names: ["-m", "--min-shift"]
+        description: smallest interval of a CSI index, as a power of two
+        value: { type: int }
+        default: 14
+        rank: 30
+      - &threads
+        names: ["--threads"]
+        description: extra worker threads
+        value: { type: int }
+        default: 0
+        rank: 75
+      - &verbosity
+        names: ["-v", "--verbosity"]
+        description: how much to log
+        value: { type: int }
+        rank: 15
+      - names: ["-n", "--nrecords"]
+        description: print the number of records, read from the index
+        rank: 60
+      - names: ["-s", "--stats"]
+        description: print the number of records per sequence, read from the index
+        rank: 60
+      - names: ["-a", "--all"]
+        description: with --stats, also list sequences without records
+        rank: 30
+    arguments:
+      - name: in.vcf.gz
+        description: compressed VCF or BCF to index
+        value: { type: file, format: vcf }
+
+  # -- VCF/BCF manipulation
+  - name: annotate
+    help: ["annotate", "--help"]
+    description: add, remove or edit annotations (INFO, FORMAT, ID…) of the records
+    arguments:
+      - name: in.vcf
+        description: variants to annotate
+        value: { type: file, format: vcf }
+
+  - name: concat
+    help: ["concat", "--help"]
+    description: join files with the same samples, e.g. one file per chromosome into one
+    options:
+      - &output
+        names: ["-o", "--output"]
+        description: file to write (standard output by default)
+        value: { type: file, format: vcf }
+        rank: 92
+      - &output-type
+        names: ["-O", "--output-type"]
+        description: output type, optionally followed by a compression level (e.g. z9)
+        value:
+          type: string
+          values:
+            - { value: z, description: compressed VCF }
+            - { value: b, description: compressed BCF }
+            - { value: v, description: uncompressed VCF }
+            - { value: u, description: "uncompressed BCF, for piping" }
+        default: v
+        rank: 80
+      - names: ["-a", "--allow-overlaps"]
+        description: inputs may overlap; records are merged in order (needs indexed inputs)
+        rank: 70
+      - names: ["-f", "--file-list"]
+        description: file listing the inputs, one per line
+        value: { type: file }
+        rank: 65
+      - names: ["-n", "--naive"]
+        description: concatenate compressed blocks without recompressing, very fast
+        rank: 55
+      - names: ["--naive-force"]
+        description: like --naive, without checking that the headers agree (risky)
+        rank: 15
+      - names: ["-d", "--rm-dups"]
+        description: write records present in several files only once
+        value:
+          type: enum
+          values: [snps, indels, both, all, exact]
+        rank: 50
+      - names: ["-D", "--remove-duplicates"]
+        description: same as -d exact
+        rank: 40
+      - names: ["-G", "--drop-genotypes"]
+        description: leave out the per-sample genotype columns
+        rank: 40
+      - names: ["-l", "--ligate"]
+        description: join phased chunks, matching the phase in their overlaps
+        rank: 45
+      - names: ["--ligate-force"]
+        description: ligate chunks even when they do not overlap, keeping every site
+        rank: 25
+      - names: ["--ligate-warn"]
+        description: drop the sites of imperfect overlaps when ligating
+        rank: 25
+      - names: ["-c", "--compact-PS"]
+        description: write the PS tag only where a new phase set starts
+        rank: 25
+      - names: ["-q", "--min-PQ"]
+        description: break the phase set below this phasing quality
+        value: { type: int }
+        default: 30
+        rank: 25
+      - &regions
+        names: ["-r", "--regions"]
+        description: restrict to these regions, comma-separated (needs an index)
+        value: { type: string }
+        rank: 65
+      - &regions-file
+        names: ["-R", "--regions-file"]
+        description: restrict to the regions listed in this file (needs an index)
+        value: { type: file, format: bed }
+        rank: 60
+      - &regions-overlap
+        names: ["--regions-overlap"]
+        description: when a record falls in a region
+        value:
+          type: enum
+          values:
+            - { value: "0", description: its position is inside }
+            - { value: "1", description: the record overlaps }
+            - { value: "2", description: the variant overlaps }
+        default: "1"
+        rank: 30
+      - &no-version
+        names: ["--no-version"]
+        description: do not record the version and command line in the header
+        rank: 25
+      - *threads
+      - *verbosity
+      - &write-index
+        names: ["-W", "--write-index"]
+        description: index the output as it is written, in CSI (default) or TBI
+        value: { type: enum, optional: true, values: [csi, tbi] }
+        rank: 60
+    arguments:
+      - name: A.vcf.gz
+        description: sorted files to join, in order
+        variadic: true
+        value: { type: file, format: vcf }
+
+  - name: convert
+    help: ["convert", "--help"]
+    description: convert VCF and BCF to and from other formats (gVCF, haplotypes, tables…)
+    arguments:
+      - name: input
+        description: file to convert
+        value: { type: file, format: vcf }
+
+  - name: head
+    help: ["head", "--help"]
+    description: print the header of a VCF or BCF, and optionally its first records
+    arguments:
+      - name: file
+        description: variants (standard input when absent)
+        value: { type: file, format: vcf, optional: true }
+
+  - name: isec
+    help: ["isec", "--help"]
+    description: find the records shared by, or private to, several files
+    arguments:
+      - name: A.vcf.gz
+        description: indexed files to compare
+        variadic: true
+        value: { type: file, format: vcf }
+
+  - name: merge
+    help: ["merge", "--help"]
+    description: merge files with different samples into one multi-sample file
+    options:
+      - *output
+      - *output-type
+      - names: ["-l", "--file-list"]
+        description: file listing the inputs, one per line
+        value: { type: file }
+        rank: 70
+      - names: ["-m", "--merge"]
+        description: which records may be joined into multiallelic ones
+        value:
+          type: string
+          values: [both, snps, indels, snp-ins-del, all, exact, none, id]
+        default: both
+        rank: 60
+      - names: ["-0", "--missing-to-ref"]
+        description: treat genotypes missing from a file as 0/0
+        rank: 50
+      - names: ["-g", "--gvcf"]
+        description: merge gVCF blocks; give the reference FASTA, or - without it
+        value: { type: file, format: fasta }
+        rank: 50
+      - names: ["-f", "--apply-filters"]
+        description: keep only records whose FILTER is one of these (e.g. PASS,.)
+        value: { type: string, values: ["PASS", "PASS,."] }
+        rank: 45
+      - names: ["-F", "--filter-logic"]
+        description: how FILTER values of merged records combine
+        value:
+          type: enum
+          values:
+            - { value: "+", description: keep every filter }
+            - { value: x, description: clear the filters when one input passes }
+        default: "+"
+        rank: 30
+      - names: ["-i", "--info-rules"]
+        description: how INFO fields combine, TAG:METHOD with sum, avg, min, max or join (- for none)
+        value: { type: string }
+        default: "DP:sum,DP4:sum"
+        rank: 35
+      - names: ["-M", "--missing-rules"]
+        description: how missing values of numeric vectors are filled, TAG:METHOD
+        value: { type: string }
+        rank: 25
+      - names: ["-L", "--local-alleles"]
+        description: above this many ALT alleles, write local LAA and LPL instead of PL (0 never)
+        value: { type: int }
+        default: 0
+        rank: 20
+      - names: ["--force-samples"]
+        description: rename duplicate sample names instead of failing
+        rank: 40
+      - names: ["--force-single"]
+        description: run even with a single input file
+        rank: 20
+      - names: ["--force-no-index", "--no-index"]
+        description: merge files without index; they must list the sequences in the same order
+        rank: 35
+      - names: ["--print-header"]
+        description: print the merged header and exit
+        rank: 25
+      - names: ["--use-header"]
+        description: use this header for the output
+        value: { type: file }
+        rank: 25
+      - *regions
+      - *regions-file
+      - *regions-overlap
+      - *no-version
+      - *threads
+      - *verbosity
+      - *write-index
+    arguments:
+      - name: A.vcf.gz
+        description: files to merge
+        variadic: true
+        value: { type: file, format: vcf }
+
+  - name: norm
+    help: ["norm", "--help"]
+    description: left-align and normalise indels, check REF against the reference, split or join multiallelics
+    options:
+      - names: ["-f", "--fasta-ref"]
+        description: reference FASTA, needed to left-align indels and check REF
+        value: { type: file, format: fasta }
+        rank: 95
+      - *output
+      - *output-type
+      - names: ["-m", "--multiallelics"]
+        description: split multiallelic records (-) or join biallelic ones (+), for snps, indels, both or any
+        value:
+          type: string
+          values:
+            - { value: "-", description: split all types }
+            - { value: "-both", description: split SNPs and indels }
+            - { value: "-snps", description: split SNPs }
+            - { value: "-indels", description: split indels }
+            - { value: "+", description: join all types }
+            - { value: "+both", description: join SNPs and indels }
+        rank: 85
+      - names: ["-c", "--check-ref"]
+        description: what to do with REF alleles that differ from the reference
+        value:
+          type: string
+          values:
+            - { value: e, description: stop with an error }
+            - { value: w, description: warn only }
+            - { value: x, description: drop the record }
+            - { value: s, description: fix REF from the reference }
+        default: e
+        rank: 65
+      - names: ["-d", "--rm-dup"]
+        description: remove duplicate records of this type
+        value: { type: enum, values: [snps, indels, both, all, exact] }
+        rank: 60
+      - names: ["-D", "--remove-duplicates"]
+        description: remove duplicate records of the same type (older form of -d)
+        deprecated: true
+        rank: 20
+      - names: ["-a", "--atomize"]
+        description: split complex variants into their parts (e.g. MNVs into SNVs)
+        rank: 50
+      - names: ["--atom-overlaps"]
+        description: allele given to overlapping parts when atomizing, * or missing (.)
+        value: { type: enum, values: ["*", "."] }
+        default: "*"
+        rank: 25
+      - names: ["--multi-overlaps"]
+        description: allele given to overlaps when splitting, reference (0) or missing (.)
+        value: { type: enum, values: ["0", "."] }
+        default: "0"
+        rank: 25
+      - names: ["-N", "--no-realign"]
+        description: do not realign, or only events shorter than the value (-N1000, no space)
+        value: { type: int, optional: true }
+        rank: 35
+      - names: ["-g", "--gff-annot"]
+        description: gene annotation, to right-align variants of forward-strand transcripts (HGVS 3' rule)
+        value: { type: file, format: gff }
+        rank: 30
+      - names: ["-s", "--strict-filter"]
+        description: when joining (-m+), the record passes only if all its parts pass
+        rank: 30
+      - names: ["-S", "--sort"]
+        description: sort order of the output
+        value: { type: enum, values: [chr_pos, lex] }
+        default: chr_pos
+        rank: 25
+      - names: ["-w", "--site-win"]
+        description: records buffered to keep the output sorted after realignment
+        value: { type: int }
+        default: 1000
+        rank: 25
+      - names: ["--keep-sum"]
+        description: tags whose vector sum is kept when splitting
+        value: { type: string }
+        rank: 20
+      - names: ["--no-update"]
+        description: do not recompute these INFO tags from the genotypes (AC, AN)
+        value: { type: string }
+        rank: 20
+      - names: ["--old-rec-tag"]
+        description: INFO tag recording the original variant of modified records
+        value: { type: string }
+        rank: 30
+      - names: ["--force"]
+        description: try to go on despite malformed tags (experimental)
+        rank: 15
+      - &include
+        names: ["-i", "--include"]
+        description: process only the records for which the expression is true
+        value: { type: string }
+        rank: 50
+      - &exclude
+        names: ["-e", "--exclude"]
+        description: skip the records for which the expression is true
+        value: { type: string }
+        rank: 50
+      - *regions
+      - *regions-file
+      - *regions-overlap
+      - &targets
+        names: ["-t", "--targets"]
+        description: like --regions, but streams through the file instead of using the index (^ excludes)
+        value: { type: string }
+        rank: 45
+      - &targets-file
+        names: ["-T", "--targets-file"]
+        description: like --regions-file, but streams through the file (^ excludes)
+        value: { type: file, format: bed }
+        rank: 45
+      - &targets-overlap
+        names: ["--targets-overlap"]
+        description: when a record falls in a target
+        value:
+          type: enum
+          values:
+            - { value: "0", description: its position is inside }
+            - { value: "1", description: the record overlaps }
+            - { value: "2", description: the variant overlaps }
+        default: "0"
+        rank: 25
+      - &progress
+        names: ["--progress"]
+        description: report the current position every so many seconds
+        value: { type: int, optional: true }
+        rank: 20
+      - *no-version
+      - *threads
+      - *verbosity
+      - *write-index
+    arguments:
+      - name: in.vcf.gz
+        description: variants to normalise
+        value: { type: file, format: vcf }
+
+  - name: plugin
+    help: ["plugin", "--help"]
+    description: run a bcftools plugin (also written bcftools +name)
+    options:
+      - names: ["-l", "--list-plugins"]
+        description: list the available plugins (-lv with their descriptions)
+        rank: 70
+      - names: ["-h", "--help"]
+        description: print the options of the plugin
+        rank: 60
+      - names: ["-V", "--version"]
+        description: print the version of the plugin and exit
+        rank: 15
+      - *output
+      - *output-type
+      - *include
+      - *exclude
+      - *regions
+      - *regions-file
+      - *regions-overlap
+      - *targets
+      - *targets-file
+      - *targets-overlap
+      - *no-version
+      - *threads
+      - *verbosity
+      - *write-index
+    arguments:
+      - name: name
+        description: plugin to run (bcftools plugin -l lists them)
+        value:
+          type: string
+          values: [GTisec, GTsubset, ad-bias, add-variantkey, af-dist, allele-length, check-ploidy,
+            check-sparsity, color-chrs, contrast, counts, dosage, fill-AN-AC, fill-from-fasta, fill-tags,
+            fixploidy, fixref, frameshifts, guess-ploidy, gvcfz, impute-info, indel-stats, isecGT,
+            mendelian2, missing2ref, parental-origin, prune, remove-overlaps, scatter, setGT, smpl-stats,
+            split, split-vep, tag2tag, trio-dnm3, trio-stats, trio-switch-rate, variant-distance,
+            variantkey-hex, vcf2table, vrfs]
+      - name: file
+        description: variants the plugin reads
+        value: { type: file, format: vcf }
+
+  - name: query
+    help: ["query", "--help"]
+    description: print chosen fields of each record in a custom text layout
+    options:
+      - names: ["-f", "--format"]
+        description: layout of each output line, e.g. '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n'
+        value: { type: string, values: ['%CHROM\t%POS\t%REF\t%ALT\n', '%CHROM\t%POS\t%REF\t%ALT[\t%SAMPLE=%GT]\n'] }
+        rank: 92
+      - names: ["-o", "--output"]
+        description: file to write (standard output by default)
+        value: { type: file }
+        rank: 85
+      - names: ["-H", "--print-header"]
+        description: print a header line (-HH without column numbers)
+        repeatable: true
+        rank: 70
+      - names: ["-l", "--list-samples"]
+        description: print the sample names and exit
+        rank: 70
+      - *include
+      - *exclude
+      - &samples
+        names: ["-s", "--samples"]
+        description: samples to keep, comma-separated (^ to exclude them)
+        value: { type: string }
+        rank: 60
+      - &samples-file
+        names: ["-S", "--samples-file"]
+        description: file listing the samples to keep (^FILE to exclude them)
+        value: { type: file }
+        rank: 50
+      - names: ["--force-samples"]
+        description: only warn about unknown samples
+        rank: 25
+      - names: ["-F", "--print-filtered"]
+        description: text printed for samples failing the -i/-e expression
+        value: { type: string }
+        rank: 25
+      - names: ["-N", "--disable-automatic-newline"]
+        description: do not add a newline when the layout lacks one
+        rank: 20
+      - names: ["-u", "--allow-undef-tags"]
+        description: print . for tags missing from the header
+        rank: 35
+      - names: ["-v", "--vcf-list"]
+        description: file listing several input files
+        value: { type: file }
+        rank: 30
+      - *regions
+      - *regions-file
+      - *regions-overlap
+      - *targets
+      - *targets-file
+      - *targets-overlap
+      - &verbosity-long
+        names: ["--verbosity"]
+        description: how much to log
+        value: { type: int }
+        rank: 15
+    arguments:
+      - name: A.vcf.gz
+        description: variants to print
+        variadic: true
+        value: { type: file, format: vcf }
+
+  - name: reheader
+    help: ["reheader", "--help"]
+    description: replace the header or rename the samples of a VCF or BCF
+    arguments:
+      - name: in.vcf.gz
+        description: variants
+        value: { type: file, format: vcf }
+
+  - name: sort
+    help: ["sort", "--help"]
+    description: sort records by position
+    options:
+      - *output
+      - *output-type
+      - names: ["-m", "--max-mem"]
+        description: memory to use, with a k, M or G suffix
+        value: { type: string, values: [768M, 1G, 2G, 4G] }
+        default: 768M
+        rank: 65
+      - names: ["-T", "--temp-dir"]
+        description: folder for the temporary files
+        value: { type: dir }
+        rank: 55
+      - *threads
+      - names: ["-v", "--verbosity"]
+        description: how much to log
+        value: { type: int }
+        default: 3
+        rank: 15
+      - *write-index
+    arguments:
+      - name: FILE.vcf
+        description: variants to sort
+        value: { type: file, format: vcf }
+
+  - name: view
+    help: ["view", "--help"]
+    description: convert between VCF and BCF, and subset or filter records and samples
+    options:
+      # Output.
+      - *output
+      - *output-type
+      - names: ["-h", "--header-only"]
+        description: print the header only
+        rank: 60
+      - names: ["-H", "--no-header"]
+        description: print the records without the header
+        rank: 60
+      - names: ["--with-header"]
+        description: print the header and the records (the default)
+        rank: 20
+      - names: ["-G", "--drop-genotypes"]
+        description: leave out the per-sample genotype columns
+        rank: 50
+      - names: ["-l", "--compression-level"]
+        description: compression level, 0 (none) to 9 (best)
+        value: { type: int }
+        rank: 30
+      - *no-version
+      - *progress
+      - *regions
+      - *regions-file
+      - *regions-overlap
+      - *targets
+      - *targets-file
+      - *targets-overlap
+      - *threads
+      - *verbosity-long
+      # Samples.
+      - *samples
+      - *samples-file
+      - names: ["--force-samples"]
+        description: only warn about unknown samples
+        rank: 25
+      - names: ["-a", "--trim-alt-alleles"]
+        description: drop ALT alleles absent from the genotypes of the kept samples
+        rank: 40
+      - names: ["-A", "--trim-unseen-allele"]
+        description: drop the <*> or <NON_REF> allele at variant sites (-AA everywhere)
+        repeatable: true
+        rank: 30
+      - names: ["-I", "--no-update"]
+        description: do not recompute INFO/AC and INFO/AN for the kept samples
+        rank: 25
+      # Filters.
+      - *include
+      - *exclude
+      - names: ["-f", "--apply-filters"]
+        description: keep only records whose FILTER is one of these (e.g. PASS,.)
+        value: { type: string, values: ["PASS", "PASS,."] }
+        rank: 65
+      - names: ["-v", "--types"]
+        description: keep only these variant types, comma-separated
+        value: { type: string, values: [snps, indels, mnps, ref, bnd, other, overlap] }
+        rank: 65
+      - names: ["-V", "--exclude-types"]
+        description: drop these variant types, comma-separated
+        value: { type: string, values: [snps, indels, mnps, ref, bnd, other, overlap] }
+        rank: 50
+      - names: ["-m", "--min-alleles"]
+        description: keep records with at least this many alleles (REF and ALT)
+        value: { type: int }
+        rank: 50
+      - names: ["-M", "--max-alleles"]
+        description: keep records with at most this many alleles (-m2 -M2 keeps biallelic sites)
+        value: { type: int }
+        rank: 50
+      - names: ["-g", "--genotype"]
+        description: keep records with a hom, het or missing genotype (^ to exclude them)
+        value: { type: string, values: [hom, het, miss, "^miss"] }
+        rank: 35
+      - names: ["-c", "--min-ac"]
+        description: lowest allele count, optionally for an allele type (INT[:nref|alt1|minor|major|nonmajor])
+        value: { type: string }
+        rank: 40
+      - names: ["-C", "--max-ac"]
+        description: highest allele count, optionally for an allele type
+        value: { type: string }
+        rank: 35
+      - names: ["-q", "--min-af"]
+        description: lowest allele frequency, optionally for an allele type (FLOAT[:TYPE])
+        value: { type: string }
+        rank: 45
+      - names: ["-Q", "--max-af"]
+        description: highest allele frequency, optionally for an allele type
+        value: { type: string }
+        rank: 40
+      - names: ["-k", "--known"]
+        description: keep records with an ID
+        rank: 30
+      - names: ["-n", "--novel"]
+        description: keep records without an ID
+        rank: 30
+      - names: ["-p", "--phased"]
+        description: keep records where every sample is phased
+        rank: 25
+      - names: ["-P", "--exclude-phased"]
+        description: drop records where every sample is phased
+        rank: 20
+      - names: ["-u", "--uncalled"]
+        description: keep records without any called genotype
+        rank: 25
+      - names: ["-U", "--exclude-uncalled"]
+        description: drop records without any called genotype
+        rank: 35
+      - names: ["-x", "--private"]
+        description: keep records whose ALT alleles are seen only in the kept samples
+        rank: 25
+      - names: ["-X", "--exclude-private"]
+        description: drop records whose ALT alleles are seen only in the kept samples
+        rank: 20
+      - *write-index
+    arguments:
+      - name: in.vcf.gz
+        description: variants to read
+        value: { type: file, format: vcf }
+      - name: region
+        description: regions to extract (chr, chr:from or chr:from-to); needs an index
+        variadic: true
+        value: { type: string, optional: true }
+
+  # -- VCF/BCF analysis
+  - name: call
+    help: ["call", "--help"]
+    description: call SNPs and indels from the genotype likelihoods of bcftools mpileup
+    options:
+      - *output
+      - *output-type
+      - names: ["-m", "--multiallelic-caller"]
+        description: use the multiallelic and rare-variant model (recommended; excludes -c)
+        rank: 88
+      - names: ["-v", "--variants-only"]
+        description: write variant sites only
+        rank: 85
+      - names: ["-c", "--consensus-caller"]
+        description: use the original consensus model (excludes -m)
+        rank: 40
+      - names: ["--ploidy"]
+        description: predefined ploidy of a genome assembly (list prints them)
+        value: { type: string, values: [GRCh37, GRCh38, X, Y, "1", "2", list] }
+        default: "2"
+        rank: 60
+      - names: ["--ploidy-file"]
+        description: ploidy per region and sex, one CHROM FROM TO SEX PLOIDY line each
+        value: { type: file }
+        rank: 40
+      - names: ["-a", "--annotate"]
+        description: optional tags to write, comma-separated (? lists them)
+        value: { type: string, values: ["FORMAT/GQ", "FORMAT/GP", "INFO/PV4"] }
+        rank: 50
+      - names: ["-A", "--keep-alts"]
+        description: keep every possible ALT allele at variant sites
+        rank: 35
+      - names: ["-*", "--keep-unseen-allele"]
+        description: keep the unobserved <*> or <NON_REF> allele
+        rank: 30
+      - names: ["-F", "--prior-freqs"]
+        description: use prior allele frequencies from these tags (AN,AC)
+        value: { type: string }
+        rank: 20
+      - names: ["-G", "--group-samples"]
+        description: call samples by group (file of sample and group), or each alone (-)
+        value: { type: file }
+        rank: 40
+      - names: ["--group-samples-tag"]
+        description: tag used with -G (FORMAT/QS or FORMAT/AD by default)
+        value: { type: string }
+        rank: 20
+      - names: ["-g", "--gvcf"]
+        description: write gVCF blocks of non-variant sites, by minimum depth per sample
+        value: { type: string }
+        rank: 45
+      - names: ["-i", "--insert-missed"]
+        description: also write target sites (-T) that mpileup skipped
+        rank: 25
+      - names: ["-M", "--keep-masked-ref"]
+        description: keep sites whose reference base is N
+        rank: 25
+      - names: ["-V", "--skip-variants"]
+        description: do not call this variant type
+        value: { type: enum, values: [snps, indels] }
+        rank: 45
+      - names: ["-C", "--constrain"]
+        description: constrained calling of given alleles or trios
+        value: { type: enum, values: [alleles, trio] }
+        rank: 30
+      - names: ["-n", "--novel-rate"]
+        description: rates of novel mutations for trio calling
+        value: { type: string }
+        default: "1e-8,1e-9,1e-9"
+        rank: 15
+      - names: ["-p", "--pval-threshold"]
+        description: with -c, call a variant when P(ref|data) is below this
+        value: { type: float }
+        default: 0.5
+        rank: 25
+      - names: ["-P", "--prior"]
+        description: with -m, mutation rate (raise it for more sensitivity)
+        value: { type: float }
+        default: 0.0011
+        rank: 35
+      - *samples
+      - names: ["-S", "--samples-file"]
+        description: file of samples, optionally with their sex, or a PED file
+        value: { type: file }
+        rank: 45
+      - *regions
+      - *regions-file
+      - *regions-overlap
+      - *targets
+      - *targets-file
+      - *no-version
+      - *threads
+      - *verbosity-long
+      - *write-index
+    arguments:
+      - name: in.vcf.gz
+        description: genotype likelihoods from bcftools mpileup (standard input when -)
+        value: { type: file, format: bcf }
+
+  - name: consensus
+    help: ["consensus", "--help"]
+    description: apply the variants to a reference FASTA to build a consensus sequence
+    arguments:
+      - name: file.vcf.gz
+        description: indexed variants
+        value: { type: file, format: vcf }
+
+  - name: cnv
+    help: ["cnv", "--help"]
+    description: call copy number variation with a hidden Markov model
+    arguments:
+      - name: FILE.vcf
+        description: variants
+        value: { type: file, format: vcf }
+
+  - name: csq
+    help: ["csq", "--help"]
+    description: predict the consequences of variants on transcripts, aware of haplotypes
+    arguments:
+      - name: in.vcf
+        description: variants
+        value: { type: file, format: vcf }
+
+  - name: filter
+    help: ["filter", "--help"]
+    description: flag or remove records with expressions on their fields
+    options:
+      - *output
+      - *output-type
+      - names: ["-i", "--include"]
+        description: keep only the records for which the expression is true
+        value: { type: string, values: ["QUAL>=30", "QUAL>=20 && INFO/DP>=10"] }
+        rank: 88
+      - names: ["-e", "--exclude"]
+        description: remove the records for which the expression is true
+        value: { type: string, values: ["QUAL<30", "QUAL<20 || INFO/DP<10"] }
+        rank: 88
+      - names: ["-s", "--soft-filter"]
+        description: flag failing records in FILTER with this name (+ makes one up) instead of removing them
+        value: { type: string, values: [LowQual, "+"] }
+        rank: 75
+      - names: ["-m", "--mode"]
+        description: with -s, add to the existing FILTER (+) or reset it on passing records (x)
+        value: { type: string, values: ["+", x, "+x"] }
+        rank: 50
+      - names: ["-g", "--SnpGap"]
+        description: flag SNPs this close to an indel (or to other given types, INT[:TYPE])
+        value: { type: string }
+        rank: 50
+      - names: ["-G", "--IndelGap"]
+        description: in clusters of indels this close, keep only one
+        value: { type: int }
+        rank: 45
+      - names: ["-S", "--set-GTs"]
+        description: set the genotypes of failing samples to missing (.) or reference (0)
+        value: { type: enum, values: [".", "0"] }
+        rank: 35
+      - names: ["--mask"]
+        description: flag the records in these regions (^ to negate)
+        value: { type: string }
+        rank: 30
+      - names: ["-M", "--mask-file"]
+        description: flag the records in the regions of this file (^FILE to negate)
+        value: { type: file, format: bed }
+        rank: 30
+      - names: ["--mask-overlap"]
+        description: when a record falls in a masked region
+        value:
+          type: enum
+          values:
+            - { value: "0", description: its position is inside }
+            - { value: "1", description: the record overlaps }
+            - { value: "2", description: the variant overlaps }
+        default: "1"
+        rank: 20
+      - *regions
+      - *regions-file
+      - *regions-overlap
+      - *targets
+      - *targets-file
+      - *targets-overlap
+      - *no-version
+      - *threads
+      - *verbosity
+      - *write-index
+    arguments:
+      - name: in.vcf.gz
+        description: variants to filter
+        value: { type: file, format: vcf }
+
+  - name: gtcheck
+    help: ["gtcheck", "--help"]
+    description: compare genotypes between samples to find swaps or contamination
+    arguments:
+      - name: query.vcf.gz
+        description: genotypes to check
+        value: { type: file, format: vcf }
+
+  - name: mpileup
+    help: ["mpileup"]
+    description: compute genotype likelihoods from alignments, the first step of variant calling
+    options:
+      # Input.
+      - names: ["-f", "--fasta-ref"]
+        description: reference FASTA, indexed with samtools faidx
+        value: { type: file, format: fasta }
+        rank: 95
+      - names: ["--no-reference"]
+        description: run without a reference FASTA
+        rank: 20
+      - names: ["-b", "--bam-list"]
+        description: file listing the input alignment files, one per line
+        value: { type: file }
+        rank: 70
+      - names: ["-q", "--min-MQ"]
+        description: skip alignments below this mapping quality
+        value: { type: int }
+        default: 0
+        rank: 70
+      - names: ["-Q", "--min-BQ"]
+        description: skip bases below this base quality
+        value: { type: int }
+        default: 1
+        rank: 65
+      - names: ["--max-BQ"]
+        description: cap base qualities at this value
+        value: { type: int }
+        default: 60
+        rank: 25
+      - names: ["--delta-BQ"]
+        description: lower a base quality to its neighbour's plus this value when smaller
+        value: { type: int }
+        default: 30
+        rank: 20
+      - names: ["-d", "--max-depth"]
+        description: reads kept per file and position, at most
+        value: { type: int }
+        default: 250
+        rank: 60
+      - names: ["-B", "--no-BAQ"]
+        description: do not compute base alignment qualities (BAQ)
+        rank: 45
+      - names: ["-D", "--full-BAQ"]
+        description: compute BAQ everywhere, not only in difficult regions
+        rank: 30
+      - names: ["-E", "--redo-BAQ"]
+        description: recompute BAQ, ignoring stored values
+        rank: 30
+      - names: ["-C", "--adjust-MQ"]
+        description: coefficient lowering the mapping quality of reads with many mismatches (50 for BWA)
+        value: { type: int }
+        default: 0
+        rank: 40
+      - names: ["-A", "--count-orphans"]
+        description: also use paired reads that are not properly paired
+        rank: 40
+      - names: ["-x", "--ignore-overlaps"]
+        description: do not detect overlaps between the reads of a pair
+        rank: 25
+      - names: ["-6", "--illumina1.3+"]
+        description: qualities use the old Illumina 1.3+ encoding
+        rank: 15
+      - names: ["-G", "--read-groups"]
+        description: file of read groups to keep or exclude
+        value: { type: file }
+        rank: 30
+      - names: ["--ignore-RG"]
+        description: ignore read groups; each file is one sample
+        rank: 35
+      - names: ["--ls", "--skip-all-set"]
+        description: skip reads having all these flags
+        value: { type: string }
+        rank: 20
+      - names: ["--ns", "--skip-any-set"]
+        description: skip reads having any of these flags
+        value: { type: string }
+        default: "UNMAP,SECONDARY,QCFAIL,DUP"
+        rank: 30
+      - names: ["--lu", "--skip-all-unset"]
+        description: skip reads having none of these flags
+        value: { type: string }
+        rank: 15
+      - names: ["--nu", "--skip-any-unset"]
+        description: skip reads missing any of these flags
+        value: { type: string }
+        rank: 15
+      - names: ["--seed"]
+        description: seed of the random sampling of deep regions
+        value: { type: int }
+        default: 0
+        rank: 15
+      - *regions
+      - *regions-file
+      - *targets
+      - *targets-file
+      - *samples
+      - *samples-file
+      # Output.
+      - *output
+      - names: ["-O", "--output-type"]
+        description: output type, optionally followed by a compression level; u when piping into bcftools call
+        value:
+          type: string
+          values:
+            - { value: u, description: "uncompressed BCF, for piping" }
+            - { value: b, description: compressed BCF }
+            - { value: z, description: compressed VCF }
+            - { value: v, description: uncompressed VCF }
+        default: v
+        rank: 82
+      - names: ["-a", "--annotate"]
+        description: optional tags to write, comma-separated (\? lists them)
+        value: { type: string, values: ["AD,DP", "FORMAT/AD,FORMAT/DP,FORMAT/SP"] }
+        rank: 75
+      - names: ["-g", "--gvcf"]
+        description: group non-variant sites into gVCF blocks by minimum depth per sample
+        value: { type: string }
+        rank: 40
+      - *no-version
+      - *progress
+      - *threads
+      - *verbosity
+      - *write-index
+      # Genotype likelihoods.
+      - names: ["-X", "--config"]
+        description: settings profile for a sequencing platform (list prints them)
+        value:
+          type: string
+          values:
+            - { value: illumina, description: Illumina short reads }
+            - { value: ont, description: Oxford Nanopore reads }
+            - { value: pacbio-ccs, description: PacBio HiFi reads }
+            - { value: ultima, description: Ultima Genomics reads }
+            - { value: list, description: print the profiles }
+        rank: 60
+        rules:
+          - when: { platform: nanopore }
+            boost: 25
+      - names: ["-I", "--skip-indels"]
+        description: do not call indels
+        rank: 45
+      - names: ["-e", "--ext-prob"]
+        description: Phred-scaled probability of a gap extension error
+        value: { type: int }
+        default: 20
+        rank: 25
+      # The help also gives -o to --open-prob, but -o is --output; only the long name is kept.
+      - names: ["--open-prob"]
+        description: Phred-scaled probability of a gap open error
+        value: { type: int }
+        default: 40
+        rank: 25
+      - names: ["-F", "--gap-frac"]
+        description: lowest fraction of gapped reads for an indel candidate
+        value: { type: float }
+        default: 0.05
+        rank: 30
+      - names: ["-h", "--tandem-qual"]
+        description: coefficient for homopolymer errors
+        value: { type: int }
+        default: 500
+        rank: 20
+      - names: ["-L", "--max-idepth"]
+        description: reads kept per file for indel calling, at most
+        value: { type: int }
+        default: 250
+        rank: 30
+      - names: ["-m", "--min-ireads"]
+        description: fewest gapped reads for an indel candidate
+        value: { type: int }
+        default: 2
+        rank: 30
+      - names: ["-M", "--max-read-len"]
+        description: longest read given to the BAQ computation
+        value: { type: int }
+        default: 500
+        rank: 20
+      - names: ["-p", "--per-sample-mF"]
+        description: apply -m and -F per sample, for more sensitivity
+        rank: 30
+      - names: ["-P", "--platforms"]
+        description: platforms whose reads are used for indels, comma-separated
+        value: { type: string }
+        rank: 20
+      - names: ["--ar", "--ambig-reads"]
+        description: what to do with reads that support no indel clearly
+        value: { type: enum, values: [drop, incAD, incAD0] }
+        default: drop
+        rank: 20
+      - names: ["--indel-bias"]
+        description: raise to favour recall over precision of indels
+        value: { type: float }
+        default: 1.0
+        rank: 25
+      - names: ["--del-bias"]
+        description: relative likelihood of insertions against deletions
+        value: { type: float }
+        default: 0.0
+        rank: 15
+      - names: ["--score-vs-ref"]
+        description: score indels against the reference (1) or the second-best allele (0)
+        value: { type: float }
+        default: 0.0
+        rank: 15
+      - names: ["--indel-size"]
+        description: largest indel considered, approximately
+        value: { type: int }
+        default: 110
+        rank: 25
+      - names: ["--indels-2.0"]
+        description: experimental indel model with a diploid reference consensus
+        rank: 15
+      - names: ["--indels-cns"]
+        description: experimental indel model using edlib
+        rank: 20
+      - names: ["--seqq-offset"]
+        description: tuning of the indel sequence qualities in --indels-cns mode
+        value: { type: int }
+        default: 120
+        rank: 15
+      - names: ["--no-indels-cns"]
+        description: turn --indels-cns off, e.g. after a -X profile
+        rank: 15
+      - names: ["--poly-mqual"]
+        description: in edlib mode, use the lowest quality of homopolymers
+        rank: 15
+    arguments:
+      - name: in.bam
+        description: sorted, indexed alignments
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: polysomy
+    help: ["polysomy", "--help"]
+    description: estimate the number of copies of each chromosome
+    arguments:
+      - name: FILE.vcf
+        description: variants
+        value: { type: file, format: vcf }
+
+  - name: roh
+    help: ["roh", "--help"]
+    description: find runs of homozygosity with a hidden Markov model
+    arguments:
+      - name: in.vcf.gz
+        description: variants
+        value: { type: file, format: vcf }
+
+  - name: stats
+    help: ["stats", "--help"]
+    description: summarise one file, or compare two (for plot-vcfstats or MultiQC)
+    arguments:
+      - name: A.vcf.gz
+        description: variants
+        value: { type: file, format: vcf }
+      - name: B.vcf.gz
+        description: second file to compare with
+        value: { type: file, format: vcf, optional: true }

@@ -1,0 +1,38 @@
+split: unrecognized option '--help'
+Usage: samtools split [-u <unaccounted.bam>] [-h <unaccounted_header.sam>]
+                      [-f <format_string>] [-v] <merged.bam>
+Options:
+  -f STRING           output filename format string ["%*_%#.%."]
+  -u FILE1            put left-over reads in FILE1
+  -h FILE2            ... and override the header with FILE2 (-u file only)
+  -d TAG              split by TAG value. TAG value must be a string.
+  -p NUMBER           zero-pad numbers in filenames to NUMBER digits
+  -M,--max-split NUM  limit number of output files from -d to NUM [100]
+  -v                  verbose output
+  --no-PG             do not add a PG line
+      --input-fmt-option OPT[=VAL]
+               Specify a single input file format option in the form
+               of OPTION or OPTION=VALUE
+      --output-fmt FORMAT[,OPT[=VAL]]...
+               Specify output format (SAM, BAM, CRAM)
+      --output-fmt-option OPT[=VAL]
+               Specify a single output file format option in the form
+               of OPTION or OPTION=VALUE
+      --reference FILE
+               Reference sequence FASTA FILE [null]
+  -@, --threads INT
+               Number of additional threads to use [0]
+      --write-index
+               Automatically index the output files [off]
+      --verbosity INT
+               Set level of verbosity
+
+See https://www.htslib.org/doc/samtools.html#GLOBAL_COMMAND_OPTIONS
+for more details.
+
+Format string expansions:
+  %%     %
+  %*     basename
+  %#     index (of @RG in the header, or count of TAG values seen so far)
+  %!     @RG ID or TAG value
+  %.     filename extension for output format

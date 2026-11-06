@@ -15,6 +15,8 @@ import specs from "./commands/specs/root.js";
 import doctor from "./commands/doctor.js";
 import { action, supportedShells } from "./commands/root.js";
 import { getVersion } from "./utils/version.js";
+// BIOPILOT: M9 register BioPilot commands.
+import info from "./biopilot/cli/info.js";
 
 const program = new Command();
 
@@ -42,5 +44,6 @@ program.addCommand(doctor);
 program.addCommand(specs);
 program.addCommand(complete);
 program.addCommand(uninstall);
+program.addCommand(info); // BIOPILOT: M9
 
 program.parse();

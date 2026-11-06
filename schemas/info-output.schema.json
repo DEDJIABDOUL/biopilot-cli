@@ -2,34 +2,59 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/DEDJIABDOUL/biopilot-cli/schemas/info-output.schema.json",
   "title": "biopilot info --json output, format 1",
-  "description": "Contract of `biopilot info --json`. Adding a field does not change `format`; removing or renaming one increments it. Errors are reported on stderr with exit code 1 and nothing on stdout.",
+  "description": "Contract of `biopilot info --json`. Adding a field does not change `format`; removing or renaming one increments it. Errors are reported on stderr with exit code 1 and nothing on stdout. `command.subcommands` and `command.arguments` were added in format 1 (ticket #6).",
   "type": "object",
   "required": ["format"],
   "properties": {
-    "format": { "const": 1 }
+    "format": {
+      "const": 1
+    }
   },
   "oneOf": [
     {
       "title": "Tool list (`biopilot info --json`)",
       "required": ["tools"],
-      "properties": { "tools": { "type": "array", "items": { "$ref": "#/$defs/tool" } } }
+      "properties": {
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tool"
+          }
+        }
+      }
     },
     {
       "title": "One command and its options (`biopilot info --json <tool> [command…]`)",
       "required": ["tool", "command", "options"],
       "properties": {
-        "tool": { "$ref": "#/$defs/tool" },
-        "command": { "$ref": "#/$defs/command" },
-        "options": { "type": "array", "items": { "$ref": "#/$defs/option" }, "description": "Highest rank first, ties in Catalog order." }
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "command": {
+          "$ref": "#/$defs/command"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/option"
+          },
+          "description": "Highest rank first, ties in Catalog order."
+        }
       }
     },
     {
       "title": "One option (`biopilot info --json <tool> [command…] <option>`)",
       "required": ["tool", "command", "option"],
       "properties": {
-        "tool": { "$ref": "#/$defs/tool" },
-        "command": { "$ref": "#/$defs/command" },
-        "option": { "$ref": "#/$defs/option" }
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "command": {
+          "$ref": "#/$defs/command"
+        },
+        "option": {
+          "$ref": "#/$defs/option"
+        }
       }
     }
   ],
@@ -38,43 +63,121 @@
       "type": "object",
       "required": ["name", "package", "description", "platforms"],
       "properties": {
-        "name": { "type": "string", "description": "Executable name." },
-        "package": { "type": ["string", "null"], "description": "Conda package, when it differs from the name." },
-        "description": { "type": ["string", "null"] },
+        "name": {
+          "type": "string",
+          "description": "Executable name."
+        },
+        "package": {
+          "type": ["string", "null"],
+          "description": "Conda package, when it differs from the name."
+        },
+        "description": {
+          "type": ["string", "null"]
+        },
         "platforms": {
           "type": "array",
-          "items": { "enum": ["illumina", "nanopore"] },
+          "items": {
+            "enum": ["illumina", "nanopore"]
+          },
           "description": "Sequencing platforms the tool serves; empty means generic."
         }
       }
     },
     "command": {
       "type": "object",
-      "required": ["path", "description"],
+      "required": ["path", "description", "subcommands", "arguments"],
       "properties": {
-        "path": { "type": "array", "items": { "type": "string" }, "description": "Subcommand path from the tool; empty for the root command." },
-        "description": { "type": ["string", "null"] }
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Subcommand path from the tool; empty for the root command."
+        },
+        "description": {
+          "type": ["string", "null"]
+        },
+        "subcommands": {
+          "type": "array",
+          "description": "Direct subcommands, in Catalog order.",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": ["string", "null"]
+              }
+            }
+          }
+        },
+        "arguments": {
+          "type": "array",
+          "description": "Positional arguments, in order.",
+          "items": {
+            "type": "object",
+            "required": ["name", "description", "variadic"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": ["string", "null"]
+              },
+              "variadic": {
+                "type": "boolean",
+                "description": "Takes one or more values."
+              }
+            }
+          }
+        }
       }
     },
     "option": {
       "type": "object",
       "required": ["canonical_name", "aliases", "description", "value", "default", "rank"],
       "properties": {
-        "canonical_name": { "type": "string", "description": "First long name, otherwise first name." },
-        "aliases": { "type": "array", "items": { "type": "string" }, "description": "Every name of the option, canonical name included. Case-sensitive." },
-        "description": { "type": ["string", "null"] },
+        "canonical_name": {
+          "type": "string",
+          "description": "First long name, otherwise first name."
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Every name of the option, canonical name included. Case-sensitive."
+        },
+        "description": {
+          "type": ["string", "null"]
+        },
         "value": {
           "oneOf": [
-            { "type": "null", "description": "A flag: takes no value." },
+            {
+              "type": "null",
+              "description": "A flag: takes no value."
+            },
             {
               "type": "object",
               "required": ["type"],
-              "properties": { "type": { "enum": ["int", "float", "string"] } }
+              "properties": {
+                "type": {
+                  "enum": ["int", "float", "string"]
+                }
+              }
             }
           ]
         },
-        "default": { "type": ["string", "null"] },
-        "rank": { "type": "integer", "minimum": 0, "maximum": 100 }
+        "default": {
+          "type": ["string", "null"]
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
       }
     }
   }

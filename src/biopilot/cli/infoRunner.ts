@@ -6,7 +6,7 @@
 // option name and is never parsed as a BioPilot flag (fastp itself has a `--json` option).
 
 import chalk from "chalk";
-import { openCatalog, type Catalog, type Command, type Option, type Tool } from "../knowledge/catalog.js";
+import { openCatalog, type Argument, type Catalog, type Command, type Option, type Tool } from "../knowledge/catalog.js";
 
 /** Version of the `--json` output contract (schemas/info-output.schema.json). */
 export const INFO_JSON_FORMAT = 1;
@@ -19,6 +19,8 @@ BioPilot's flags go before the tool name; everything after it is read as a comma
   biopilot info                   list the tools in the Catalog
   biopilot info fastp             show fastp and its options
   biopilot info fastp -i          show one option (any alias works)
+  biopilot info samtools sort     show a subcommand: its arguments, subcommands and options
+  biopilot info samtools sort -o  show one option of a subcommand
   biopilot info --json fastp -i   the same, as JSON
 
 Flags:
@@ -65,7 +67,23 @@ const toolJson = (tool: Tool) => ({
   platforms: tool.platforms,
 });
 
-const commandJson = (command: Command) => ({ path: command.path, description: command.description });
+const commandJson = (catalog: Catalog, command: Command) => ({
+  path: command.path,
+  description: command.description,
+  subcommands: catalog.listSubcommands(command).map((sub) => ({ name: commandWord(sub), description: sub.description })),
+  arguments: catalog.listArguments(command).map((argument) => ({ name: argument.name, description: argument.description, variadic: argument.variadic })),
+});
+
+/** Last word of a command's path: `sort` for `samtools sort`. */
+const commandWord = (command: Command) => command.path[command.path.length - 1];
+
+const argumentText = (argument: Argument) => `<${argument.name}>${argument.variadic ? "..." : ""}`;
+
+/** Two-column list: `  name   description`. */
+const twoColumnText = (rows: [string, string | null][]) => {
+  const width = Math.min(Math.max(0, ...rows.map(([left]) => left.length)), 40);
+  return rows.map(([left, right]) => `  ${left.padEnd(width)}  ${right ?? ""}`.trimEnd()).join("\n");
+};
 
 const optionJson = (option: Option) => ({
   canonical_name: option.canonicalName,
@@ -126,17 +144,27 @@ const run = (catalog: Catalog, request: Request, io: InfoIO): number => {
       io.stderr(`biopilot: unknown option "${request.option}" for ${commandName}\n`);
       return 1;
     }
-    if (request.json) out({ tool: toolJson(tool), command: commandJson(command), option: optionJson(option) });
+    if (request.json) out({ tool: toolJson(tool), command: commandJson(catalog, command), option: optionJson(option) });
     else io.stdout(`${chalk.bold(commandName)}\n${optionsText([option])}\n`);
     return 0;
   }
 
   const options = catalog.listOptions(command);
-  if (request.json) out({ tool: toolJson(tool), command: commandJson(command), options: options.map(optionJson) });
+  if (request.json) out({ tool: toolJson(tool), command: commandJson(catalog, command), options: options.map(optionJson) });
   else {
-    const header = [`${chalk.bold(commandName)}${tool.description ? ` — ${tool.description}` : ""}`, `platforms: ${platformsText(tool)}`];
+    const description = command.path.length > 0 ? command.description : tool.description;
+    const header = [`${chalk.bold(commandName)}${description ? ` — ${description}` : ""}`, `platforms: ${platformsText(tool)}`];
     if (tool.package && tool.package !== tool.name) header.push(`package: ${tool.package}`);
-    io.stdout(`${header.join("\n")}\n\noptions:\n${optionsText(options)}\n`);
+    const sections = [header.join("\n")];
+    const args = catalog.listArguments(command);
+    if (args.length > 0) {
+      sections.push(`usage: ${[commandName, options.length > 0 ? "[options]" : "", ...args.map(argumentText)].filter(Boolean).join(" ")}`);
+      sections.push(`arguments:\n${twoColumnText(args.map((argument) => [argumentText(argument), argument.description]))}`);
+    }
+    const subcommands = catalog.listSubcommands(command);
+    if (subcommands.length > 0) sections.push(`commands:\n${twoColumnText(subcommands.map((sub) => [commandWord(sub), sub.description]))}`);
+    if (options.length > 0) sections.push(`options:\n${optionsText(options)}`);
+    io.stdout(sections.join("\n\n") + "\n");
   }
   return 0;
 };

@@ -119,6 +119,30 @@ describe("Catalog compiler", () => {
       ]);
     });
 
+    test("alias used twice in a subcommand (aliases are unique per command, at any depth)", () => {
+      const source = tool("", 'commands:\n  - name: sort\n    options:\n      - names: ["-o"]\n      - names: ["-o", "--out"]');
+      expect(errorsOf(source)).toEqual([expect.objectContaining({ location: "commands[0].options[1].names[0]", line: 7 })]);
+    });
+
+    test("the same alias in a parent and a subcommand is fine", () => {
+      const { result } = compile({ "t.yml": tool("", 'commands:\n  - name: sort\n    options:\n      - names: ["-o"]') });
+      expect(result.ok).toBe(true);
+    });
+
+    test("two subcommands with the same name under one parent", () => {
+      const source = tool("", "commands:\n  - name: sort\n  - name: view\n    commands:\n      - name: x\n      - name: x\n  - name: sort");
+      expect(
+        errorsOf(source)
+          .map((e) => e.location)
+          .sort(),
+      ).toEqual(["commands[1].commands[1].name", "commands[2].name"]);
+    });
+
+    test("a variadic positional argument that is not the last one", () => {
+      const source = tool("", "arguments:\n  - name: files\n    variadic: true\n  - name: out");
+      expect(errorsOf(source)).toEqual([expect.objectContaining({ location: "arguments[0].variadic", message: expect.stringContaining("last") })]);
+    });
+
     test("two files describing the same tool", () => {
       const { result } = compile({ "fastp.yml": FASTP, "fastp-copy.yml": FASTP });
       expect(result).toEqual({

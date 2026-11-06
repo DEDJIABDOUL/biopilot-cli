@@ -6,7 +6,7 @@
  * version equals this one exactly (spec decision 30): Catalog and reader always
  * ship together, so a mismatch means a broken install.
  */
-export const CATALOG_SCHEMA_VERSION = 1;
+export const CATALOG_SCHEMA_VERSION = 2;
 
 export const PLATFORMS = ["illumina", "nanopore"] as const;
 export type Platform = (typeof PLATFORMS)[number];
@@ -57,6 +57,15 @@ CREATE TABLE option_names (
   option_id  INTEGER NOT NULL REFERENCES options(id),
   ord        INTEGER NOT NULL,
   PRIMARY KEY (command_id, name)
+) WITHOUT ROWID;
+
+CREATE TABLE arguments (
+  command_id  INTEGER NOT NULL REFERENCES commands(id),
+  position    INTEGER NOT NULL,
+  name        TEXT NOT NULL,
+  description TEXT,
+  variadic    INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (command_id, position)
 ) WITHOUT ROWID;
 `;
 

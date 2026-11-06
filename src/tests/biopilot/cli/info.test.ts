@@ -8,10 +8,12 @@ import { jest } from "@jest/globals";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import url from "node:url";
-import { FASTP, compileValid } from "../helpers.js";
+import { FASTP, SAMTOOLS, compileValid } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
-const catalogPath = compileValid({ "fastp.yml": FASTP });
+// fastp has its own `--json` option (its JSON report): `biopilot info fastp --json` must show it.
+const FASTP_WITH_JSON = `${FASTP}  - names: ["-j", "--json"]\n    description: JSON report file\n`;
+const catalogPath = compileValid({ "fastp.yml": FASTP_WITH_JSON, "samtools.yml": SAMTOOLS });
 
 const biopilot = (...args: string[]) => {
   const result = spawnSync(process.execPath, ["--import", "tsx", path.join(repoRoot, "src", "index.ts"), "info", ...args], {
@@ -66,5 +68,43 @@ describe("biopilot info", () => {
     });
     expect(unavailable.status).toBe(1);
     expect(unavailable.stderr).toContain("unavailable");
+  });
+
+  test("`info fastp --json` is fastp's own --json option, not BioPilot's JSON output", () => {
+    const { code, stdout } = biopilot("fastp", "--json");
+    expect(code).toBe(0);
+    expect(stdout).toContain("--json, -j");
+    expect(stdout).toContain("JSON report file");
+    expect(() => JSON.parse(stdout)).toThrow();
+  });
+
+  test("a subcommand path, then one of its options", () => {
+    const { code, stdout } = biopilot("--json", "samtools", "sort", "-o");
+    expect(code).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.command.path).toEqual(["sort"]);
+    expect(output.option).toMatchObject({ canonical_name: "-o", description: "output file" });
+  });
+
+  test("a command shows its subcommands and positional arguments", () => {
+    const root = JSON.parse(biopilot("--json", "samtools").stdout);
+    expect(root.command.subcommands).toEqual([
+      { name: "sort", description: "sort alignments" },
+      { name: "view", description: "view and convert" },
+      { name: "deep", description: null },
+    ]);
+    const view = JSON.parse(biopilot("--json", "samtools", "view").stdout);
+    expect(view.command.arguments).toEqual([
+      { name: "in.bam", description: null, variadic: false },
+      { name: "region", description: null, variadic: true },
+    ]);
+    const text = biopilot("samtools", "view").stdout;
+    expect(text).toMatch(/^usage: samtools view <in\.bam> <region>\.\.\.$/m);
+  });
+
+  test("an unknown subcommand exits with 1", () => {
+    const { code, stderr } = biopilot("samtools", "nope");
+    expect(code).toBe(1);
+    expect(stderr).toContain('unknown command "samtools nope"');
   });
 });

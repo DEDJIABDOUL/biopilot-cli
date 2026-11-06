@@ -49,9 +49,10 @@ describe("Catalog reader", () => {
 
   test("exposes canonical name, aliases, value type and default", () => {
     const thread = catalog.findOption(catalog.getCommand("fastp")!, "--thread");
-    expect(thread).toEqual({ canonicalName: "--thread", aliases: ["-w", "--thread"], description: null, valueType: "int", defaultValue: "3", rank: 75 });
+    expect(thread).toMatchObject({ canonicalName: "--thread", aliases: ["-w", "--thread"], description: null, defaultValue: "3", rank: 75 });
+    expect(thread?.value).toMatchObject({ type: "int", format: null, values: [] });
     const dedup = catalog.findOption(catalog.getCommand("fastp")!, "-D");
-    expect(dedup?.valueType).toBeNull();
+    expect(dedup?.value).toBeNull();
   });
 
   test("finds an option by any alias; the canonical name is the first long name, else the first name", () => {

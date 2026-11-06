@@ -6,14 +6,18 @@
  * version equals this one exactly (spec decision 30): Catalog and reader always
  * ship together, so a mismatch means a broken install.
  */
-export const CATALOG_SCHEMA_VERSION = 2;
+export const CATALOG_SCHEMA_VERSION = 3;
 
 export const PLATFORMS = ["illumina", "nanopore"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
-/** Value types supported so far. `null` in the Catalog means a flag (no value). */
-export const VALUE_TYPES = ["int", "float", "string"] as const;
+/** Value types. An option without a value is a flag. Only `enum` restricts the value to its listed values. */
+export const VALUE_TYPES = ["int", "float", "string", "file", "dir", "enum"] as const;
 export type ValueType = (typeof VALUE_TYPES)[number];
+
+/** How a file format is recognised: one file by its name, a reference index by prefix + suffixes, or by a folder + marker. */
+export const FORMAT_KINDS = ["file", "prefix", "dir"] as const;
+export type FormatKind = (typeof FORMAT_KINDS)[number];
 
 export const CATALOG_DDL = `
 CREATE TABLE metadata (
@@ -41,15 +45,45 @@ CREATE TABLE commands (
   description TEXT
 );
 
+CREATE TABLE formats (
+  ord         INTEGER PRIMARY KEY,
+  name        TEXT NOT NULL UNIQUE,
+  kind        TEXT NOT NULL,
+  description TEXT,
+  pattern     TEXT,
+  suffixes    TEXT,
+  marker      TEXT
+);
+
 CREATE TABLE options (
   id             INTEGER PRIMARY KEY,
   command_id     INTEGER NOT NULL REFERENCES commands(id),
   canonical_name TEXT NOT NULL,
   description    TEXT,
   value_type     TEXT,
+  value_format   TEXT,
+  value_optional INTEGER NOT NULL,
+  value_multiple INTEGER NOT NULL,
+  read_role      INTEGER,
+  mate_of        INTEGER REFERENCES options(id),
+  derive_from    INTEGER REFERENCES options(id),
+  derive_suffix  TEXT,
   default_value  TEXT,
-  rank           INTEGER NOT NULL
+  rank           INTEGER NOT NULL,
+  since_version  TEXT,
+  until_version  TEXT,
+  repeatable     INTEGER NOT NULL,
+  hidden         INTEGER NOT NULL,
+  deprecated     INTEGER NOT NULL
 );
+
+CREATE TABLE option_values (
+  option_id   INTEGER NOT NULL REFERENCES options(id),
+  ord         INTEGER NOT NULL,
+  value       TEXT NOT NULL,
+  description TEXT,
+  PRIMARY KEY (option_id, ord)
+) WITHOUT ROWID;
 
 CREATE TABLE option_names (
   command_id INTEGER NOT NULL,
@@ -60,12 +94,29 @@ CREATE TABLE option_names (
 ) WITHOUT ROWID;
 
 CREATE TABLE arguments (
-  command_id  INTEGER NOT NULL REFERENCES commands(id),
-  position    INTEGER NOT NULL,
-  name        TEXT NOT NULL,
-  description TEXT,
-  variadic    INTEGER NOT NULL DEFAULT 0,
+  command_id     INTEGER NOT NULL REFERENCES commands(id),
+  position       INTEGER NOT NULL,
+  name           TEXT NOT NULL,
+  description    TEXT,
+  variadic       INTEGER NOT NULL,
+  value_type     TEXT,
+  value_format   TEXT,
+  value_optional INTEGER NOT NULL,
+  value_multiple INTEGER NOT NULL,
+  read_role      INTEGER,
+  default_value  TEXT,
+  since_version  TEXT,
+  until_version  TEXT,
   PRIMARY KEY (command_id, position)
+) WITHOUT ROWID;
+
+CREATE TABLE argument_values (
+  command_id  INTEGER NOT NULL,
+  position    INTEGER NOT NULL,
+  ord         INTEGER NOT NULL,
+  value       TEXT NOT NULL,
+  description TEXT,
+  PRIMARY KEY (command_id, position, ord)
 ) WITHOUT ROWID;
 `;
 

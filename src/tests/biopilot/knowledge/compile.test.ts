@@ -95,7 +95,7 @@ describe("Catalog compiler", () => {
     });
 
     test("unknown value type", () => {
-      expect(errorsOf(tool(`    value: { type: file }`))).toEqual([expect.objectContaining({ location: "options[0].value.type" })]);
+      expect(errorsOf(tool(`    value: { type: path }`))).toEqual([expect.objectContaining({ location: "options[0].value.type" })]);
     });
 
     test("version regex that doesn't compile", () => {
@@ -141,6 +141,53 @@ describe("Catalog compiler", () => {
     test("a variadic positional argument that is not the last one", () => {
       const source = tool("", "arguments:\n  - name: files\n    variadic: true\n  - name: out");
       expect(errorsOf(source)).toEqual([expect.objectContaining({ location: "arguments[0].variadic", message: expect.stringContaining("last") })]);
+    });
+
+    test.each([
+      ["an undeclared format", "    value: { type: file, format: bam }", "options[0].value.format", "not declared"],
+      ["a format on a non-file type", "    value: { type: string, format: fastq }", "options[0].value.format", "only applies to type file or dir"],
+      ["a folder format on type file", "    value: { type: file, format: salmon-index }", "options[0].value.format", "use type dir"],
+      ["a file format on type dir", "    value: { type: dir, format: fastq }", "options[0].value.format", "use type file"],
+      ["an enum without values", "    value: { type: enum }", "options[0].value.values", "at least one value"],
+      ["a read role on a non-file type", "    value: { type: string, read_role: 1 }", "options[0].value.read_role", "only applies to type file"],
+      [
+        "a mate that is not an option of the command",
+        "    value: { type: file, read_role: 2, mate_of: --nope }",
+        "options[0].value.mate_of",
+        "not an option of this command",
+      ],
+      ["an option that is its own mate", "    value: { type: file, read_role: 2, mate_of: --out }", "options[0].value.mate_of", "its own mate"],
+      [
+        "a derived output from an unknown option",
+        "    value: { type: file, derive: { from: --nope, suffix: .x } }",
+        "options[0].value.derive.from",
+        "not an option",
+      ],
+      [
+        "a derived output on a non-file type",
+        "    value: { type: string, derive: { from: --out, suffix: .x } }",
+        "options[0].value.derive",
+        "only applies to type file",
+      ],
+    ])("rejects %s", (_, option, location, message) => {
+      expect(errorsOf(tool(option))).toEqual(expect.arrayContaining([expect.objectContaining({ location, message: expect.stringContaining(message) })]));
+    });
+
+    test("rejects mates whose read roles are not 1 and 2", () => {
+      const source = tool(`    value: { type: file, read_role: 1 }\n  - names: ["-I"]\n    value: { type: file, read_role: 1, mate_of: "-o" }`);
+      expect(errorsOf(source)).toEqual([expect.objectContaining({ location: "options[1].value.mate_of", message: expect.stringContaining("1 and 2") })]);
+    });
+
+    test("rejects two options claiming the same mate", () => {
+      const source = tool(
+        `    value: { type: file, read_role: 1 }\n  - names: ["-I"]\n    value: { type: file, read_role: 2, mate_of: "-o" }\n  - names: ["-J"]\n    value: { type: file, read_role: 2, mate_of: "--out" }`,
+      );
+      expect(errorsOf(source)).toEqual([expect.objectContaining({ location: "options[2].value.mate_of", message: expect.stringContaining("options[1]") })]);
+    });
+
+    test("rejects an undeclared format on a positional argument", () => {
+      const source = tool("", "arguments:\n  - name: in\n    value: { type: file, format: bam }");
+      expect(errorsOf(source)).toEqual([expect.objectContaining({ location: "arguments[0].value.format" })]);
     });
 
     test("two files describing the same tool", () => {
@@ -192,6 +239,46 @@ describe("Catalog compiler", () => {
   test("the published schema and the code agree on platforms and value types", () => {
     const schema = JSON.parse(fs.readFileSync(TOOL_SCHEMA_PATH, "utf-8"));
     expect(schema.properties.platforms.items.enum).toEqual([...PLATFORMS]);
-    expect(schema.definitions.option.properties.value.properties.type.enum).toEqual([...VALUE_TYPES]);
+    expect(schema.definitions.optionValue.properties.type.enum).toEqual([...VALUE_TYPES]);
+    expect(schema.definitions.argumentValue.properties.type.enum).toEqual([...VALUE_TYPES]);
+  });
+
+  describe("the formats file", () => {
+    const formatErrors = (formats: string) => {
+      const { result } = compile({ "fastp.yml": FASTP }, formats);
+      if (result.ok) throw new Error("expected the formats file to be rejected");
+      return result.errors;
+    };
+
+    test("is validated: a prefix index needs suffixes, fields must fit the kind", () => {
+      const errors = formatErrors("formats:\n  - name: idx\n    kind: prefix\n  - name: odd\n    pattern: 'x'\n    marker: m\n");
+      expect(errors.map((e) => e.location)).toEqual(expect.arrayContaining(["formats[0].suffixes", "formats[1]"]));
+      expect(errors.every((e) => e.file.endsWith("formats.yml"))).toBe(true);
+    });
+
+    test("rejects a format declared twice and a pattern that does not compile", () => {
+      const errors = formatErrors("formats:\n  - name: fq\n    pattern: 'fq$'\n  - name: fq\n    pattern: '(['\n");
+      expect(errors.map((e) => e.location).sort()).toEqual(["formats[1].name", "formats[1].pattern"]);
+    });
+
+    test("a missing formats file is an error", () => {
+      const result = compileCatalog({
+        sourcesDir: writeSources({}),
+        formatsPath: path.join(tempDir(), "nope.yml"),
+        outputPath: path.join(tempDir(), "k.db"),
+        biopilotVersion: "test",
+      });
+      expect(result.ok).toBe(false);
+    });
+
+    test("the repository's formats file and tool sources compile together", () => {
+      const result = compileCatalog({
+        sourcesDir: path.resolve(path.dirname(TOOL_SCHEMA_PATH), "..", "knowledge", "tools"),
+        formatsPath: path.resolve(path.dirname(TOOL_SCHEMA_PATH), "..", "knowledge", "formats.yml"),
+        outputPath: path.join(tempDir(), "k.db"),
+        biopilotVersion: "test",
+      });
+      expect(result).toEqual({ ok: true, toolCount: expect.any(Number) });
+    });
   });
 });

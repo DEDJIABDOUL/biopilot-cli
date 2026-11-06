@@ -1,0 +1,163 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Porechop, written from its recorded --help:
+# knowledge/help/porechop/0.2.4/root.txt (GPL-3.0-only; attribution in
+# RECORDING.yml next to it). Every option of that help is described here, in our
+# own words, never copied (spec decision 31). Ranks follow the shared scale of
+# spec §6.4.
+name: porechop
+package: porechop
+description: Finds and removes adapters in Oxford Nanopore reads, splits chimeric reads and bins by barcode
+platforms: [nanopore]
+version: { args: ["--version"], regex: '^(\d[\w.]*)' }
+help: ["--help"]
+options:
+  # --- Main options ----------------------------------------------------------
+  - names: ["-i", "--input"]
+    description: reads to process - a FASTQ or FASTA file, or a folder searched recursively for FASTQ files
+    value: { type: file, format: fastq }
+    rank: 95
+  - names: ["-o", "--output"]
+    description: file for the trimmed reads, FASTQ or FASTA; printed to standard output when omitted
+    value: { type: file, format: fastq, derive: { from: "--input", suffix: ".trimmed" } }
+    rank: 85
+    rules:
+      - when: { used: ["--input"] }
+        boost: 10
+  - names: ["--format"]
+    description: format of the trimmed reads; auto follows the output name or else the input
+    value:
+      type: enum
+      values:
+        - { value: auto, description: "from the output name, else the input" }
+        - fastq
+        - fastq.gz
+        - fasta
+        - fasta.gz
+    default: auto
+    rank: 55
+  - names: ["-v", "--verbosity"]
+    description: amount of progress information, from 0 (silent) to 3 (everything)
+    value:
+      type: int
+      values:
+        - { value: "0", description: nothing }
+        - { value: "1", description: some }
+        - { value: "2", description: a lot }
+        - { value: "3", description: everything }
+    default: 1
+    rank: 40
+  - names: ["-t", "--threads"]
+    # The help shows the recording machine's value (16); the real default depends on the CPU count.
+    description: number of threads used to align reads against the adapters
+    value: { type: int }
+    rank: 75
+  # --- Barcode binning -------------------------------------------------------
+  - names: ["-b", "--barcode_dir"]
+    description: demultiplex - write the reads of each barcode to its own file in this folder (not with --output)
+    value: { type: dir }
+    rank: 70
+  - names: ["--barcode_threshold"]
+    description: lowest percent identity to a barcode for a read to be binned
+    value: { type: float }
+    default: 75.0
+    rank: 30
+    rules:
+      - when: { used: ["--barcode_dir"] }
+        boost: 25
+  - names: ["--barcode_diff"]
+    description: a read stays unbinned when its best two barcode identities are closer than this
+    value: { type: float }
+    default: 5.0
+    rank: 30
+    rules:
+      - when: { used: ["--barcode_dir"] }
+        boost: 20
+  - names: ["--require_two_barcodes"]
+    description: bin a read only when both of its ends match the barcode well
+    rank: 35
+    rules:
+      - when: { used: ["--barcode_dir"] }
+        boost: 25
+  - names: ["--untrimmed"]
+    description: sort reads into barcode bins without trimming them
+    rank: 30
+    rules:
+      - when: { used: ["--barcode_dir"] }
+        boost: 15
+  - names: ["--discard_unassigned"]
+    description: drop the reads without a barcode instead of writing a "none" bin
+    rank: 30
+    rules:
+      - when: { used: ["--barcode_dir"] }
+        boost: 25
+  # --- Adapter search --------------------------------------------------------
+  - names: ["--adapter_threshold"]
+    description: percent identity (0 to 100) an adapter set needs to be considered present and trimmed
+    value: { type: float }
+    default: 90.0
+    rank: 35
+  - names: ["--check_reads"]
+    description: number of reads aligned to every known adapter to decide which sets are present
+    value: { type: int }
+    default: 10000
+    rank: 35
+  - names: ["--scoring_scheme"]
+    description: alignment scores as match,mismatch,gap open,gap extend
+    value: { type: string, values: ["3,-6,-5,-2"] }
+    default: "3,-6,-5,-2"
+    rank: 20
+  # --- End adapters ----------------------------------------------------------
+  - names: ["--end_size"]
+    description: length, in bases, searched for adapters at each read end
+    value: { type: int }
+    default: 150
+    rank: 30
+  - names: ["--min_trim_size"]
+    description: adapter hits shorter than this are ignored
+    value: { type: int }
+    default: 4
+    rank: 30
+  - names: ["--extra_end_trim"]
+    description: extra bases removed next to an adapter found at a read end
+    value: { type: int }
+    default: 2
+    rank: 30
+  - names: ["--end_threshold"]
+    description: percent identity (0 to 100) an end adapter needs to be removed
+    value: { type: float }
+    default: 75.0
+    rank: 35
+  # --- Middle adapters -------------------------------------------------------
+  - names: ["--no_split"]
+    description: do not split reads at adapters found in their middle
+    rank: 40
+  - names: ["--discard_middle"]
+    description: drop reads with an adapter in the middle rather than splitting them (needed for Nanopolish; on when binning barcodes)
+    rank: 45
+  - names: ["--middle_threshold"]
+    description: percent identity (0 to 100) a middle adapter needs to be found
+    value: { type: float }
+    default: 90.0
+    rank: 30
+  - names: ["--extra_middle_trim_good_side"]
+    description: extra bases removed on the "good" side of a middle adapter
+    value: { type: int }
+    default: 10
+    rank: 25
+  - names: ["--extra_middle_trim_bad_side"]
+    description: extra bases removed on the "bad" side of a middle adapter
+    value: { type: int }
+    default: 100
+    rank: 25
+  - names: ["--min_split_read_size"]
+    description: pieces shorter than this, after splitting, are not written
+    value: { type: int }
+    default: 1000
+    rank: 30
+  # --- Help ------------------------------------------------------------------
+  - names: ["-h", "--help"]
+    description: show the help and exit
+    rank: 10
+  - names: ["--version"]
+    description: print the version and exit
+    rank: 10

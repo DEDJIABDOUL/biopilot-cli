@@ -38,9 +38,14 @@ describe("Catalog compiler", () => {
   });
 
   test("the repository's own tool sources compile", () => {
-    const sourcesDir = path.resolve(path.dirname(TOOL_SCHEMA_PATH), "..", "knowledge", "tools");
-    const result = compileCatalog({ sourcesDir, outputPath: path.join(tempDir(), "k.db"), biopilotVersion: "test" });
-    expect(result.ok).toBe(true);
+    const knowledge = path.resolve(path.dirname(TOOL_SCHEMA_PATH), "..", "knowledge");
+    const result = compileCatalog({
+      sourcesDir: path.join(knowledge, "tools"),
+      formatsPath: path.join(knowledge, "formats.yml"),
+      outputPath: path.join(tempDir(), "k.db"),
+      biopilotVersion: "test",
+    });
+    expect(result).toMatchObject({ ok: true });
   });
 
   describe("reports each rule violation with file, location and line", () => {

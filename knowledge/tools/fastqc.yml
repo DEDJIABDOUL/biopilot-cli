@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# FastQC, written from its recorded --help: knowledge/help/fastqc/0.13.0/root.txt
+# (GPL-3.0-or-later; attribution in RECORDING.yml next to it). Every option of
+# that help is described here, in our own words, never copied (spec decision
+# 31). Ranks follow the shared scale of spec §6.4. FastQC serves every platform
+# (annex A: "Toutes"), so `platforms` is left empty.
+name: fastqc
+package: fastqc
+description: Quality-control report (HTML plus zipped data) for each file of sequencing reads
+version: { args: ["--version"], regex: 'FastQC v(\S+)' }
+help: ["--help"]
+arguments:
+  - name: files
+    # FastQC also reads fast5 folders (see --fast5); FASTQ is by far the most common input.
+    description: read files to check
+    variadic: true
+    value: { type: file, format: [fastq, bam, sam] }
+options:
+  - names: ["--outdir"]
+    description: folder for all reports; it must already exist (by default each report goes next to its input)
+    value: { type: dir }
+    rank: 90
+  - names: ["-t", "--threads"]
+    description: total CPU threads; one file uses at most 4 (capped by the CPUs available)
+    value: { type: int }
+    default: 4
+    rank: 75
+  - names: ["-q", "--quiet"]
+    description: print only errors, no progress
+    rank: 45
+  - names: ["--extract"]
+    description: unzip the result archive next to it once written
+    rank: 45
+  - names: ["--delete"]
+    description: with --extract, remove the zip archive after unpacking it
+    rank: 30
+    rules:
+      - when: { used: ["--extract"] }
+        boost: 25
+  - names: ["--memory"]
+    description: base memory per file, in MB; raise it for files with very long reads
+    value: { type: int }
+    default: 512
+    rank: 40
+    rules:
+      - when: { platform: nanopore }
+        boost: 15
+  - names: ["-f", "--format"]
+    description: skip format detection and read the input as this format
+    value:
+      type: enum
+      values:
+        - fastq
+        - bam
+        - sam
+        - { value: bam_mapped, description: "BAM, mapped reads only" }
+        - { value: sam_mapped, description: "SAM, mapped reads only" }
+    rank: 40
+  - names: ["--nogroup"]
+    description: plot every base position instead of grouping positions beyond 50 bp; can blow up on long reads
+    rank: 35
+    rules:
+      - when: { platform: nanopore }
+        boost: -20
+  - names: ["-a", "--adapters"]
+    description: custom list of adapters to search for (name, tab, sequence per line; # starts a comment)
+    value: { type: file }
+    rank: 35
+  - names: ["-c", "--contaminants"]
+    description: custom list of contaminants to compare overrepresented sequences with (name, tab, sequence per line)
+    value: { type: file }
+    rank: 35
+  - names: ["--min_length"]
+    description: ignore reads shorter than this many bases
+    value: { type: int }
+    rank: 35
+  - names: ["--max_length"]
+    description: ignore reads longer than this many bases
+    value: { type: int }
+    rank: 30
+  - names: ["--dup_length"]
+    description: truncate sequences to this length before comparing them for duplication (useful for long or UMI-tagged reads)
+    value: { type: int }
+    rank: 25
+  - names: ["-l", "--limits"]
+    description: custom warn/fail thresholds per module, or modules to switch off (same layout as the shipped limits.txt)
+    value: { type: file }
+    rank: 30
+  - names: ["--png"]
+    description: draw the report graphs as PNG images instead of SVG
+    rank: 30
+  - names: ["--fast5"]
+    # In this version the option expects a value after it, which is not used.
+    description: inputs are fast5 files or folders of them; all reads go into one report
+    value: { type: string }
+    rank: 25
+    rules:
+      - when: { platform: nanopore }
+        boost: 20
+  - names: ["--phred64"]
+    description: the qualities use the old Phred+64 encoding
+    rank: 20
+  - names: ["-d", "--dir"]
+    description: folder for temporary files made while drawing the graphs (system temp folder by default)
+    value: { type: dir }
+    rank: 20
+  - names: ["-j", "--java"]
+    description: Java executable to run FastQC with, instead of the bundled or PATH one
+    value: { type: file }
+    rank: 15
+  - names: ["--debug"]
+    description: print debugging information from the launcher
+    rank: 10
+  - names: ["-h", "--help"]
+    description: show the help and exit
+    rank: 10
+  - names: ["-v", "--version"]
+    description: print the version and exit
+    rank: 10

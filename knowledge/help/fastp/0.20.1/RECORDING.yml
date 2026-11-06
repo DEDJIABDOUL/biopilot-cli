@@ -1,0 +1,17 @@
+# Raw --help recordings of a tool, kept as test data only (annex C scenario 7):
+# the Catalog is written from fastp 1.4.0. The .txt files are the tool's own
+# text (stdout and stderr together, as printed) and are never edited; they
+# remain under the tool's licence, credited below.
+tool: fastp
+package: fastp
+version: 0.20.1
+build: h2e03b76_1
+channel: bioconda
+licence: MIT
+copyright: fastp authors (Shifu Chen et al.), https://github.com/OpenGene/fastp
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: fastp-0.20.1
+used_by_catalog: false
+files:
+  root.txt: fastp --help

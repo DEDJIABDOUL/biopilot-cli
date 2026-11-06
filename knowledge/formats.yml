@@ -54,3 +54,11 @@ formats:
     kind: dir
     # salmon 1.x writes versionInfo.json; 2.x no longer does, both write refseq.bin.
     marker: [versionInfo.json, refseq.bin]
+# part A (ticket #11)
+  - name: rad
+    description: salmon / piscem mapping records (RAD)
+    pattern: '\.rad$'
+  - name: salmon-quant
+    description: salmon quant result folder
+    kind: dir
+    marker: quant.sf

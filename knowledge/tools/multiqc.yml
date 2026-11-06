@@ -1,0 +1,239 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# MultiQC, written from its recorded --help: knowledge/help/multiqc/1.35/root.txt
+# (GPL-3.0-or-later; attribution in RECORDING.yml next to it). Every option of
+# that help is described here, in our own words, never copied (spec decision
+# 31). Ranks follow the shared scale of spec §6.4. MultiQC serves every
+# platform (annex A: "Toutes"), so `platforms` is left empty. Option forms
+# `--x/--no-x` are two distinct Options (amendment 6).
+name: multiqc
+package: multiqc
+description: Gathers the logs and reports of many tools and samples into one HTML report
+version: { args: ["--version"], regex: 'version (\S+)' }
+help: ["--help"]
+arguments:
+  - name: analysis_dir
+    description: folders (or files) to scan for tool results, e.g. . for the current folder
+    variadic: true
+    value: { type: dir }
+options:
+  # --- Main options ----------------------------------------------------------
+  - names: ["-o", "--outdir"]
+    description: folder to write the report into
+    value: { type: dir }
+    rank: 90
+  - names: ["-n", "--filename"]
+    description: name of the report file; stdout prints it to standard output
+    value: { type: string, values: [stdout] }
+    rank: 80
+  - names: ["-f", "--force"]
+    description: replace reports that already exist
+    rank: 80
+  - names: ["-c", "--config"]
+    description: extra configuration file, read after the ones found in the install, home and working folders
+    value: { type: file }
+    repeatable: true
+    rank: 55
+  - names: ["--cl-config"]
+    description: configuration given inline, as YAML text
+    value: { type: string }
+    repeatable: true
+    rank: 35
+  - names: ["-x", "--ignore"]
+    description: skip analysis files matching this glob
+    value: { type: string }
+    repeatable: true
+    rank: 55
+  - names: ["--ignore-samples"]
+    description: leave out samples whose name matches this glob
+    value: { type: string }
+    repeatable: true
+    rank: 40
+  - names: ["--ignore-symlinks"]
+    description: do not follow symbolic links to files or folders
+    rank: 30
+  - names: ["-l", "--file-list"]
+    description: the positional argument is a file listing the paths to scan, one per line
+    rank: 35
+  # --- Choosing modules ------------------------------------------------------
+  - names: ["-m", "--module"]
+    description: run only this module (give it once per module)
+    value: { type: string, values: [fastqc, fastp, porechop, salmon, samtools, bcftools] }
+    repeatable: true
+    rank: 60
+  - names: ["-e", "--exclude"]
+    description: skip this module (give it once per module)
+    value: { type: string, values: [general_stats, fastqc, fastp, porechop, salmon, samtools, bcftools] }
+    repeatable: true
+    rank: 50
+  - names: ["--require-logs"]
+    description: fail when a module asked for with --module finds no log
+    rank: 25
+    rules:
+      - when: { used: ["--module"] }
+        boost: 20
+  # --- Sample handling -------------------------------------------------------
+  - names: ["-d", "--dirs"]
+    description: put the folder name in front of sample names
+    rank: 50
+  - names: ["-dd", "--dirs-depth"]
+    description: number of folder levels put in front of sample names (negative counts from the start of the path)
+    value: { type: int }
+    rank: 40
+    rules:
+      - when: { used: ["--dirs"] }
+        boost: 15
+  - names: ["-s", "--fullnames"]
+    description: keep sample names as the full file names, without cleaning
+    rank: 40
+  - names: ["--fn_as_s_name"]
+    description: name samples after their log file
+    rank: 30
+  - names: ["--replace-names"]
+    description: TSV file mapping sample names to the names shown in the report
+    value: { type: file }
+    rank: 35
+  # --- Report customisation --------------------------------------------------
+  - names: ["-i", "--title"]
+    description: title at the top of the report, also used for the file name when none is given
+    value: { type: string }
+    rank: 70
+  - names: ["-b", "--comment"]
+    description: free text shown at the top of the report
+    value: { type: string }
+    rank: 40
+  - names: ["-t", "--template"]
+    description: report layout
+    value:
+      type: enum
+      values: [default, disco, gathered, geo, original, sections, simple]
+    rank: 45
+  - names: ["--sample-names"]
+    description: TSV file of alternative sample names, offered as rename buttons in the report
+    value: { type: file }
+    rank: 30
+  - names: ["--sample-filters"]
+    description: TSV file of show/hide sample patterns for the report
+    value: { type: file }
+    rank: 30
+  - names: ["--custom-css-file"]
+    description: CSS file added to the report
+    value: { type: file }
+    repeatable: true
+    rank: 20
+  # --- Output files ----------------------------------------------------------
+  - names: ["-fp", "--flat"]
+    description: draw every plot as a static image
+    rank: 35
+  - names: ["-ip", "--interactive"]
+    description: draw every plot as an interactive in-browser chart
+    rank: 35
+  - names: ["-p", "--export"]
+    description: also save the plots as image files
+    rank: 40
+  - names: ["--data-dir"]
+    description: always create the folder of parsed data
+    rank: 30
+  - names: ["--no-data-dir"]
+    description: do not create the folder of parsed data
+    rank: 30
+  - names: ["-k", "--data-format"]
+    description: format of the parsed data files
+    value:
+      type: enum
+      values: [tsv, csv, json, yaml]
+    rank: 45
+  - names: ["-z", "--zip-data-dir"]
+    description: compress the folder of parsed data
+    rank: 35
+  - names: ["--no-report"]
+    description: write only the data and plots, no report
+    rank: 30
+  - names: ["--clean-up"]
+    description: remove the temporary folder and log when done (the default)
+    rank: 15
+  - names: ["--no-clean-up"]
+    description: keep the temporary folder and log when done
+    rank: 20
+  - names: ["--pdf"]
+    description: also produce a PDF report, with the simple template (needs Pandoc)
+    rank: 30
+  # --- Behaviour -------------------------------------------------------------
+  - names: ["-v", "--verbose"]
+    description: more detailed log; repeat for even more (-vv)
+    repeatable: true
+    rank: 35
+  - names: ["-q", "--quiet"]
+    description: log warnings only
+    rank: 40
+  - names: ["--no-version-check"]
+    description: do not ask the server whether a newer MultiQC exists
+    rank: 30
+  - names: ["--strict"]
+    description: development aid - let errors through and run extra code checks
+    rank: 15
+  - names: ["--development", "--dev"]
+    description: development mode - JS and CSS kept as separate files, plot data uncompressed
+    rank: 10
+  - names: ["--profile-runtime"]
+    description: add a section on how long the run took
+    rank: 15
+  - names: ["--profile-memory"]
+    description: add a section on memory use per module (makes the run several times slower)
+    rank: 15
+  - names: ["--no-megaqc-upload"]
+    description: never upload the report to MegaQC, even when it is configured
+    rank: 15
+  - names: ["--no-ansi"]
+    description: plain log output, without colours
+    rank: 20
+  - names: ["--version"]
+    description: print the version and exit
+    rank: 10
+  - names: ["-h", "--help"]
+    description: show the help and exit
+    rank: 10
+  # --- AI features -----------------------------------------------------------
+  - names: ["--ai", "--ai-summary"]
+    description: add an AI-written summary to the report
+    rank: 20
+  - names: ["--ai-summary-full"]
+    description: add a longer AI-written summary to the report
+    rank: 15
+  - names: ["--ai-provider"]
+    description: service that writes the AI summary
+    value:
+      type: enum
+      values: [seqera, openai, anthropic, aws_bedrock, custom]
+    default: seqera
+    rank: 15
+    rules:
+      - when: { used: ["--ai"] }
+        boost: 30
+  - names: ["--no-ai"]
+    description: remove the AI tools and buttons from the report
+    rank: 25
+  - names: ["--ai-model"]
+    description: model used for the AI summary
+    value: { type: string }
+    rank: 10
+    rules:
+      - when: { used: ["--ai"] }
+        boost: 20
+  - names: ["--ai-custom-endpoint"]
+    description: address of a custom OpenAI-compatible service for the AI summary
+    value: { type: string }
+    rank: 10
+  - names: ["--ai-custom-context-window"]
+    description: context window size of that custom service
+    value: { type: int }
+    default: 128000
+    rank: 10
+  # --- Other -----------------------------------------------------------------
+  - names: ["--check-config"]
+    description: check a MultiQC configuration file for mistakes, then exit
+    rank: 15
+  - names: ["--only-samples"]
+    description: keep only the samples whose name matches this glob
+    value: { type: string }
+    repeatable: true
+    rank: 40

@@ -1,0 +1,14 @@
+Merge a column across multiple samples' quant files into a matrix
+
+Usage: salmon quantmerge [OPTIONS] --quants <QUANTS>... --output <OUTPUT>
+
+Options:
+      --quants <QUANTS>...  Quantification directories (one per sample)
+      --names <NAMES>...    Optional sample names (default: the directory basenames)
+  -c, --column <COLUMN>     Column to merge: {len, elen, tpm, numreads} [default: TPM]
+      --genes               Merge gene-level quant.genes.sf instead of transcript-level quant.sf
+      --missing <MISSING>   Value written for targets missing from a sample [default: NA]
+  -o, --output <OUTPUT>     Output matrix file
+  -q, --quiet               Reduce logging to warnings and errors only
+      --no-version-check    Accepted for compatibility with C++ salmon. salmon 2.0 never contacts the network to check for a newer release, so this flag (and the `SALMON_NO_VERSION_CHECK` environment variable) is a no-op
+  -h, --help                Print help

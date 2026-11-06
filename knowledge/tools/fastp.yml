@@ -1,59 +1,480 @@
 # yaml-language-server: $schema=../../schemas/tool.schema.json
-# Minimal fastp description for the Catalog tracer bullet (ticket #4).
-# Root options only, flags and simple values; replaced by the full, curated
-# description from fastp's real --help in ticket #11.
-# Descriptions are written in our own words (spec decision 31).
+# fastp, written from its recorded --help: knowledge/help/fastp/1.4.0/root.txt
+# (MIT licence; attribution in RECORDING.yml next to it). Every option of that
+# help is described here, in our own words (spec decision 31). Ranks follow the
+# shared scale of spec §6.4; read pairs, derived outputs and context rules are
+# curated by hand. The 0.23.4 and 0.20.1 recordings are test data only; they
+# give the `since` of the options that 0.20.1 lacks.
 name: fastp
 package: fastp
-description: Quality control, trimming and filtering of FASTQ reads in one pass
+description: Cleans FASTQ reads in a single pass - adapter and quality trimming, filtering, QC reports
 platforms: [illumina]
 version: { args: ["--version"], regex: 'fastp (\d[\w.]*)' }
 help: ["--help"]
 options:
+  # --- Inputs and outputs -----------------------------------------------------
   - names: ["-i", "--in1"]
-    description: input file for read 1
-    value: { type: string }
+    description: FASTQ file of read 1 (or of single-end reads) to clean
+    value: { type: file, format: fastq, read_role: 1 }
     rank: 95
   - names: ["-o", "--out1"]
-    description: output file for read 1
-    value: { type: string }
-    rank: 90
+    description: where to write the cleaned read 1 reads
+    value: { type: file, format: fastq, read_role: 1, derive: { from: "--in1", suffix: ".trimmed" } }
+    rank: 65
+    rules:
+      - when: { used: ["--in1"] }
+        boost: 20
   - names: ["-I", "--in2"]
-    description: input file for read 2 (paired-end data)
-    value: { type: string }
+    description: FASTQ file of read 2, for paired-end data
+    value: { type: file, format: fastq, read_role: 2, mate_of: "--in1" }
     rank: 60
+    rules:
+      # Annex B: once read 1 is given in a paired project, its mate comes first.
+      - when: { used: ["--in1"], paired: true }
+        boost: 35
+      - when: { paired: false }
+        boost: -20
   - names: ["-O", "--out2"]
-    description: output file for read 2 (paired-end data)
+    description: where to write the cleaned read 2 reads
+    value: { type: file, format: fastq, read_role: 2, mate_of: "--out1", derive: { from: "--in2", suffix: ".trimmed" } }
+    rank: 55
+    rules:
+      - when: { used: ["--in2"] }
+        boost: 30
+  - names: ["--unpaired1"]
+    description: paired-end only - keep read 1 here when it passes the filters but its mate does not (dropped otherwise)
+    value: { type: file, format: fastq }
+    rank: 35
+    rules:
+      - when: { used: ["--in2"] }
+        boost: 10
+  - names: ["--unpaired2"]
+    description: paired-end only - keep read 2 here when it passes the filters but its mate does not; may be the same file as --unpaired1
+    value: { type: file, format: fastq }
+    rank: 35
+    rules:
+      - when: { used: ["--in2"] }
+        boost: 10
+  - names: ["--overlapped_out"]
+    description: write, for each pair, the region where the two mates overlap without any mismatch
+    value: { type: file, format: fastq }
+    rank: 25
+    # Absent from 0.20.1, present in 0.23.4; the first release that has it is not known.
+  - names: ["--failed_out"]
+    description: collect the reads rejected by the filters in this file
+    value: { type: file, format: fastq }
+    rank: 40
+  - names: ["-m", "--merge"]
+    description: paired-end only - join overlapping mates into one read, written to --merged_out; the rest goes to --out1/--out2
+    rank: 45
+    rules:
+      - when: { paired: true }
+        boost: 5
+  - names: ["--merged_out"]
+    description: merge mode - file for the joined reads (or --stdout to stream them)
+    value: { type: file, format: fastq }
+    rank: 40
+    rules:
+      - when: { used: ["--merge"] }
+        boost: 45
+  - names: ["--include_unmerged"]
+    description: merge mode - also put the pairs that could not be joined, and unpaired reads, in the merged output
+    rank: 30
+    rules:
+      - when: { used: ["--merge"] }
+        boost: 25
+  - names: ["--stdin"]
+    description: read the input from standard input (add --interleaved_in for interleaved pairs); adapter auto-detection is then off
+    rank: 35
+  - names: ["--stdout"]
+    description: send the reads that pass to standard output (interleaved when paired)
+    rank: 40
+  - names: ["--interleaved_in"]
+    description: the --in1 file holds both mates, one after the other
+    rank: 35
+  - names: ["-j", "--json"]
+    description: name of the JSON report
+    value: { type: file, format: json }
+    default: fastp.json
+    rank: 70
+  - names: ["-h", "--html"]
+    description: name of the HTML report
+    value: { type: file, format: html }
+    default: fastp.html
+    rank: 70
+  - names: ["-R", "--report_title"]
+    description: title shown at the top of the reports (quote it)
     value: { type: string }
-    rank: 60
+    default: fastp report
+    rank: 35
+  # --- Run settings ----------------------------------------------------------
   - names: ["-w", "--thread"]
     description: number of worker threads
     value: { type: int }
     default: 3
     rank: 75
-  - names: ["-j", "--json"]
-    description: file name of the JSON report
-    value: { type: string }
-    default: fastp.json
-    rank: 70
-  - names: ["-h", "--html"]
-    description: file name of the HTML report
-    value: { type: string }
-    default: fastp.html
-    rank: 70
-  - names: ["-D", "--dedup"]
-    description: remove duplicated reads
-    rank: 45
-  - names: ["-q", "--qualified_quality_phred"]
-    description: minimum Phred quality for a base to count as qualified
-    value: { type: int }
-    default: 15
+  - names: ["-z", "--compression"]
+    description: gzip level of the outputs, from 1 (fastest) to 9 (smallest)
+    value: { type: int, values: ["1", "4", "6", "9"] }
+    default: 4
     rank: 40
-  - names: ["-l", "--length_required"]
-    description: discard reads shorter than this length
+  - names: ["-6", "--phred64"]
+    description: the input qualities are Phred+64; they are written back as Phred+33
+    rank: 20
+  - names: ["--reads_to_process"]
+    description: stop after this many reads or pairs (0 processes everything)
     value: { type: int }
-    default: 15
-    rank: 40
-  - names: ["-A", "--disable_adapter_trimming"]
-    description: turn off adapter trimming
+    default: 0
     rank: 30
+  - names: ["--dont_overwrite"]
+    description: refuse to replace files that already exist
+    rank: 25
+  - names: ["--fix_mgi_id"]
+    description: rewrite MGI-style read names so that BAM tools accept them
+    rank: 20
+  - names: ["-V", "--verbose"]
+    description: log progress regularly (every million reads)
+    rank: 30
+  # --- Adapters --------------------------------------------------------------
+  - names: ["-A", "--disable_adapter_trimming"]
+    description: turn adapter trimming off (it is on by default)
+    rank: 40
+  - names: ["-a", "--adapter_sequence"]
+    description: adapter of read 1; detected automatically for single-end data when omitted, used for pairs whose mates do not overlap
+    value:
+      type: string
+      values:
+        - { value: auto, description: let fastp detect it }
+        - { value: AGATCGGAAGAGCACACGTCTGAACTCCAGTCA, description: "Illumina TruSeq, read 1" }
+        - { value: CTGTCTCTTATACACATCT, description: Illumina Nextera / Tn5 }
+    default: auto
+    rank: 55
+  - names: ["--adapter_sequence_r2"]
+    description: paired-end only - adapter of read 2, for non-overlapping pairs; same as read 1's when omitted
+    value:
+      type: string
+      values:
+        - { value: auto, description: same as --adapter_sequence }
+        - { value: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT, description: "Illumina TruSeq, read 2" }
+        - { value: CTGTCTCTTATACACATCT, description: Illumina Nextera / Tn5 }
+    default: auto
+    rank: 40
+    rules:
+      - when: { used: ["--in2"] }
+        boost: 10
+  - names: ["--adapter_fasta"]
+    description: FASTA of adapter sequences, all of them trimmed from both reads
+    value: { type: file, format: fasta }
+    rank: 45
+  - names: ["-2", "--detect_adapter_for_pe"]
+    description: also look for adapters in paired-end data - a little cleaner, a little slower
+    rank: 50
+    rules:
+      - when: { paired: true }
+        boost: 15
+  - names: ["--allow_gap_overlap_trimming"]
+    description: paired-end only - tolerate one gap when finding adapters from the mate overlap
+    rank: 30
+  - names: ["--dimer_max_len"]
+    description: a read this short or shorter after adapter removal counts as an adapter dimer (needs adapter evidence)
+    value: { type: int }
+    default: 2
+    rank: 30
+  # --- Fixed-length trimming ---------------------------------------------------
+  - names: ["-f", "--trim_front1"]
+    description: number of bases to cut from the start of read 1
+    value: { type: int }
+    default: 0
+    rank: 45
+  - names: ["-t", "--trim_tail1"]
+    description: number of bases to cut from the end of read 1
+    value: { type: int }
+    default: 0
+    rank: 40
+  - names: ["-b", "--max_len1"]
+    description: cut read 1 at its end down to this length (0 means no limit)
+    value: { type: int }
+    default: 0
+    rank: 35
+  - names: ["-F", "--trim_front2"]
+    description: number of bases to cut from the start of read 2 (follows read 1 when omitted)
+    value: { type: int }
+    default: 0
+    rank: 35
+  - names: ["-T", "--trim_tail2"]
+    description: number of bases to cut from the end of read 2 (follows read 1 when omitted)
+    value: { type: int }
+    default: 0
+    rank: 35
+  - names: ["-B", "--max_len2"]
+    description: cut read 2 at its end down to this length (0 means no limit; follows read 1 when omitted)
+    value: { type: int }
+    default: 0
+    rank: 30
+  # --- Duplication -----------------------------------------------------------
+  - names: ["-D", "--dedup"]
+    description: drop duplicated reads or pairs
+    rank: 50
+    since: "0.22.0"
+  - names: ["--dup_calc_accuracy"]
+    description: precision of the duplication estimate, 1 to 6; each level doubles the memory used (1 GB to 32 GB)
+    value: { type: int, values: ["1", "2", "3", "4", "5", "6"] }
+    default: 0
+    rank: 30
+    since: "0.22.0"
+  - names: ["--dont_eval_duplication"]
+    description: skip the duplication estimate, saving time and memory
+    rank: 30
+    since: "0.22.0"
+  # --- PolyG / polyX ---------------------------------------------------------
+  - names: ["-g", "--trim_poly_g"]
+    description: always trim polyG tails (already automatic for NextSeq/NovaSeq data)
+    rank: 45
+  - names: ["--poly_g_min_len"]
+    description: shortest run of G at the read end that counts as a polyG tail
+    value: { type: int }
+    default: 10
+    rank: 30
+  - names: ["-G", "--disable_trim_poly_g"]
+    description: never trim polyG tails, even for NextSeq/NovaSeq data
+    rank: 35
+  - names: ["-x", "--trim_poly_x"]
+    description: trim homopolymer tails of any base at the 3' end
+    rank: 40
+  - names: ["--poly_x_min_len"]
+    description: shortest homopolymer run at the read end that gets trimmed
+    value: { type: int }
+    default: 10
+    rank: 30
+  # --- Sliding-window quality trimming ----------------------------------------
+  - names: ["-5", "--cut_front"]
+    description: slide a window from the 5' end and drop low-quality windows until a good one is met
+    rank: 45
+  - names: ["-3", "--cut_tail"]
+    description: slide a window from the 3' end and drop low-quality windows until a good one is met
+    rank: 45
+  - names: ["-r", "--cut_right"]
+    description: slide a window from the 5' end; at the first low-quality window, cut it and everything after it
+    rank: 50
+  - names: ["-W", "--cut_window_size"]
+    description: window length shared by the three cut modes, 1 to 1000
+    value: { type: int }
+    default: 4
+    rank: 40
+  - names: ["-M", "--cut_mean_quality"]
+    description: mean quality a window needs to be kept, shared by the three cut modes, 1 to 36
+    value: { type: int }
+    default: 20
+    rank: 40
+  - names: ["--cut_front_window_size"]
+    description: window length for --cut_front only (defaults to --cut_window_size)
+    value: { type: int }
+    default: 4
+    rank: 30
+  - names: ["--cut_front_mean_quality"]
+    description: required mean quality for --cut_front only (defaults to --cut_mean_quality)
+    value: { type: int }
+    default: 20
+    rank: 30
+  - names: ["--cut_tail_window_size"]
+    description: window length for --cut_tail only (defaults to --cut_window_size)
+    value: { type: int }
+    default: 4
+    rank: 30
+  - names: ["--cut_tail_mean_quality"]
+    description: required mean quality for --cut_tail only (defaults to --cut_mean_quality)
+    value: { type: int }
+    default: 20
+    rank: 30
+  - names: ["--cut_right_window_size"]
+    description: window length for --cut_right only (defaults to --cut_window_size)
+    value: { type: int }
+    default: 4
+    rank: 30
+  - names: ["--cut_right_mean_quality"]
+    description: required mean quality for --cut_right only (defaults to --cut_mean_quality)
+    value: { type: int }
+    default: 20
+    rank: 30
+  # --- Quality, length and complexity filters ----------------------------------
+  - names: ["-Q", "--disable_quality_filtering"]
+    description: turn the quality filter off (it is on by default)
+    rank: 35
+  - names: ["-q", "--qualified_quality_phred"]
+    description: lowest Phred score at which a base counts as good
+    value: { type: int }
+    default: 15
+    rank: 45
+  - names: ["-u", "--unqualified_percent_limit"]
+    description: highest share of poor bases (percent, 0 to 100) a read may have
+    value: { type: int }
+    default: 40
+    rank: 40
+  - names: ["-n", "--n_base_limit"]
+    description: a read or pair with more N bases than this is dropped
+    value: { type: int }
+    default: 5
+    rank: 35
+  - names: ["-e", "--average_qual"]
+    description: drop reads whose mean quality is below this (0 means no minimum)
+    value: { type: int }
+    default: 0
+    rank: 40
+  - names: ["-L", "--disable_length_filtering"]
+    description: turn the length filter off (it is on by default)
+    rank: 35
+  - names: ["-l", "--length_required"]
+    description: drop reads shorter than this
+    value: { type: int }
+    default: 15
+    rank: 50
+  - names: ["--length_limit"]
+    description: drop reads longer than this (0 means no maximum)
+    value: { type: int }
+    default: 0
+    rank: 35
+  - names: ["-y", "--low_complexity_filter"]
+    description: drop low-complexity reads (complexity = share of bases that differ from the next one)
+    rank: 40
+  - names: ["-Y", "--complexity_threshold"]
+    description: lowest complexity, in percent (0 to 100), a read needs to be kept
+    value: { type: int }
+    default: 30
+    rank: 30
+    rules:
+      - when: { used: ["--low_complexity_filter"] }
+        boost: 20
+  - names: ["--filter_by_index1"]
+    description: file of index 1 barcodes to discard, one per line
+    value: { type: file }
+    rank: 25
+  - names: ["--filter_by_index2"]
+    description: file of index 2 barcodes to discard, one per line
+    value: { type: file }
+    rank: 25
+  - names: ["--filter_by_index_threshold"]
+    description: mismatches allowed when matching barcodes for index filtering (0 means exact)
+    value: { type: int }
+    default: 0
+    rank: 20
+  # --- Overlap analysis and correction (paired-end) ------------------------------
+  - names: ["-c", "--correction"]
+    description: paired-end only - fix mismatched bases where the two mates overlap
+    rank: 40
+    rules:
+      - when: { used: ["--in2"] }
+        boost: 10
+  - names: ["--overlap_len_require"]
+    description: shortest mate overlap that is taken into account (affects merging, adapter trimming and correction)
+    value: { type: int }
+    default: 30
+    rank: 30
+  - names: ["--overlap_diff_limit"]
+    description: most mismatches allowed in a mate overlap (affects merging, adapter trimming and correction)
+    value: { type: int }
+    default: 5
+    rank: 30
+  - names: ["--overlap_diff_percent_limit"]
+    description: most mismatches allowed in a mate overlap, in percent (affects merging, adapter trimming and correction)
+    value: { type: int }
+    default: 20
+    rank: 30
+  # --- UMI -------------------------------------------------------------------
+  - names: ["-U", "--umi"]
+    description: extract unique molecular identifiers (UMI) and move them into the read names
+    rank: 40
+  - names: ["--umi_loc"]
+    description: where the UMI is read from
+    value:
+      type: enum
+      values:
+        - { value: index1, description: the index 1 barcode }
+        - { value: index2, description: the index 2 barcode }
+        - { value: read1, description: the start of read 1 }
+        - { value: read2, description: the start of read 2 }
+        - { value: per_index, description: both index barcodes }
+        - { value: per_read, description: the start of each read }
+    rank: 30
+    rules:
+      - when: { used: ["--umi"] }
+        boost: 45
+  - names: ["--umi_len"]
+    description: UMI length, needed when the UMI sits in read 1 or read 2
+    value: { type: int }
+    default: 0
+    rank: 30
+    rules:
+      - when: { used: ["--umi"] }
+        boost: 35
+  - names: ["--umi_prefix"]
+    description: text put before the UMI in read names, joined with an underscore
+    value: { type: string }
+    rank: 25
+    rules:
+      - when: { used: ["--umi"] }
+        boost: 20
+  - names: ["--umi_skip"]
+    description: number of bases after a UMI in the read to drop as well
+    value: { type: int }
+    default: 0
+    rank: 25
+    rules:
+      - when: { used: ["--umi"] }
+        boost: 20
+  - names: ["--umi_delim"]
+    description: separator between the read name and the UMI
+    value: { type: string }
+    default: ":"
+    rank: 20
+    rules:
+      - when: { used: ["--umi"] }
+        boost: 15
+    # Absent from 0.20.1, present in 0.23.4; the first release that has it is not known.
+  # --- Overrepresented sequences ---------------------------------------------
+  - names: ["-p", "--overrepresentation_analysis"]
+    description: look for overrepresented sequences
+    rank: 40
+  - names: ["-P", "--overrepresentation_sampling"]
+    description: analyse one read in this many for overrepresentation (1 to 10000; lower is slower)
+    value: { type: int }
+    default: 20
+    rank: 25
+    rules:
+      - when: { used: ["--overrepresentation_analysis"] }
+        boost: 20
+  # --- Splitting the output ----------------------------------------------------
+  - names: ["-s", "--split"]
+    description: spread the output over this many numbered files (2 to 999)
+    value: { type: int }
+    default: 0
+    rank: 30
+  - names: ["-S", "--split_by_lines"]
+    description: start a new numbered output file every this many lines (1000 or more)
+    value: { type: int }
+    default: 0
+    rank: 25
+  - names: ["-d", "--split_prefix_digits"]
+    description: width of the number put before split file names, 1 to 10 (0 disables padding)
+    value: { type: int }
+    default: 4
+    rank: 20
+  # --- Deprecated and help -----------------------------------------------------
+  - names: ["--cut_by_quality5"]
+    description: old name of --cut_front
+    deprecated: true
+    rank: 10
+  - names: ["--cut_by_quality3"]
+    description: old name of --cut_tail
+    deprecated: true
+    rank: 10
+  - names: ["--cut_by_quality_aggressive"]
+    description: old name of --cut_right
+    deprecated: true
+    rank: 10
+  - names: ["--discard_unmerged"]
+    description: no longer has any effect (see merge mode)
+    deprecated: true
+    rank: 10
+  - names: ["-?", "--help"]
+    description: show the help and exit
+    rank: 10

@@ -24,6 +24,10 @@ export const FORMAT_KINDS = ["file", "prefix", "dir"] as const;
 export type FormatKind = (typeof FORMAT_KINDS)[number];
 
 export const CATALOG_DDL = `
+-- Small pages: every table and index takes at least one page, so the fixed cost of a Catalog stays low
+-- (spec §11 size budget, scaled down to a handful of tools). Lookup time is the same as with 4 KiB pages.
+PRAGMA page_size = 1024;
+
 CREATE TABLE metadata (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -143,6 +147,12 @@ CREATE TABLE argument_values (
   description TEXT,
   PRIMARY KEY (command_id, position, ord)
 ) WITHOUT ROWID;
+
+-- Lookups of the reader that no primary key serves (spec §11: a query under 2 ms).
+CREATE INDEX commands_by_parent ON commands (parent_id, name);
+CREATE INDEX options_by_command ON options (command_id);
+CREATE INDEX options_by_mate ON options (mate_of) WHERE mate_of IS NOT NULL;
+CREATE INDEX option_names_by_option ON option_names (option_id, ord);
 `;
 
 /**

@@ -191,6 +191,30 @@ type ArgumentRow = ValueColumns & {
 
 type FormatRow = { name: string; kind: FormatKind; description: string | null; pattern: string | null; suffixes: string | null; marker: string | null };
 type ValueRow = { value: string; description: string | null };
+type RuleRow = { option_id: number; ord: number; paired: number | null; platform: Platform | null; assay: Assay | null; boost: number };
+
+/** An option's aliases, values and rules, fetched one option at a time or for a whole command at once. */
+type OptionDetails = {
+  names: (optionId: number) => string[];
+  values: (optionId: number) => ValueRow[];
+  rules: (optionId: number) => Rule[];
+};
+
+const groupBy = <T>(rows: T[], key: (row: T) => number | string): Map<number | string, T[]> => {
+  const groups = new Map<number | string, T[]>();
+  for (const row of rows) {
+    const k = key(row);
+    const group = groups.get(k);
+    if (group) group.push(row);
+    else groups.set(k, [row]);
+  }
+  return groups;
+};
+
+const toRule = (rule: RuleRow, used: string[]): Rule => ({
+  when: { used, paired: rule.paired === null ? null : rule.paired === 1, platform: rule.platform, assay: rule.assay },
+  boost: rule.boost,
+});
 
 /** Options with their mate (in either direction) and the name of the option they derive from. */
 const OPTION_SELECT = `
@@ -279,6 +303,21 @@ class SqliteCatalog implements Catalog {
       commandById: db.prepare<[number], { parent_id: number | null; name: string; description: string | null; tool: string }>(
         "SELECT c.parent_id, c.name, c.description, t.name AS tool FROM commands c JOIN tools t ON t.id = c.tool_id WHERE c.id = ?",
       ),
+      // Whole-command variants, so listing a large command costs a fixed number of queries.
+      commandNames: db.prepare<[number], { option_id: number; name: string }>(
+        "SELECT option_id, name FROM option_names WHERE command_id = ? ORDER BY option_id, ord",
+      ),
+      commandValues: db.prepare<[number], ValueRow & { option_id: number }>(
+        "SELECT v.option_id, v.value, v.description FROM option_values v JOIN options o ON o.id = v.option_id WHERE o.command_id = ? ORDER BY v.option_id, v.ord",
+      ),
+      commandRules: db.prepare<[number], RuleRow>(
+        "SELECT r.option_id, r.ord, r.paired, r.platform, r.assay, r.boost FROM rules r JOIN options o ON o.id = r.option_id WHERE o.command_id = ? ORDER BY r.option_id, r.ord",
+      ),
+      commandRuleUsed: db.prepare<[number], { option_id: number; rule_ord: number; name: string }>(
+        `SELECT u.option_id, u.rule_ord, m.canonical_name AS name FROM rule_used u
+         JOIN options o ON o.id = u.option_id JOIN options m ON m.id = u.used_option_id
+         WHERE o.command_id = ? ORDER BY u.option_id, u.rule_ord, u.ord`,
+      ),
       optionValues: db.prepare<[number], ValueRow>("SELECT value, description FROM option_values WHERE option_id = ? ORDER BY ord"),
       listArguments: db.prepare<[number], ArgumentRow>("SELECT * FROM arguments WHERE command_id = ? ORDER BY position"),
       argumentValues: db.prepare<[number, number], ValueRow>(
@@ -320,7 +359,9 @@ class SqliteCatalog implements Catalog {
 
   listOptions(command: Command): Option[] {
     const id = this.#commandId(command);
-    return id === undefined ? [] : this.#statements.listOptions.all(id).map((row) => this.#toOption(row));
+    if (id === undefined) return [];
+    const details = this.#commandDetails(id);
+    return this.#statements.listOptions.all(id).map((row) => this.#toOption(row, details));
   }
 
   listArguments(command: Command): Argument[] {
@@ -425,12 +466,44 @@ class SqliteCatalog implements Catalog {
     return this.#commandIds.get(key);
   }
 
-  #toOption(row: OptionRow): Option {
+  /** Details of one option, a few small queries. */
+  readonly #singleDetails: OptionDetails = {
+    names: (optionId) => this.#statements.optionNames.all(optionId).map(({ name }) => name),
+    values: (optionId) => this.#statements.optionValues.all(optionId),
+    rules: (optionId) =>
+      this.#statements.optionRules.all(optionId).map((rule) =>
+        toRule(
+          { ...rule, option_id: optionId },
+          this.#statements.ruleUsed.all(optionId, rule.ord).map(({ name }) => name),
+        ),
+      ),
+  };
+
+  /** Details of every option of a command, in four queries. */
+  #commandDetails(commandId: number): OptionDetails {
+    const names = groupBy(this.#statements.commandNames.all(commandId), (row) => row.option_id);
+    const values = groupBy(this.#statements.commandValues.all(commandId), (row) => row.option_id);
+    const used = groupBy(this.#statements.commandRuleUsed.all(commandId), (row) => `${row.option_id}:${row.rule_ord}`);
+    const rules = groupBy(this.#statements.commandRules.all(commandId), (row) => row.option_id);
+    return {
+      names: (optionId) => (names.get(optionId) ?? []).map(({ name }) => name),
+      values: (optionId) => values.get(optionId) ?? [],
+      rules: (optionId) =>
+        (rules.get(optionId) ?? []).map((rule) =>
+          toRule(
+            rule,
+            (used.get(`${optionId}:${rule.ord}`) ?? []).map(({ name }) => name),
+          ),
+        ),
+    };
+  }
+
+  #toOption(row: OptionRow, details: OptionDetails = this.#singleDetails): Option {
     return {
       canonicalName: row.canonical_name,
-      aliases: this.#statements.optionNames.all(row.id).map(({ name }) => name),
+      aliases: details.names(row.id),
       description: row.description,
-      value: toValueSpec(row, this.#statements.optionValues.all(row.id)),
+      value: toValueSpec(row, details.values(row.id)),
       defaultValue: row.default_value,
       rank: row.rank,
       since: row.since_version,
@@ -440,15 +513,7 @@ class SqliteCatalog implements Catalog {
       deprecated: row.deprecated === 1,
       mate: row.mate_name,
       derive: row.derive_from_name !== null && row.derive_suffix !== null ? { from: row.derive_from_name, suffix: row.derive_suffix } : null,
-      rules: this.#statements.optionRules.all(row.id).map((rule) => ({
-        when: {
-          used: this.#statements.ruleUsed.all(row.id, rule.ord).map(({ name }) => name),
-          paired: rule.paired === null ? null : rule.paired === 1,
-          platform: rule.platform,
-          assay: rule.assay,
-        },
-        boost: rule.boost,
-      })),
+      rules: details.rules(row.id),
     };
   }
 }

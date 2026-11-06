@@ -1,6 +1,7 @@
 node_modules/
 build/
-t*.md
+# BIOPILOT: upstream ignored t*.md everywhere, which hid docs such as triage-labels.md; root only now.
+/t*.md
 .tui-test/
 tui-traces/
 .idea/

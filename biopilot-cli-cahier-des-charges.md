@@ -157,11 +157,14 @@ CREATE TABLE commands (                  -- racine et sous-commandes
 CREATE TABLE options (
   id          INTEGER PRIMARY KEY,
   command_id  INTEGER NOT NULL REFERENCES commands(id),
-  names       TEXT NOT NULL,             -- JSON : ["-i", "--in1"]
+  names       TEXT NOT NULL,             -- JSON : ["-i", "--in1"] — alias sensibles à la casse
+  canonical_name TEXT NOT NULL,          -- premier nom long, sinon premier nom : --in1 (décision 11)
   description TEXT,
   value_type  TEXT,                      -- NULL (drapeau) | int | float | string | file | dir | enum
   value_format TEXT,                     -- fastq | bam | fasta | ... si value_type = file
   read_role   INTEGER,                   -- 1 ou 2 pour les entrées appariées
+  mate_of     INTEGER REFERENCES options(id), -- option du mate (annexe B : mate_of)
+  derive      TEXT,                      -- JSON : {"from": "--in1", "suffix": ".trimmed"} (annexe B)
   default_value TEXT,
   rank        INTEGER NOT NULL DEFAULT 50,
   since_version TEXT,                    -- facultatif, si connu
@@ -192,6 +195,11 @@ CREATE TABLE rules (                     -- règles de contexte
 CREATE TABLE formats (
   name    TEXT PRIMARY KEY,              -- fastq
   pattern TEXT NOT NULL                  -- '\.(fastq|fq)(\.gz|\.bz2)?$'
+);
+
+CREATE TABLE metadata (                  -- version du schéma : le lecteur refuse un schéma qu'il ne connaît pas
+  key   TEXT PRIMARY KEY,                -- schema_version | biopilot_version
+  value TEXT NOT NULL
 );
 
 CREATE VIRTUAL TABLE options_fts USING fts5(names, description, content='options', content_rowid='id');
@@ -248,8 +256,8 @@ CREATE TABLE usage (
 
 | Option | Avantage | Point vérifié |
 |---|---|---|
-| `node:sqlite` intégré à Node | Aucune dépendance | Rejeté : encore au stade *Release Candidate* (pas stable) même en Node 26, API modifiée récemment (renommage dans la 26.11), et exige Node 22+ — incompatible avec le plancher Node 18+ promis en section 10.2 pour la variante npm. |
-| **`better-sqlite3`** ✅ | Rapide, mûr, synchrone | Retenu : depuis la v13, les binaires précompilés sont embarqués dans le paquet npm lui-même pour les six cibles (linux/darwin/win32 × x64/arm64) — aucune compilation chez l'utilisateur. Module natif : pour le binaire autonome (SEA), devra être extrait sur disque puis chargé au runtime, exactement comme le moteur Inshellisense le fait déjà pour `node-pty`. |
+| `node:sqlite` intégré à Node | Aucune dépendance | Rejeté : encore au stade *Release Candidate* (pas stable) même en Node 26, et API modifiée récemment (renommage dans la 26.11). *(Corrigé le 6 novembre 2026 : l'argument « exige Node 22+ » ne le distingue pas de `better-sqlite3`, qui l'exige aussi.)* |
+| **`better-sqlite3`** ✅ | Rapide, mûr, synchrone | Retenu : depuis la v13, les binaires précompilés (Node-API) sont embarqués dans le paquet npm lui-même pour les six cibles (linux/darwin/win32 × x64/arm64, plus linux musl) — aucune compilation chez l'utilisateur. Exige Node 22+ (la v12 exigeait déjà Node 20+ ; aucune version ne prend en charge Node 18). Module natif : pour le binaire autonome (SEA), devra être extrait sur disque puis chargé au runtime, exactement comme le moteur Inshellisense le fait déjà pour `node-pty`. |
 | `sql.js` (WebAssembly) | Portable, sans module natif | Rejeté : `user.db` deviendrait purement en mémoire, imposant de sérialiser/réécrire le fichier à chaque mutation (statistiques d'usage, outils appris) — coût d'ingénierie pour un gain de simplicité marginal, et binaire WASM d'environ 1,5 Mo ajouté. |
 
 Critères de décision : temps d'ouverture, taille ajoutée, absence de compilation chez l'utilisateur.
@@ -376,7 +384,7 @@ conda install -c conda-forge biopilot-cli   # cible à moyen terme, très utilis
 | Étapes manuelles après le script | Une seule : ajouter la ligne d'initialisation du shell |
 | Droits administrateur | Jamais |
 | Compilation chez l'utilisateur | Jamais |
-| Prérequis | Aucun pour le binaire autonome ; Node 18+ pour la variante npm |
+| Prérequis | Aucun pour le binaire autonome ; Node 22 pour la variante npm (plancher imposé par `better-sqlite3`, plafond `<23` hérité d'Inshellisense) |
 | Mise à jour | `biopilot update`, ou relance du script |
 | Désinstallation | `biopilot uninstall` laisse le système dans son état initial |
 
@@ -486,9 +494,12 @@ Prévue pour l'architecture, non développée en version 1.
 17. **Usage global :** compté pour toute la machine, pas par projet (section 6.4).
 18. **Version d'un outil appris :** `conda-meta/`, puis sondes `--version`, `-V`, `version`, puis empreinte (section 6.4).
 
+19. **Plancher Node 22 pour la variante npm** (section 10.2) : `better-sqlite3` exige Node 22+ ; l'argument de l'ADR-0001 contre `node:sqlite` fondé sur Node 18 était faux et a été corrigé. Le binaire autonome embarque déjà Node 22.
+20. **Schéma du catalogue aligné sur l'annexe B** (section 6.2) : ajout de `canonical_name`, `mate_of`, `derive` et d'une table `metadata` portant la version du schéma.
+
 ### Décisions encore ouvertes
 
-Aucune. Session de "grilling" close le 6 novembre 2026.
+Précisions manquantes relevées sur la spec de la phase 1 (issue #3) : contrat JSON de `biopilot info`, emplacement du catalogue en développement, source et versions des `--help`, barème des rangs, index de référence (préfixe bwa, dossier salmon), formes d'options (valeur facultative, multiple, répétable, négative, cachée), plateforme d'un outil (valeur ou ensemble), valeurs suggérées non fermées, signe du `boost`, politique de version du schéma, licences des textes d'aide. À trancher avant la phase 1.
 
 ---
 

@@ -16,7 +16,8 @@ const result = compileCatalog({ sourcesDir, outputPath, biopilotVersion });
 if (!result.ok) {
   process.stderr.write(`Catalog build failed: ${result.errors.length} error(s)\n`);
   for (const error of result.errors) {
-    process.stderr.write(`  ${path.join(path.relative(process.cwd(), sourcesDir), error.file)} › ${error.location}: ${error.message}\n`);
+    const file = path.join(path.relative(process.cwd(), sourcesDir), error.file);
+    process.stderr.write(`  ${file}${error.line ? `:${error.line}` : ""} › ${error.location}: ${error.message}\n`);
   }
   process.exit(1);
 }

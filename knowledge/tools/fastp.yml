@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
 # Minimal fastp description for the Catalog tracer bullet (ticket #4).
 # Root options only, flags and simple values; replaced by the full, curated
 # description from fastp's real --help in ticket #11.

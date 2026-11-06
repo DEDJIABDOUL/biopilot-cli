@@ -7,14 +7,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
+import { fileURLToPath } from "node:url";
+import _Ajv, { type ErrorObject, type ValidateFunction } from "ajv";
 import { LineCounter, parseDocument } from "yaml";
-import { CATALOG_DDL, CATALOG_SCHEMA_VERSION, PLATFORMS, VALUE_TYPES, canonicalName, type Platform, type ValueType } from "./schema.js";
+import { CATALOG_DDL, CATALOG_SCHEMA_VERSION, canonicalName, type Platform, type ValueType } from "./schema.js";
+
+// ajv is CommonJS; under ESM its default export is the module object (same workaround as utils/config.ts).
+const Ajv = _Ajv as unknown as typeof _Ajv.default;
 
 export type CompileError = {
   /** Source file, relative to the sources folder. */
   file: string;
-  /** Location inside the YAML, e.g. `options[2].names`, or `line 4` for syntax errors. */
+  /** Location inside the YAML, e.g. `options[2].names`; `document` for the whole file. */
   location: string;
+  /** 1-based line in the source file, when known. */
+  line?: number;
   message: string;
 };
 
@@ -49,100 +56,144 @@ type ToolSource = {
   options: OptionSource[];
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
-const isStringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every((item) => typeof item === "string");
+type YamlOption = {
+  names: string[];
+  description?: string;
+  value?: { type: ValueType };
+  default?: string | number | boolean;
+  rank?: number;
+  rules?: unknown[];
+};
+
+type YamlTool = {
+  name: string;
+  package?: string;
+  description?: string;
+  platforms?: Platform[];
+  version: { args: string[]; regex: string };
+  help?: string[];
+  options?: YamlOption[];
+};
+
+/** The published schema (schemas/tool.schema.json), resolved from src/ or build/ alike. */
+export const TOOL_SCHEMA_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "schemas", "tool.schema.json");
+
+let validator: ValidateFunction | undefined;
+const validateTool = (data: unknown): ErrorObject[] => {
+  if (!validator) {
+    const ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+    validator = ajv.compile(JSON.parse(fs.readFileSync(TOOL_SCHEMA_PATH, "utf-8")));
+  }
+  return validator(data) ? [] : validator.errors ?? [];
+};
+
+type Segment = string | number;
+
+/** `["options", 1, "rank"]` → `options[1].rank`. */
+const formatLocation = (segments: readonly Segment[]): string =>
+  segments.reduce<string>((text, segment) => (typeof segment === "number" ? `${text}[${segment}]` : text ? `${text}.${segment}` : segment), "") || "document";
+
+const pointerSegments = (pointer: string): Segment[] =>
+  pointer
+    .split("/")
+    .slice(1)
+    .map((part) => part.replaceAll("~1", "/").replaceAll("~0", "~"))
+    .map((part) => (/^\d+$/.test(part) ? Number(part) : part));
+
+const schemaErrorDetails = (error: ErrorObject): { segments: Segment[]; message: string } => {
+  const segments = pointerSegments(error.instancePath);
+  const params = error.params as Record<string, unknown>;
+  switch (error.keyword) {
+    case "required":
+      return { segments: [...segments, String(params.missingProperty)], message: "required field is missing" };
+    case "additionalProperties":
+      return { segments: [...segments, String(params.additionalProperty)], message: "unknown field" };
+    case "enum":
+      return { segments, message: `must be one of: ${(params.allowedValues as unknown[]).join(", ")}` };
+    case "pattern":
+      if (segments.at(-2) === "names") return { segments, message: "is not an option name (expected -x or --long-name)" };
+      return { segments, message: `${error.message}` };
+    default:
+      return { segments, message: `${error.message}` };
+  }
+};
+
+/** Number of capture groups of a regular expression. */
+const captureGroups = (regex: RegExp): number => (new RegExp(`${regex.source}|`).exec("") as RegExpExecArray).length - 1;
+
+const toToolSource = (file: string, tool: YamlTool): ToolSource => ({
+  file,
+  name: tool.name,
+  package: tool.package,
+  description: tool.description,
+  platforms: tool.platforms ?? [],
+  versionArgs: tool.version.args,
+  versionRegex: tool.version.regex,
+  helpArgs: tool.help,
+  options: (tool.options ?? []).map((option) => ({
+    names: option.names,
+    description: option.description,
+    valueType: option.value?.type ?? null,
+    defaultValue: option.default === undefined ? undefined : String(option.default),
+    rank: option.rank ?? 50,
+  })),
+});
 
 /** Reads and checks one YAML file, appending every problem found to `errors`. */
 const readToolSource = (sourcesDir: string, file: string, errors: CompileError[]): ToolSource | undefined => {
-  const fail = (location: string, message: string) => errors.push({ file, location, message });
   const text = fs.readFileSync(path.join(sourcesDir, file), "utf-8");
   const lineCounter = new LineCounter();
   const doc = parseDocument(text, { lineCounter, prettyErrors: false });
   if (doc.errors.length > 0) {
-    for (const error of doc.errors) fail(`line ${lineCounter.linePos(error.pos[0]).line}`, error.message);
+    for (const error of doc.errors) {
+      errors.push({ file, location: "document", line: lineCounter.linePos(error.pos[0]).line, message: error.message });
+    }
     return;
   }
-  const data: unknown = doc.toJS();
-  if (!isRecord(data)) {
-    fail("document", "expected a mapping describing one tool");
-    return;
-  }
-  const before = errors.length;
 
-  if (typeof data.name !== "string" || data.name.length === 0) fail("name", "required non-empty string");
-  for (const field of ["package", "description"] as const) {
-    if (data[field] !== undefined && typeof data[field] !== "string") fail(field, "must be a string");
-  }
-
-  const platforms = data.platforms ?? [];
-  if (!isStringArray(platforms)) fail("platforms", "must be a list of platforms");
-  else
-    platforms.forEach((platform, i) => {
-      if (!(PLATFORMS as readonly string[]).includes(platform))
-        fail(`platforms[${i}]`, `unknown platform "${platform}" (expected one of: ${PLATFORMS.join(", ")})`);
-    });
-
-  const version = data.version;
-  if (!isRecord(version)) fail("version", "required mapping with `args` and `regex`");
-  else {
-    if (!isStringArray(version.args) || version.args.length === 0) fail("version.args", "required non-empty list of strings");
-    if (typeof version.regex !== "string" || version.regex.length === 0) fail("version.regex", "required non-empty string");
-  }
-  if (data.help !== undefined && !isStringArray(data.help)) fail("help", "must be a list of strings");
-
-  const options: OptionSource[] = [];
-  if (data.options !== undefined && !Array.isArray(data.options)) fail("options", "must be a list");
-  const seenNames = new Map<string, number>();
-  ((Array.isArray(data.options) ? data.options : []) as unknown[]).forEach((option, i) => {
-    const at = `options[${i}]`;
-    if (!isRecord(option)) {
-      fail(at, "expected a mapping");
-      return;
+  /** Line of the closest existing node on the path (a missing field points at its parent). */
+  const lineOf = (segments: readonly Segment[]): number | undefined => {
+    for (let depth = segments.length; depth >= 0; depth--) {
+      const node = depth === 0 ? doc.contents : doc.getIn(segments.slice(0, depth), true);
+      const range = (node as { range?: [number, number, number] } | null | undefined)?.range;
+      if (range) return lineCounter.linePos(range[0]).line;
     }
-    const optionErrors = errors.length;
-    if (!isStringArray(option.names) || option.names.length === 0) fail(`${at}.names`, "required non-empty list of strings");
-    else
-      option.names.forEach((name, j) => {
-        if (!/^--?[^\s-][^\s]*$/.test(name)) fail(`${at}.names[${j}]`, `"${name}" is not an option name (expected -x or --long-name)`);
-        const previous = seenNames.get(name);
-        if (previous !== undefined) fail(`${at}.names[${j}]`, `alias "${name}" already used by options[${previous}]`);
-        else seenNames.set(name, i);
-      });
-    if (option.description !== undefined && typeof option.description !== "string") fail(`${at}.description`, "must be a string");
-    let valueType: ValueType | null = null;
-    if (option.value !== undefined) {
-      if (!isRecord(option.value) || typeof option.value.type !== "string") fail(`${at}.value`, "must be a mapping with a `type`");
-      else if (!(VALUE_TYPES as readonly string[]).includes(option.value.type)) {
-        fail(`${at}.value.type`, `unknown value type "${option.value.type}" (expected one of: ${VALUE_TYPES.join(", ")}; omit \`value\` for a flag)`);
-      } else valueType = option.value.type as ValueType;
-    }
-    const rank = option.rank ?? 50;
-    if (typeof rank !== "number" || !Number.isInteger(rank)) fail(`${at}.rank`, "must be an integer");
-    if (option.default !== undefined && !["string", "number", "boolean"].includes(typeof option.default)) fail(`${at}.default`, "must be a scalar");
-    if (errors.length === optionErrors) {
-      options.push({
-        names: option.names as string[],
-        description: option.description as string | undefined,
-        valueType,
-        defaultValue: option.default === undefined ? undefined : String(option.default),
-        rank: rank as number,
-      });
-    }
-  });
-
-  if (errors.length > before) return;
-  const checkedVersion = version as { args: string[]; regex: string };
-  return {
-    file,
-    name: data.name as string,
-    package: data.package as string | undefined,
-    description: data.description as string | undefined,
-    platforms: platforms as Platform[],
-    versionArgs: checkedVersion.args,
-    versionRegex: checkedVersion.regex,
-    helpArgs: data.help as string[] | undefined,
-    options,
   };
+  const fail = (segments: readonly Segment[], message: string) => errors.push({ file, location: formatLocation(segments), line: lineOf(segments), message });
+
+  const data: unknown = doc.toJS();
+  const before = errors.length;
+  for (const error of validateTool(data)) {
+    const { segments, message } = schemaErrorDetails(error);
+    fail(segments, message);
+  }
+
+  // Semantic checks. They run even when the schema failed, on whatever parts are well-formed,
+  // so a contributor sees every problem of the file at once.
+  const loose = data as { version?: { regex?: unknown }; options?: unknown };
+  const regex = loose?.version?.regex;
+  if (typeof regex === "string" && regex.length > 0) {
+    try {
+      const groups = captureGroups(new RegExp(regex));
+      if (groups !== 1) fail(["version", "regex"], `must have exactly one capture group (the version number), found ${groups}`);
+    } catch (error) {
+      fail(["version", "regex"], `is not a valid regular expression: ${(error as Error).message}`);
+    }
+  }
+  const seenNames = new Map<string, number>();
+  (Array.isArray(loose?.options) ? loose.options : []).forEach((option: unknown, i: number) => {
+    const names = (option as { names?: unknown })?.names;
+    if (!Array.isArray(names)) return;
+    names.forEach((name: unknown, j: number) => {
+      if (typeof name !== "string") return;
+      const previous = seenNames.get(name);
+      if (previous !== undefined) fail(["options", i, "names", j], `alias "${name}" is already used by options[${previous}]`);
+      else seenNames.set(name, i);
+    });
+  });
+  const tool = data as YamlTool;
+  if (errors.length > before) return;
+  return toToolSource(file, tool);
 };
 
 const writeCatalog = (tools: ToolSource[], outputPath: string, biopilotVersion: string) => {

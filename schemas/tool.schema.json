@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/DEDJIABDOUL/biopilot-cli/schemas/tool.schema.json",
+  "title": "BioPilot Catalog: one tool",
+  "description": "Format of knowledge/tools/<tool>.yml. `npm run build:db` validates every file against this schema, then runs the cross-file checks (duplicate tools, duplicate aliases, version regex).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "version"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\s/]+$",
+      "description": "Executable name, as typed in the shell (e.g. fastp, porechop, blastn)."
+    },
+    "package": { "type": "string", "minLength": 1, "description": "Conda package, when it differs from the executable name." },
+    "description": { "type": "string", "minLength": 1, "description": "Short description, in our own words (never copied from --help)." },
+    "platforms": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["illumina", "nanopore"] },
+      "description": "Sequencing platforms the tool serves; omit or leave empty for a generic tool."
+    },
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["args", "regex"],
+      "properties": {
+        "args": { "$ref": "#/definitions/args", "description": "Arguments that make the tool print its version, e.g. [\"--version\"]." },
+        "regex": {
+          "type": "string",
+          "minLength": 1,
+          "description": "JavaScript regular expression with exactly one capture group: the version number."
+        }
+      }
+    },
+    "help": { "$ref": "#/definitions/args", "description": "Arguments that make the tool print its help, e.g. [\"--help\"]." },
+    "options": { "type": "array", "items": { "$ref": "#/definitions/option" } }
+  },
+  "definitions": {
+    "args": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["names"],
+      "properties": {
+        "names": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^--?[^\\s-]\\S*$" },
+          "description": "Every alias of the option (case-sensitive). The first long name is the canonical name."
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": { "type": { "enum": ["int", "float", "string"] } },
+          "description": "What the option takes. Omit for a flag."
+        },
+        "default": { "type": ["string", "number", "boolean"] },
+        "rank": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 50,
+          "description": "90–100 main inputs/outputs and reference; 70–89 very common; 50 default; 30–49 fine tuning; 10–29 rare, debug or deprecated."
+        },
+        "rules": { "type": "array", "items": { "$ref": "#/definitions/rule" } }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["when", "boost"],
+      "properties": {
+        "when": { "type": "object", "description": "Context condition (stored from ticket #8 on)." },
+        "boost": { "type": "integer", "minimum": -100, "maximum": 100, "description": "Added to the rank when the condition holds." }
+      }
+    }
+  }
+}

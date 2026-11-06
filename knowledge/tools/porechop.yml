@@ -14,7 +14,7 @@ options:
   # --- Main options ----------------------------------------------------------
   - names: ["-i", "--input"]
     description: reads to process - a FASTQ or FASTA file, or a folder searched recursively for FASTQ files
-    value: { type: file, format: fastq }
+    value: { type: file, format: [fastq, fasta] }
     rank: 95
   - names: ["-o", "--output"]
     description: file for the trimmed reads, FASTQ or FASTA; printed to standard output when omitted

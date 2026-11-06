@@ -168,7 +168,7 @@ commands:
         rank: 75
       - names: ["-g", "--geneMap"]
         description: transcript-to-gene table (GTF, GFF or two-column TSV, possibly compressed); adds gene-level estimates
-        value: { type: file, format: gtf }
+        value: { type: file, format: [gtf, gff] }
         rank: 60
       - names: ["--ignoreTxVersion"]
         description: ignore version suffixes (.2) of transcript names when matching them to --geneMap

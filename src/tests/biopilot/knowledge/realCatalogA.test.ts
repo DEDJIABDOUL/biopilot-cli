@@ -52,13 +52,13 @@ describe("real Catalog, part A", () => {
     const options = catalog.listOptions(command("fastp"));
     expect(options[0].canonicalName).toBe("--in1");
     expect(options[0].rank).toBeGreaterThan(options[1].rank);
-    expect(options[0].value).toMatchObject({ type: "file", format: "fastq", readRole: 1 });
+    expect(options[0].value).toMatchObject({ type: "file", formats: ["fastq"], readRole: 1 });
   });
 
   test("fastp: --in2 is the R2 mate of --in1, boosted as in annex B", () => {
     const in2 = option(command("fastp"), "-I");
     expect(in2).toMatchObject({ canonicalName: "--in2", rank: 60, mate: "--in1" });
-    expect(in2.value).toMatchObject({ format: "fastq", readRole: 2 });
+    expect(in2.value).toMatchObject({ formats: ["fastq"], readRole: 2 });
     expect(in2.rules).toContainEqual({ when: { used: ["--in1"], paired: true, platform: null, assay: null }, boost: 35 });
   });
 
@@ -78,10 +78,10 @@ describe("real Catalog, part A", () => {
     expect(option(root, "--barcode_dir").value?.type).toBe("dir");
   });
 
-  test("FastQC: files to check are a variadic FASTQ argument; --outdir leads", () => {
+  test("FastQC: files to check are a variadic FASTQ (or BAM/SAM) argument; --outdir leads", () => {
     const root = command("fastqc");
     expect(catalog.listArguments(root)).toEqual([
-      expect.objectContaining({ name: "files", variadic: true, value: expect.objectContaining({ type: "file", format: "fastq" }) }),
+      expect.objectContaining({ name: "files", variadic: true, value: expect.objectContaining({ type: "file", formats: ["fastq", "bam", "sam"] }) }),
     ]);
     expect(catalog.listOptions(root)[0].canonicalName).toBe("--outdir");
     expect(option(root, "--nogroup").rules).toContainEqual(expect.objectContaining({ when: expect.objectContaining({ platform: "nanopore" }), boost: -20 }));
@@ -100,12 +100,12 @@ describe("real Catalog, part A", () => {
     const root = command("salmon");
     expect(catalog.listSubcommands(root).map((c) => c.path.join(" "))).toEqual(["index", "quant", "quantmerge", "debug-map", "help"]);
     const quant = command("salmon", "quant");
-    expect(option(quant, "-i").value).toMatchObject({ type: "dir", format: "salmon-index" });
+    expect(option(quant, "-i").value).toMatchObject({ type: "dir", formats: ["salmon-index"] });
     expect(option(quant, "-2")).toMatchObject({ canonicalName: "--mates2", mate: "--mates1" });
     expect(option(quant, "-1").value).toMatchObject({ multiple: true, readRole: 1 });
     expect(option(quant, "--writeSam").canonicalName).toBe("--writeMappings");
-    expect(option(command("salmon", "quantmerge"), "--quants").value).toMatchObject({ type: "dir", format: "salmon-quant", multiple: true });
-    expect(option(command("salmon", "index"), "-t").value).toMatchObject({ format: "fasta" });
+    expect(option(command("salmon", "quantmerge"), "--quants").value).toMatchObject({ type: "dir", formats: ["salmon-quant"], multiple: true });
+    expect(option(command("salmon", "index"), "-t").value).toMatchObject({ formats: ["fasta"] });
   });
 
   test("every option of the five tools has a description and a rank on the scale", () => {

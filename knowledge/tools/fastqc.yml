@@ -11,11 +11,10 @@ version: { args: ["--version"], regex: 'FastQC v(\S+)' }
 help: ["--help"]
 arguments:
   - name: files
-    # FastQC also reads SAM/BAM (see --format) and fast5 folders (see --fast5);
-    # FASTQ is by far the most common input.
+    # FastQC also reads fast5 folders (see --fast5); FASTQ is by far the most common input.
     description: read files to check
     variadic: true
-    value: { type: file, format: fastq }
+    value: { type: file, format: [fastq, bam, sam] }
 options:
   - names: ["--outdir"]
     description: folder for all reports; it must already exist (by default each report goes next to its input)

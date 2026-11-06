@@ -1,0 +1,1412 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# samtools 1.25, written from the help recorded in knowledge/help/samtools/1.25/ (ticket #12).
+# Descriptions are in our own words (spec decision 31); samtools is MIT.
+# Every subcommand of the root help is listed, in its order. Options are described in full for
+# the commonly used ones; the others only have their positional arguments for now.
+# The options shared by many subcommands (htslib's global options) are written once, with a
+# YAML anchor (&name) at their first use, and repeated with an alias (*name).
+name: samtools
+description: Toolkit to view, convert, sort, index and summarise SAM, BAM and CRAM alignments
+version: { args: ["--version"], regex: 'samtools (\d[\w.]*)' }
+help: ["--help"]
+options:
+  - names: ["--version"]
+    description: print the version of samtools and htslib, and exit
+    rank: 10
+  - names: ["--version-only"]
+    description: print the version number only, and exit
+    rank: 10
+commands:
+  # -- Indexing
+  - name: dict
+    help: ["dict", "--help"]
+    description: write a sequence dictionary (.dict) of a reference FASTA
+    options:
+      - names: ["-o", "--output"]
+        description: dictionary file to write (standard output by default)
+        value: { type: file, format: dict }
+        rank: 90
+      - names: ["-a", "--assembly"]
+        description: assembly name, stored in the AS tag
+        value: { type: string }
+        rank: 50
+      - names: ["-s", "--species"]
+        description: species, stored in the SP tag
+        value: { type: string }
+        rank: 50
+      - names: ["-u", "--uri"]
+        description: URI of the reference, stored in the UR tag (the absolute file path by default)
+        value: { type: string }
+        rank: 40
+      - names: ["-A", "--alias", "--alternative-name"]
+        description: add an AN tag naming each sequence with or without the chr prefix
+        rank: 40
+      - names: ["-H", "--no-header"]
+        description: leave out the @HD line
+        rank: 30
+      - names: ["-l", "--alt"]
+        description: file of alternate loci, which get an AH:* tag
+        value: { type: file }
+        rank: 30
+    arguments:
+      - name: file.fa
+        description: reference sequences, plain or gzip-compressed
+        value: { type: file, format: fasta }
+
+  - name: faidx
+    help: ["faidx", "--help"]
+    description: index a FASTA file, or extract regions from an indexed one
+    options:
+      - names: ["-o", "--output"]
+        description: file to write the extracted sequences to
+        value: { type: file, format: fasta }
+        rank: 85
+      - names: ["-r", "--region-file"]
+        description: file listing the regions to extract, one chr:from-to per line
+        value: { type: file }
+        rank: 70
+      - names: ["-i", "--reverse-complement"]
+        description: output the reverse complement of the regions
+        rank: 55
+      - names: ["--mark-strand"]
+        description: how to mark the strand in sequence names (rc, no, sign or custom,<pos>,<neg>)
+        value: { type: string, values: [rc, "no", sign] }
+        default: rc
+        rank: 35
+      - names: ["-n", "--length"]
+        description: line length of the FASTA output
+        value: { type: int }
+        default: 60
+        rank: 40
+      - names: ["-c", "--continue"]
+        description: keep going when a region cannot be found
+        rank: 40
+      - names: ["--fai-idx"]
+        description: name of the .fai index (file.fa.fai by default)
+        value: { type: file, format: fai }
+        rank: 35
+      - names: ["--gzi-idx"]
+        description: name of the index of a bgzip-compressed FASTA (file.fa.gz.gzi by default)
+        value: { type: file }
+        rank: 30
+      - names: ["-f", "--fastq"]
+        description: the file and its index are FASTQ, not FASTA
+        rank: 40
+      - &output-fmt-option
+        names: ["--output-fmt-option"]
+        description: one option of the output format, OPTION or OPTION=VALUE
+        value: { type: string }
+        repeatable: true
+        rank: 30
+      - &threads
+        names: ["-@", "--threads"]
+        description: extra threads to use, besides the main one
+        value: { type: int }
+        default: 0
+        rank: 80
+      - &write-index
+        names: ["--write-index"]
+        description: index the output file as it is written
+        rank: 60
+      - names: ["-h", "--help"]
+        description: print this help and exit
+        rank: 10
+    arguments:
+      - name: file.fa
+        description: FASTA file, plain or bgzip-compressed
+        value: { type: file, format: fasta }
+      - name: region
+        description: regions to extract, as chr, chr:from or chr:from-to
+        variadic: true
+        value: { type: string, optional: true }
+
+  - name: fqidx
+    help: ["fqidx", "--help"]
+    description: index a FASTQ file, or extract reads from an indexed one
+    arguments:
+      - name: file.fq
+        description: FASTQ file, plain or bgzip-compressed
+        value: { type: file, format: fastq }
+      - name: region
+        description: read names or regions to extract
+        variadic: true
+        value: { type: string, optional: true }
+
+  - name: index
+    help: ["index", "--help"]
+    description: index a coordinate-sorted BAM or CRAM file, for random access by region
+    options:
+      - names: ["-o", "--output"]
+        description: index file to write (next to the input by default)
+        value: { type: file, format: bai }
+        rank: 70
+      - names: ["-b", "--bai"]
+        description: write a BAI index (the default for BAM)
+        rank: 55
+      - names: ["-c", "--csi"]
+        description: write a CSI index, needed for references longer than 512 Mbp
+        rank: 60
+      - names: ["-m", "--min-shift"]
+        description: smallest interval of a CSI index, as a power of two
+        value: { type: int }
+        default: 14
+        rank: 30
+      - names: ["-M"]
+        description: treat every argument as a file to index
+        rank: 50
+      - *threads
+    arguments:
+      - name: in.bam
+        description: sorted alignments to index
+        value: { type: file, format: bam }
+      - name: out.index
+        description: index file to write, unless -M is set
+        value: { type: file, format: bai, optional: true }
+
+  # -- Editing
+  - name: calmd
+    help: ["calmd", "--help"]
+    description: recompute the MD and NM tags from the reference
+    arguments:
+      - name: aln.bam
+        description: alignments
+        value: { type: file, format: bam }
+      - name: ref.fasta
+        description: reference the reads were aligned to
+        value: { type: file, format: fasta }
+
+  - name: fixmate
+    help: ["fixmate", "--help"]
+    description: fill in mate coordinates and flags in a name-grouped file, before markdup
+    options:
+      - names: ["-m"]
+        description: add the mate score tag (ms), needed by markdup
+        rank: 80
+      - names: ["-r"]
+        description: drop unmapped reads and secondary alignments
+        rank: 50
+      - names: ["-p"]
+        description: skip the check of forward-reverse proper pairs
+        rank: 30
+      - names: ["-c"]
+        description: add the template CIGAR tag (ct)
+        rank: 35
+      - names: ["-u"]
+        description: write uncompressed output, for piping
+        rank: 50
+      - names: ["-z", "--sanitize"]
+        description: fix inconsistent alignment fields (comma-separated kinds; all by default)
+        value: { type: string }
+        rank: 30
+      - names: ["-M"]
+        description: fix the base modification tags (MM, ML, MN)
+        rank: 25
+      - &no-PG
+        names: ["--no-PG"]
+        description: do not record this command in a @PG header line
+        rank: 25
+      - &input-fmt-option
+        names: ["--input-fmt-option"]
+        description: one option of the input format, OPTION or OPTION=VALUE
+        value: { type: string }
+        repeatable: true
+        rank: 25
+      - &output-fmt
+        names: ["-O", "--output-fmt"]
+        description: format of the output, optionally followed by its options (FORMAT[,OPT=VAL]...)
+        value: { type: string, values: [BAM, SAM, CRAM] }
+        rank: 75
+      - *output-fmt-option
+      - &reference
+        names: ["--reference"]
+        description: reference FASTA, needed to read or write CRAM
+        value: { type: file, format: fasta }
+        rank: 55
+      - *threads
+      - &verbosity
+        names: ["--verbosity"]
+        description: how much to log
+        value: { type: int }
+        rank: 15
+    arguments:
+      - name: in.nameSrt.bam
+        description: alignments grouped by read name
+        value: { type: file, format: bam }
+      - name: out.nameSrt.bam
+        description: file to write
+        value: { type: file, format: bam }
+
+  - name: reheader
+    help: ["reheader", "--help"]
+    description: replace the header of a file without rewriting the alignments
+    arguments:
+      - name: in.header.sam
+        description: SAM file holding the new header
+        value: { type: file, format: sam }
+      - name: in.bam
+        description: file whose header is replaced
+        value: { type: file, format: bam }
+
+  - name: targetcut
+    help: ["targetcut", "--help"]
+    description: cut fosmid regions out of a fosmid pool
+    arguments:
+      - name: in.bam
+        description: alignments
+        value: { type: file, format: bam }
+
+  - name: addreplacerg
+    help: ["addreplacerg", "--help"]
+    description: add read group tags to reads, or replace the existing ones
+    arguments:
+      - name: input.bam
+        description: alignments
+        value: { type: file, format: bam }
+
+  - name: markdup
+    help: ["markdup", "--help"]
+    description: flag or remove duplicate reads in a coordinate-sorted file prepared by fixmate -m
+    options:
+      - names: ["-r"]
+        description: remove duplicates instead of flagging them
+        rank: 80
+      - names: ["-s"]
+        description: print duplicate statistics
+        rank: 70
+      - names: ["-f"]
+        description: file to write the statistics to (implies -s)
+        value: { type: file }
+        rank: 70
+      - names: ["--json"]
+        description: write the statistics as JSON (implies -s)
+        rank: 50
+      - names: ["-l"]
+        description: longest expected read length
+        value: { type: int }
+        default: 300
+        rank: 40
+      - names: ["-S"]
+        description: also flag the supplementary alignments of duplicates (slower)
+        rank: 45
+      - names: ["-T"]
+        description: path prefix of the temporary files
+        value: { type: string }
+        rank: 45
+      - names: ["-d"]
+        description: optical duplicate distance; optical duplicates get a dt tag
+        value: { type: int }
+        rank: 50
+        rules:
+          - when: { platform: illumina }
+            boost: 10
+      - names: ["-c"]
+        description: clear duplicate flags and tags left by an earlier run
+        rank: 35
+      - names: ["-m", "--mode"]
+        description: how paired reads are compared
+        value:
+          type: enum
+          values:
+            - { value: t, description: by template start and end }
+            - { value: s, description: by sequence start }
+        default: t
+        rank: 40
+      - names: ["-u"]
+        description: write uncompressed output, for piping
+        rank: 45
+      - names: ["--include-fails"]
+        description: also consider reads that failed quality checks
+        rank: 30
+      - *no-PG
+      - names: ["--no-multi-dup"]
+        description: check fewer duplicates of duplicates, faster
+        rank: 25
+      - names: ["--read-coords"]
+        description: regular expression extracting coordinates from read names
+        value: { type: string }
+        rank: 25
+      - names: ["--coords-order"]
+        description: order of the elements captured by --read-coords (txy by default)
+        value: { type: string }
+        rank: 20
+      - names: ["--barcode-tag"]
+        description: tag holding a barcode that duplicates must share
+        value: { type: string }
+        rank: 35
+      - names: ["--barcode-name"]
+        description: take the UMI or barcode from the eighth colon-separated field of the read name
+        rank: 35
+      - names: ["--barcode-rgx"]
+        description: regular expression extracting the barcode from the read name
+        value: { type: string }
+        rank: 30
+      - names: ["--move-umi-to-tag"]
+        description: move the UMI from the read name to the RX tag
+        rank: 30
+      - names: ["--umi-separator"]
+        description: character separating the UMI parts
+        value: { type: string }
+        default: ":"
+        rank: 20
+      - names: ["--use-read-groups"]
+        description: duplicates must also share their read group
+        rank: 35
+      - names: ["-t"]
+        description: name the original read in a do tag on each duplicate (for debugging)
+        rank: 15
+      - names: ["--duplicate-count"]
+        description: store in a dc tag how many copies each primary read has
+        rank: 25
+      - *input-fmt-option
+      - *output-fmt
+      - *output-fmt-option
+      - *reference
+      - *threads
+      - *write-index
+      - *verbosity
+    arguments:
+      - name: input.bam
+        description: coordinate-sorted alignments carrying mate score tags
+        value: { type: file, format: bam }
+      - name: output.bam
+        description: file to write
+        value: { type: file, format: bam }
+
+  - name: ampliconclip
+    help: ["ampliconclip", "--help"]
+    description: clip primer sequences from the ends of amplicon reads
+    arguments:
+      - name: input.bam
+        description: alignments
+        value: { type: file, format: bam }
+
+  # -- File operations
+  - name: collate
+    help: ["collate", "--help"]
+    description: group the reads of each template together, quicker than a name sort
+    options:
+      - names: ["-o"]
+        description: file to write (built from the prefix when not set)
+        value: { type: file, format: bam }
+        rank: 90
+      - names: ["-O"]
+        description: write to standard output
+        rank: 75
+      - names: ["-u"]
+        description: write uncompressed BAM, for piping
+        rank: 60
+      - names: ["-f"]
+        description: fast mode, primary alignments only
+        rank: 55
+      - names: ["-r"]
+        description: reads held in memory in fast mode
+        value: { type: int }
+        default: 10000
+        rank: 30
+      - names: ["-l"]
+        description: compression level
+        value: { type: int }
+        default: 1
+        rank: 35
+      - names: ["-n"]
+        description: number of temporary files
+        value: { type: int }
+        default: 64
+        rank: 30
+      - names: ["-T"]
+        description: path prefix of the temporary files
+        value: { type: string }
+        rank: 40
+      - *no-PG
+      - *input-fmt-option
+      - names: ["--output-fmt"]
+        description: format of the output, optionally followed by its options (FORMAT[,OPT=VAL]...)
+        value: { type: string, values: [BAM, SAM, CRAM] }
+        rank: 70
+      - *output-fmt-option
+      - *reference
+      - *threads
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: alignments to group
+        value: { type: file, format: bam }
+      - name: prefix
+        description: prefix of the output and temporary files, unless -o or -O is set
+        value: { type: string, optional: true }
+
+  - name: cat
+    help: ["cat", "--help"]
+    description: concatenate BAM or CRAM files with compatible headers, without decompressing
+    arguments:
+      - name: in.bam
+        description: files to concatenate
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: consensus
+    help: ["consensus", "--help"]
+    description: build a consensus sequence from the alignments
+    arguments:
+      - name: in.bam
+        description: alignments
+        value: { type: file, format: bam }
+
+  - name: merge
+    help: ["merge", "--help"]
+    description: merge several sorted files into one, keeping the sort order
+    options:
+      - names: ["-o"]
+        description: file to write, instead of giving it as the first argument
+        value: { type: file, format: bam }
+        rank: 92
+      - names: ["-b"]
+        description: file listing the input files, one per line
+        value: { type: file }
+        rank: 70
+      - names: ["-f"]
+        description: overwrite the output file if it exists
+        rank: 60
+      - names: ["-n"]
+        description: the inputs are sorted by read name (natural order)
+        rank: 55
+      - names: ["-N"]
+        description: the inputs are sorted by read name (ASCII order)
+        rank: 35
+      - names: ["-t"]
+        description: the inputs are sorted by the value of this tag
+        value: { type: string }
+        rank: 30
+      - names: ["--template-coordinate"]
+        description: the inputs are sorted by template coordinate
+        rank: 25
+      - names: ["-r"]
+        description: add an RG tag to each read, named after its input file
+        rank: 50
+      - names: ["-u"]
+        description: write uncompressed BAM, for piping
+        rank: 45
+      - names: ["-1"]
+        description: fast compression (level 1)
+        rank: 30
+      - names: ["-l"]
+        description: compression level, 0 to 9
+        value: { type: int }
+        rank: 35
+      - names: ["-R"]
+        description: merge only this region
+        value: { type: string }
+        rank: 45
+      - names: ["-L"]
+        description: merge only the regions of this BED file
+        value: { type: file, format: bed }
+        rank: 40
+      - names: ["-h"]
+        description: take the header from this file (the first input by default)
+        value: { type: file, format: sam }
+        rank: 40
+      - names: ["-c"]
+        description: merge @RG header lines that share an ID, instead of renaming them
+        rank: 35
+      - names: ["-p"]
+        description: merge @PG header lines that share an ID, instead of renaming them
+        rank: 30
+      - names: ["-s"]
+        description: seed of the random generator
+        value: { type: int }
+        rank: 15
+      - names: ["-X"]
+        description: index files are given after the inputs
+        rank: 20
+      - *no-PG
+      - *input-fmt-option
+      - *output-fmt
+      - *output-fmt-option
+      - *reference
+      - *threads
+      - *write-index
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: sorted files to merge (preceded by the output file when -o is not set)
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: mpileup
+    help: ["mpileup", "--help"]
+    description: summarise the bases aligned at each position, one column per file
+    arguments:
+      - name: in.bam
+        description: alignments
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: sort
+    help: ["sort", "--help"]
+    description: sort alignments by coordinate (by default), read name or tag
+    options:
+      - names: ["-o"]
+        description: file to write (standard output by default)
+        value: { type: file, format: bam }
+        rank: 95
+      - *threads
+      - *output-fmt
+      - names: ["-n"]
+        description: sort by read name (natural order); the result cannot be indexed
+        rank: 72
+      - names: ["-m"]
+        description: memory per thread, with a K, M or G suffix
+        value: { type: string, values: [768M, 1G, 2G, 4G] }
+        default: 768M
+        rank: 65
+      - names: ["-T"]
+        description: path prefix of the temporary files
+        value: { type: string }
+        rank: 50
+      - *write-index
+      - names: ["-l"]
+        description: compression level, 0 (none) to 9 (best)
+        value: { type: int }
+        rank: 40
+      - names: ["-u"]
+        description: write uncompressed output (same as -l 0), for piping
+        rank: 45
+      - names: ["-N"]
+        description: sort by read name (ASCII order); the result cannot be indexed
+        rank: 35
+      - names: ["-t"]
+        description: sort by the value of this tag, then by position (or name with -n)
+        value: { type: string }
+        rank: 35
+      - names: ["--template-coordinate"]
+        description: sort by template coordinate, as needed by some UMI tools
+        rank: 25
+      - names: ["-M"]
+        description: cluster unaligned reads by minimiser
+        rank: 20
+      - names: ["-R"]
+        description: with -M, do not use the reverse strand
+        rank: 15
+      - names: ["-K"]
+        description: k-mer size of the minimiser
+        value: { type: int }
+        default: 20
+        rank: 15
+      - names: ["-I"]
+        description: order the minimisers by their position in this FASTA
+        value: { type: file, format: fasta }
+        rank: 15
+      - names: ["-w"]
+        description: window size for the minimiser index built with -I
+        value: { type: int }
+        default: 100
+        rank: 15
+      - names: ["-H"]
+        description: squash homopolymers when computing minimisers
+        rank: 15
+      - *no-PG
+      - *input-fmt-option
+      - *output-fmt-option
+      - *reference
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: alignments to sort (standard input when absent)
+        value: { type: file, format: bam, optional: true }
+
+  - name: split
+    help: ["split", "--help"]
+    description: split a file into one file per read group (or per tag value)
+    arguments:
+      - name: merged.bam
+        description: alignments to split
+        value: { type: file, format: bam }
+
+  - name: quickcheck
+    help: ["quickcheck", "--help"]
+    description: check quickly that files look complete; the exit status tells the result
+    options:
+      - names: ["-v"]
+        description: list the files that fail (repeat for more detail)
+        repeatable: true
+        rank: 70
+      - names: ["-q"]
+        description: do not print warnings
+        rank: 60
+      - names: ["-u"]
+        description: accept unaligned files, whose header has no references
+        rank: 40
+    arguments:
+      - name: input
+        description: files to check
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: fastq
+    help: ["fastq", "--help"]
+    description: convert alignments back to FASTQ reads; the input must be grouped by name
+    options:
+      - names: ["-1"]
+        description: file for read 1 of the pairs
+        value: { type: file, format: fastq, read_role: 1 }
+        rank: 92
+      - names: ["-2"]
+        description: file for read 2 of the pairs
+        value: { type: file, format: fastq, read_role: 2, mate_of: "-1" }
+        rank: 88
+        rules:
+          - when: { used: ["-1"] }
+            boost: 10
+      - names: ["-o"]
+        description: file for read 1 and read 2 together
+        value: { type: file, format: fastq }
+        rank: 80
+      - names: ["-0"]
+        description: file for reads that are neither read 1 nor read 2
+        value: { type: file, format: fastq }
+        rank: 70
+      - names: ["-s"]
+        description: file for reads whose mate is missing
+        value: { type: file, format: fastq }
+        rank: 70
+      - names: ["-n"]
+        description: do not add /1 and /2 to read names
+        rank: 55
+      - names: ["-N"]
+        description: always add /1 and /2 to read names
+        rank: 45
+      - names: ["-d", "--tag"]
+        description: keep only reads with this tag, optionally with this value (TAG[:VAL])
+        value: { type: string }
+        rank: 35
+      - names: ["-D", "--tag-file"]
+        description: keep only reads with a tag whose value is listed in a file (TAG:FILE)
+        value: { type: string }
+        rank: 30
+      - names: ["-f", "--require-flags"]
+        description: keep only reads having all these flags
+        value: { type: string }
+        default: 0
+        rank: 45
+      - names: ["-F", "--excl-flags", "--exclude-flags"]
+        description: drop reads having any of these flags
+        value: { type: string, values: ["0x900", "0x904"] }
+        default: "0x900"
+        rank: 50
+      - names: ["--rf", "--incl-flags", "--include-flags"]
+        description: keep only reads having at least one of these flags
+        value: { type: string }
+        rank: 30
+      - names: ["-G"]
+        description: drop reads having all of these flags
+        value: { type: string }
+        rank: 25
+      - names: ["--no-sc"]
+        description: remove soft-clipped bases from the reads
+        rank: 30
+      - names: ["--sc-aux"]
+        description: tag that keeps the removed soft-clipped bases
+        value: { type: string }
+        default: s0
+        rank: 20
+      - names: ["--no-sc-bkp"]
+        description: do not keep the removed soft-clipped bases in a tag
+        rank: 20
+      - names: ["-O"]
+        description: use the original qualities of the OQ tag when present
+        rank: 30
+      - names: ["-t"]
+        description: copy the RG, BC and QT tags into the FASTQ header
+        rank: 45
+      - names: ["-T"]
+        description: tags to copy into the FASTQ header, * for all
+        value: { type: string }
+        rank: 40
+      - names: ["-v"]
+        description: quality given to bases that have none
+        value: { type: int }
+        default: 1
+        rank: 25
+      - names: ["-i"]
+        description: add the Illumina Casava 1.8 field to the header (e.g. 1:N:0:ATCACG)
+        rank: 35
+        rules:
+          - when: { platform: illumina }
+            boost: 10
+      - names: ["-U", "--UMI"]
+        description: add the UMI to the read name
+        rank: 35
+      - names: ["--UMI-tag"]
+        description: tags searched for the UMI
+        value: { type: string }
+        default: "RX,OX"
+        rank: 25
+      - names: ["-c"]
+        description: compression level of bgzf output files, 0 to 9
+        value: { type: int }
+        default: 1
+        rank: 35
+      - names: ["--i1"]
+        description: file for the first index reads
+        value: { type: file, format: fastq }
+        rank: 35
+      - names: ["--i2"]
+        description: file for the second index reads
+        value: { type: file, format: fastq }
+        rank: 30
+      - names: ["--barcode-tag"]
+        description: tag holding the barcode
+        value: { type: string }
+        default: BC
+        rank: 25
+      - names: ["--quality-tag"]
+        description: tag holding the barcode qualities
+        value: { type: string }
+        default: QT
+        rank: 20
+      - names: ["--index-format"]
+        description: layout of the barcode and quality tags, e.g. i8i8
+        value: { type: string }
+        rank: 20
+      - *input-fmt-option
+      - *reference
+      - *threads
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: alignments grouped by read name
+        value: { type: file, format: bam }
+
+  - name: fasta
+    help: ["fasta", "--help"]
+    description: convert alignments back to FASTA sequences
+    arguments:
+      - name: in.bam
+        description: alignments grouped by read name
+        value: { type: file, format: bam }
+
+  - name: import
+    help: ["import", "--help"]
+    description: turn FASTQ or FASTA reads into unaligned SAM, BAM or CRAM
+    arguments:
+      - name: file.fastq
+        description: reads to convert
+        variadic: true
+        value: { type: file, format: fastq, optional: true }
+
+  - name: reference
+    help: ["reference", "--help"]
+    description: rebuild the reference sequence from the reads of a CRAM or BAM file
+    arguments:
+      - name: in.cram
+        description: alignments
+        value: { type: file, format: cram, optional: true }
+
+  - name: reset
+    help: ["reset", "--help"]
+    description: undo aligner changes, giving back unaligned reads
+    arguments:
+      - name: in.bam
+        description: alignments (standard input when absent)
+        value: { type: file, format: bam, optional: true }
+
+  # -- Statistics
+  - name: bedcov
+    help: ["bedcov", "--help"]
+    description: sum the read depth over each region of a BED file
+    arguments:
+      - name: in.bed
+        description: regions
+        value: { type: file, format: bed }
+      - name: in.bam
+        description: indexed alignments
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: coverage
+    help: ["coverage", "--help"]
+    description: report depth and breadth of coverage per reference sequence, as a table or histogram
+    options:
+      - names: ["-o", "--output"]
+        description: file to write (standard output by default)
+        value: { type: file }
+        rank: 85
+      - names: ["-r", "--region"]
+        description: report only this region (chr:start-end)
+        value: { type: string }
+        rank: 75
+      - names: ["-b", "--bam-list"]
+        description: file listing the input files, one per line
+        value: { type: file }
+        rank: 60
+      - names: ["-q", "--min-MQ"]
+        description: lowest mapping quality counted
+        value: { type: int }
+        default: 0
+        rank: 60
+      - names: ["-Q", "--min-BQ"]
+        description: lowest base quality counted
+        value: { type: int }
+        default: 0
+        rank: 55
+      - names: ["-l", "--min-read-len"]
+        description: ignore reads shorter than this
+        value: { type: int }
+        default: 0
+        rank: 40
+      - names: ["--rf"]
+        description: count only reads having these flags
+        value: { type: string }
+        rank: 30
+      - names: ["--ff"]
+        description: ignore reads having any of these flags
+        value: { type: string }
+        default: "UNMAP,SECONDARY,QCFAIL,DUP"
+        rank: 40
+      - names: ["-d", "--depth"]
+        description: depth cap per position (0 removes it)
+        value: { type: int }
+        default: 1000000
+        rank: 30
+      - names: ["--min-depth"]
+        description: lowest depth for a position to count as covered
+        value: { type: int }
+        default: 1
+        rank: 45
+      - names: ["-m", "--histogram"]
+        description: draw a histogram instead of the table
+        rank: 55
+      - names: ["-D", "--plot-depth"]
+        description: draw the depth instead of the table
+        rank: 40
+      - names: ["-A", "--ascii"]
+        description: use only ASCII characters in the histogram
+        rank: 30
+      - names: ["-H", "--no-header"]
+        description: leave out the header line of the table
+        rank: 40
+      - names: ["-w", "--n-bins"]
+        description: number of histogram bins (terminal width minus 40 by default)
+        value: { type: int }
+        rank: 30
+      - names: ["-h", "--help"]
+        description: print this help and exit
+        rank: 10
+      - *input-fmt-option
+      - *reference
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: alignments
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: depth
+    help: ["depth", "--help"]
+    description: report the read depth at each position
+    options:
+      - names: ["-o"]
+        description: file to write (standard output by default)
+        value: { type: file }
+        rank: 85
+      - names: ["-a"]
+        description: report every position, zero depth included (twice, -aa, also unused sequences)
+        repeatable: true
+        rank: 75
+      - names: ["-r"]
+        description: report only this region (chr or chr:from-to)
+        value: { type: string }
+        rank: 75
+      - names: ["-b"]
+        description: report only the regions of this BED file
+        value: { type: file, format: bed }
+        rank: 70
+      - names: ["-H"]
+        description: print a header line
+        rank: 50
+      - names: ["-f"]
+        description: file listing the input files
+        value: { type: file }
+        rank: 50
+      - names: ["-q", "--min-BQ"]
+        description: lowest base quality counted
+        value: { type: int }
+        default: 0
+        rank: 55
+      - names: ["-Q", "--min-MQ"]
+        description: lowest mapping quality counted
+        value: { type: int }
+        default: 0
+        rank: 60
+      - names: ["-l"]
+        description: ignore reads shorter than this
+        value: { type: int }
+        default: 0
+        rank: 35
+      - names: ["-J"]
+        description: count deletions in the depth
+        rank: 40
+      - names: ["-s"]
+        description: count overlapping mates of a pair only once
+        rank: 40
+      - names: ["-g"]
+        description: take these flags out of the default exclusion list
+        value: { type: string }
+        rank: 30
+      - names: ["-G", "--excl-flags"]
+        description: add these flags to the default exclusion list (UNMAP, SECONDARY, QCFAIL, DUP)
+        value: { type: string }
+        rank: 35
+      - names: ["--incl-flags"]
+        description: count only reads having at least one of these flags
+        value: { type: string }
+        rank: 25
+      - names: ["--require-flags"]
+        description: count only reads having all these flags
+        value: { type: string }
+        rank: 25
+      - names: ["-X"]
+        description: index files are given after the inputs
+        rank: 20
+      - *input-fmt-option
+      - *reference
+      - *threads
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: alignments
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: flagstat
+    help: ["flagstat", "--help"]
+    description: count reads per flag category (mapped, paired, duplicates…)
+    options:
+      - names: ["-O", "--output-fmt"]
+        description: format of the report
+        value:
+          type: enum
+          values:
+            - { value: default, description: plain text }
+            - { value: json, description: JSON }
+            - { value: tsv, description: tab-separated }
+        rank: 70
+      - *input-fmt-option
+      - *threads
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: alignments
+        value: { type: file, format: bam }
+
+  - name: idxstats
+    help: ["idxstats", "--help"]
+    description: print the mapped and unmapped read counts per reference sequence, from the index
+    options:
+      - names: ["-X"]
+        description: the index file is given after the input
+        rank: 25
+      - *input-fmt-option
+      - *threads
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: indexed alignments
+        value: { type: file, format: bam }
+
+  - name: cram-size
+    help: ["cram-size", "--help"]
+    description: list the size of each data series of a CRAM file
+    arguments:
+      - name: in.cram
+        description: CRAM file
+        value: { type: file, format: cram, optional: true }
+
+  - name: phase
+    help: ["phase", "--help"]
+    description: phase heterozygous variants from the reads
+    arguments:
+      - name: in.bam
+        description: sorted alignments
+        value: { type: file, format: bam }
+
+  - name: stats
+    help: ["stats", "--help"]
+    description: collect detailed statistics (qualities, insert sizes, coverage…) for plot-bamstats or MultiQC
+    options:
+      - names: ["-r", "--ref-seq"]
+        description: reference, needed for the GC-depth and mismatch-per-cycle statistics
+        value: { type: file, format: fasta }
+        rank: 70
+      - names: ["-t", "--target-regions"]
+        description: compute the statistics on these regions only (chr, from, to; 1-based)
+        value: { type: file }
+        rank: 65
+      - names: ["-d", "--remove-dups"]
+        description: leave reads flagged as duplicates out
+        rank: 55
+      - names: ["-f", "--required-flag"]
+        description: count only reads having these flags
+        value: { type: string }
+        default: 0
+        rank: 40
+      - names: ["-F", "--filtering-flag"]
+        description: ignore reads having these flags
+        value: { type: string }
+        default: 0
+        rank: 45
+      - names: ["-c", "--coverage"]
+        description: range and step of the coverage distribution (min,max,step)
+        value: { type: string }
+        default: "1,1000,1"
+        rank: 35
+      - names: ["--GC-depth"]
+        description: bin size of the GC-depth statistics (smaller uses more memory)
+        value: { type: float }
+        default: 20000
+        rank: 25
+      - names: ["-i", "--insert-size"]
+        description: largest insert size counted
+        value: { type: int }
+        default: 8000
+        rank: 40
+      - names: ["-I", "--id"]
+        description: count only this read group or sample
+        value: { type: string }
+        rank: 40
+      - names: ["-l", "--read-length"]
+        description: count only reads of this length
+        value: { type: int }
+        default: -1
+        rank: 25
+      - names: ["-m", "--most-inserts"]
+        description: fraction of the insert sizes reported, the most frequent first
+        value: { type: float }
+        default: 0.99
+        rank: 25
+      - names: ["-S", "--split"]
+        description: also write separate statistics for each value of this tag
+        value: { type: string }
+        rank: 35
+      - names: ["-P", "--split-prefix"]
+        description: path prefix of the files written by -S (the input name by default)
+        value: { type: string }
+        rank: 25
+      - names: ["-q", "--trim-quality"]
+        description: quality threshold of the BWA-style read trimming
+        value: { type: int }
+        default: 0
+        rank: 25
+      - names: ["-x", "--sparse"]
+        description: leave out insert size rows without insertions
+        rank: 20
+      - names: ["-p", "--remove-overlaps"]
+        description: count the overlap of paired reads once in coverage and base counts
+        rank: 35
+      - names: ["-g", "--cov-threshold"]
+        description: coverage a base must exceed to count in the target percentage
+        value: { type: int }
+        default: 0
+        rank: 30
+      - names: ["--ref-stats"]
+        description: also compute statistics of the reference
+        rank: 20
+      - names: ["--ref-stats-chunk"]
+        description: size in Mb of the reference chunks read for --ref-stats
+        value: { type: int }
+        default: 1
+        rank: 15
+      - names: ["-X", "--customized-index"]
+        description: the index file is given after the input
+        rank: 20
+      - names: ["-s", "--sam"]
+        description: ignored, the input format is detected
+        deprecated: true
+        rank: 10
+      - names: ["-h", "--help"]
+        description: print this help and exit
+        rank: 10
+      - *input-fmt-option
+      - *reference
+      - *threads
+      - *verbosity
+    arguments:
+      - name: file.bam
+        description: alignments
+        value: { type: file, format: bam }
+      - name: region
+        description: regions to restrict the statistics to (needs an index)
+        variadic: true
+        value: { type: string, optional: true }
+
+  - name: ampliconstats
+    help: ["ampliconstats", "--help"]
+    description: statistics per amplicon, from a BED file of primers
+    arguments:
+      - name: primers.bed
+        description: primer positions
+        value: { type: file, format: bed }
+      - name: in.bam
+        description: alignments
+        variadic: true
+        value: { type: file, format: bam }
+
+  - name: checksum
+    help: ["checksum", "--help"]
+    description: checksum the sequence content, whatever the order of the reads
+    arguments:
+      - name: file.bam
+        description: alignments (standard input when absent)
+        variadic: true
+        value: { type: file, format: bam, optional: true }
+
+  # -- Viewing
+  - name: flags
+    help: ["flags", "--help"]
+    description: translate SAM flags between numbers and names
+    arguments:
+      - name: flags
+        description: flags as numbers or comma-separated names
+        variadic: true
+        value: { type: string, values: [UNMAP, SECONDARY, SUPPLEMENTARY, DUP, QCFAIL, PROPER_PAIR] }
+
+  - name: head
+    help: ["head", "--help"]
+    description: print the header, and optionally the first records, of a file
+    arguments:
+      - name: file
+        description: alignments (standard input when absent)
+        value: { type: file, format: bam, optional: true }
+
+  - name: tview
+    help: ["tview", "--help"]
+    description: browse alignments interactively in the terminal
+    arguments:
+      - name: aln.bam
+        description: sorted, indexed alignments
+        value: { type: file, format: bam }
+      - name: ref.fasta
+        description: reference, to show mismatches
+        value: { type: file, format: fasta, optional: true }
+
+  - name: view
+    help: ["view", "--help"]
+    description: convert between SAM, BAM and CRAM, filter alignments or extract regions
+    options:
+      # Output.
+      - names: ["-o", "--output"]
+        description: file to write (standard output by default)
+        value: { type: file, format: bam }
+        rank: 95
+      - names: ["-b", "--bam"]
+        description: write BAM
+        rank: 88
+      - names: ["-h", "--with-header"]
+        description: keep the header in SAM output
+        rank: 82
+      - names: ["-C", "--cram"]
+        description: write CRAM (needs the reference, -T)
+        rank: 60
+      - names: ["-u", "--uncompressed"]
+        description: write uncompressed BAM, best for piping into another samtools command
+        rank: 60
+      - names: ["-1", "--fast"]
+        description: write BAM with fast compression
+        rank: 35
+      - names: ["-H", "--header-only"]
+        description: print the header only
+        rank: 65
+      - names: ["--no-header"]
+        description: print the alignment records only (the default for SAM)
+        rank: 30
+      - names: ["-c", "--count"]
+        description: print only how many records pass the filters
+        rank: 70
+      - names: ["--save-counts"]
+        description: write how many records passed and failed the filters to this file
+        value: { type: file }
+        rank: 25
+      - names: ["-U", "--unoutput", "--output-unselected"]
+        description: file for the reads rejected by the filters
+        value: { type: file, format: bam }
+        rank: 40
+      - names: ["-p", "--unmap"]
+        description: flag rejected reads as unmapped and still write them
+        rank: 25
+      - names: ["-P", "--fetch-pairs"]
+        description: also fetch the mates of reads in the regions, even outside them
+        rank: 35
+      - names: ["--remove-ur"]
+        description: drop the UR tags of @SQ header lines
+        rank: 15
+      # Input.
+      - names: ["-t", "--fai-reference"]
+        description: file of reference names and lengths, such as a .fai index
+        value: { type: file, format: fai }
+        rank: 30
+      - names: ["-M", "--use-index"]
+        description: fetch regions with the index and the multi-region iterator (no duplicates)
+        rank: 40
+      - names: ["--region-file", "--regions-file"]
+        description: fetch only the reads overlapping these regions, using the index
+        value: { type: file, format: bed }
+        rank: 50
+      - names: ["-X", "--customized-index"]
+        description: an index file is given after the input
+        rank: 20
+      # Filters.
+      - names: ["-q", "--min-MQ"]
+        description: keep reads with at least this mapping quality
+        value: { type: int }
+        rank: 75
+      - names: ["-F", "--excl-flags", "--exclude-flags"]
+        description: drop reads having any of these flags (e.g. 4 for unmapped)
+        value: { type: string, values: ["4", "0x904", "UNMAP,SECONDARY,SUPPLEMENTARY"] }
+        rank: 78
+      - names: ["-f", "--require-flags"]
+        description: keep reads having all these flags (e.g. 2 for properly paired)
+        value: { type: string, values: ["2", "0x2", "PROPER_PAIR"] }
+        rank: 72
+      - names: ["--rf", "--incl-flags", "--include-flags"]
+        description: keep reads having at least one of these flags
+        value: { type: string }
+        rank: 35
+      - names: ["-G"]
+        description: drop reads having all of these flags
+        value: { type: string }
+        rank: 30
+      - names: ["-L", "--target-file", "--targets-file"]
+        description: keep reads overlapping the regions of this BED file
+        value: { type: file, format: bed }
+        rank: 65
+      - names: ["-N", "--qname-file"]
+        description: keep reads whose name is listed in this file (^FILE keeps the others)
+        value: { type: file }
+        rank: 40
+      - names: ["-r", "--read-group"]
+        description: keep reads of this read group (and reads without one)
+        value: { type: string }
+        rank: 45
+      - names: ["-R", "--read-group-file"]
+        description: keep reads of the read groups listed in this file (^FILE keeps the others)
+        value: { type: file }
+        rank: 35
+      - names: ["-n", "--exclude-no-read_group"]
+        description: drop reads that have no read group
+        rank: 25
+      - names: ["-d", "--tag"]
+        description: keep reads with this tag, optionally with this value (TAG[:VAL])
+        value: { type: string }
+        rank: 40
+      - names: ["-D", "--tag-file"]
+        description: keep reads with a tag whose value is listed in a file (TAG:FILE)
+        value: { type: string }
+        rank: 30
+      - names: ["-l", "--library"]
+        description: keep reads of this library
+        value: { type: string }
+        rank: 30
+      - names: ["-m", "--min-qlen"]
+        description: keep reads covering at least this many query bases
+        value: { type: int }
+        rank: 35
+      - names: ["-e", "--expr"]
+        description: keep reads matching this filter expression
+        value: { type: string }
+        rank: 45
+      - names: ["--subsample"]
+        description: fraction of templates (read pairs) to keep
+        value: { type: float }
+        rank: 50
+      - names: ["--subsample-seed"]
+        description: seed choosing which templates are kept, or auto (from the header)
+        value: { type: string, values: [auto] }
+        default: auto
+        rank: 35
+      - names: ["-s"]
+        description: shorthand for a seed and a fraction, SEED.FRACTION (e.g. 42.1)
+        value: { type: string }
+        rank: 40
+      # Processing.
+      - names: ["--add-flags"]
+        description: set these flags on every read
+        value: { type: string }
+        rank: 20
+      - names: ["--remove-flags"]
+        description: clear these flags on every read
+        value: { type: string }
+        rank: 20
+      - names: ["-x", "--remove-tag"]
+        description: tags to strip, comma-separated
+        value: { type: string }
+        repeatable: true
+        rank: 35
+      - names: ["--keep-tag"]
+        description: tags to keep, all others are stripped
+        value: { type: string }
+        repeatable: true
+        rank: 30
+      - names: ["-B", "--remove-B"]
+        description: collapse backward (B) CIGAR operations
+        rank: 15
+      - names: ["-z", "--sanitize"]
+        description: check and fix records (comma-separated kinds)
+        value: { type: string }
+        rank: 25
+      # General.
+      - names: ["-S"]
+        description: ignored, the input format is detected
+        deprecated: true
+        rank: 10
+      - names: ["-?", "--help"]
+        description: print the long help and exit
+        rank: 10
+      - *no-PG
+      - *input-fmt-option
+      - *output-fmt
+      - *output-fmt-option
+      - names: ["-T", "--reference"]
+        description: reference FASTA, needed to read or write CRAM
+        value: { type: file, format: fasta }
+        rank: 60
+      - *threads
+      - *write-index
+      - *verbosity
+    arguments:
+      - name: in.bam
+        description: SAM, BAM or CRAM file to read
+        value: { type: file, format: bam }
+      - name: region
+        description: regions to extract (chr, chr:from or chr:from-to); needs an index
+        variadic: true
+        value: { type: string, optional: true }
+
+  - name: depad
+    help: ["depad", "--help"]
+    description: convert a padded BAM to an unpadded one
+    arguments:
+      - name: in.bam
+        description: padded alignments
+        value: { type: file, format: bam }
+
+  - name: samples
+    help: ["samples", "--help"]
+    description: list the samples (SM tags) of alignment files
+    arguments:
+      - name: input
+        description: alignment files
+        variadic: true
+        value: { type: file, format: bam }
+
+  # -- Misc
+  - name: help
+    help: ["help"]
+    description: print the list of subcommands, or the help of one
+    arguments:
+      - name: cmd
+        description: subcommand whose help to print
+        value: { type: string, optional: true }
+
+  - name: version
+    help: ["version"]
+    description: print detailed version and build information

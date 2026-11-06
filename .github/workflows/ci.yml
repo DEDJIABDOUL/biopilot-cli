@@ -53,6 +53,8 @@ jobs:
 
       - run: npm run lint
 
+      - run: npm run build:db  # BIOPILOT: compile the Catalog; fails on invalid YAML
+
       - run: npm test
 
       - run: npm run build

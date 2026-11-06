@@ -178,6 +178,23 @@ describe("Catalog compiler", () => {
       expect(errorsOf(source)).toEqual([expect.objectContaining({ location: "options[1].value.mate_of", message: expect.stringContaining("1 and 2") })]);
     });
 
+    test.each([
+      ["an option used that is not in the command", `when: { used: ["--nope"] }`, "options[0].rules[0].when.used[0]", "not an option of this command"],
+      ["an unknown condition", `when: { tool: fastp }`, "options[0].rules[0].when.tool", "unknown field"],
+      ["an unknown assay", `when: { assay: chip-seq }`, "options[0].rules[0].when.assay", "rna-seq"],
+      ["an unknown platform", `when: { platform: pacbio }`, "options[0].rules[0].when.platform", "nanopore"],
+    ])("rejects a rule with %s", (_, when, location, message) => {
+      const source = tool(`    rules:\n      - ${when}\n        boost: 10`);
+      expect(errorsOf(source)).toEqual([expect.objectContaining({ location, message: expect.stringContaining(message) })]);
+    });
+
+    test("accepts a rule using an option of the same command by any alias", () => {
+      const { result } = compile({
+        "t.yml": tool(`    rules:\n      - when: { used: ["--out"], paired: false, platform: illumina, assay: rna-seq }\n        boost: -20`),
+      });
+      expect(result.ok).toBe(true);
+    });
+
     test("rejects two options claiming the same mate", () => {
       const source = tool(
         `    value: { type: file, read_role: 1 }\n  - names: ["-I"]\n    value: { type: file, read_role: 2, mate_of: "-o" }\n  - names: ["-J"]\n    value: { type: file, read_role: 2, mate_of: "--out" }`,

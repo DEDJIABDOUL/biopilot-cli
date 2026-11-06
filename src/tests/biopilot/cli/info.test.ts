@@ -10,12 +10,12 @@ import fs from "node:fs";
 import _Ajv2020 from "ajv/dist/2020.js";
 import path from "node:path";
 import url from "node:url";
-import { FASTP, PACKER, SAMTOOLS, TRIMMER, compileValid } from "../helpers.js";
+import { FASTP, PACKER, RULED, SAMTOOLS, TRIMMER, compileValid } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 // fastp has its own `--json` option (its JSON report): `biopilot info fastp --json` must show it.
 const FASTP_WITH_JSON = `${FASTP}  - names: ["-j", "--json"]\n    description: JSON report file\n`;
-const catalogPath = compileValid({ "fastp.yml": FASTP_WITH_JSON, "samtools.yml": SAMTOOLS, "trimmer.yml": TRIMMER, "packer.yml": PACKER });
+const catalogPath = compileValid({ "fastp.yml": FASTP_WITH_JSON, "samtools.yml": SAMTOOLS, "trimmer.yml": TRIMMER, "packer.yml": PACKER, "ruled.yml": RULED });
 
 const biopilot = (...args: string[]) => {
   const result = spawnSync(process.execPath, ["--import", "tsx", path.join(repoRoot, "src", "index.ts"), "info", ...args], {
@@ -49,6 +49,7 @@ describe("biopilot info", () => {
       deprecated: false,
       mate: null,
       derive: null,
+      rules: [],
     });
   });
 
@@ -164,7 +165,7 @@ describe("biopilot info", () => {
     const validate = new Ajv2020({ allErrors: true, strict: false }).compile(
       JSON.parse(fs.readFileSync(path.join(repoRoot, "schemas", "info-output.schema.json"), "utf-8")),
     );
-    for (const args of [["--json"], ["--json", "trimmer"], ["--json", "trimmer", "-o"], ["--json", "samtools", "view"]]) {
+    for (const args of [["--json"], ["--json", "trimmer"], ["--json", "trimmer", "-o"], ["--json", "samtools", "view"], ["--json", "ruled"]]) {
       const output = JSON.parse(biopilot(...args).stdout);
       expect({ args, valid: validate(output), errors: validate.errors }).toEqual({ args, valid: true, errors: null });
     }
@@ -172,5 +173,15 @@ describe("biopilot info", () => {
 
   test("text shows positional arguments that are optional or take several values", () => {
     expect(biopilot("packer").stdout).toMatch(/^usage: packer <archive>\.\.\. \[<level>\]$/m);
+  });
+
+  test("an option's rules, in JSON and in text", () => {
+    expect(JSON.parse(biopilot("--json", "ruled", "-I").stdout).option.rules).toEqual([
+      { when: { used: ["--in1"], paired: true, platform: null, assay: null }, boost: 35 },
+    ]);
+    const { stdout } = biopilot("ruled");
+    expect(stdout).toMatch(/--in2, -I .*\+35 when --in1 used and paired/);
+    expect(stdout).toMatch(/--nanopore-mode .*\+40 when nanopore, -30 when illumina/);
+    expect(stdout).toMatch(/--quant .*\+20 when rna-seq, \+5 always/);
   });
 });

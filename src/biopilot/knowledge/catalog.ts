@@ -6,7 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { CATALOG_SCHEMA_VERSION, type FormatKind, type Platform, type ValueType } from "./schema.js";
+import { CATALOG_SCHEMA_VERSION, type Assay, type FormatKind, type Platform, type ValueType } from "./schema.js";
 import { catalogCandidates } from "./location.js";
 
 export type Tool = {
@@ -39,6 +39,19 @@ export type ValueSpec = {
   readRole: 1 | 2 | null;
 };
 
+/** A context condition; `null` (or an empty `used`) means "no constraint". See `ruleHolds`. */
+export type RuleCondition = {
+  /** Canonical names of options of the same command that must already be on the command line. */
+  used: string[];
+  paired: boolean | null;
+  /** Holds when the project's platforms contain this one. */
+  platform: Platform | null;
+  assay: Assay | null;
+};
+
+/** Adds `boost` (−100 to +100) to an option's rank when `when` holds. */
+export type Rule = { when: RuleCondition; boost: number };
+
 export type Option = {
   canonicalName: string;
   /** Every name of the option, in Catalog order (the canonical name included). Case-sensitive. */
@@ -59,6 +72,8 @@ export type Option = {
   mate: string | null;
   /** Derived output: canonical name of the source option and the suffix added to its value. */
   derive: { from: string; suffix: string } | null;
+  /** Context rules, in Catalog order. */
+  rules: Rule[];
 };
 
 export type Argument = {
@@ -85,6 +100,9 @@ export type Format = {
   marker: string | null;
 };
 
+/** An option found by `searchOptions`, with the command it belongs to. */
+export type SearchResult = { command: Command; option: Option };
+
 /** A path of a listing recognised as a format: a file, an index prefix, or an index folder. */
 export type FileMatch = { path: string; format: string };
 
@@ -106,6 +124,11 @@ export interface Catalog {
   listArguments(command: Command): Argument[];
   /** Finds an Option of a Command by any of its aliases (case-sensitive). */
   findOption(command: Command, alias: string): Option | undefined;
+  /**
+   * Searches options of every tool by the words of their names and descriptions: every word must match,
+   * the last one as a prefix. Best matches first. Any text is accepted; nothing to search finds nothing.
+   */
+  searchOptions(text: string, limit?: number): SearchResult[];
   /** Declared file formats, in declaration order. */
   listFormats(): Format[];
   /** Format of a single file, from its name (kind `file` only; first match in declaration order). */
@@ -243,6 +266,19 @@ class SqliteCatalog implements Catalog {
       findOption: db.prepare<[number, string], OptionRow>(
         `${OPTION_SELECT} WHERE o.id = (SELECT option_id FROM option_names WHERE command_id = ? AND name = ?)`,
       ),
+      optionRules: db.prepare<[number], { ord: number; paired: number | null; platform: Platform | null; assay: Assay | null; boost: number }>(
+        "SELECT ord, paired, platform, assay, boost FROM rules WHERE option_id = ? ORDER BY ord",
+      ),
+      ruleUsed: db.prepare<[number, number], { name: string }>(
+        "SELECT o.canonical_name AS name FROM rule_used u JOIN options o ON o.id = u.used_option_id WHERE u.option_id = ? AND u.rule_ord = ? ORDER BY u.ord",
+      ),
+      search: db.prepare<[string, number], { id: number; command_id: number }>(
+        "SELECT f.rowid AS id, o.command_id FROM options_fts f JOIN options o ON o.id = f.rowid WHERE options_fts MATCH ? ORDER BY bm25(options_fts), o.id LIMIT ?",
+      ),
+      optionById: db.prepare<[number], OptionRow>(`${OPTION_SELECT} WHERE o.id = ?`),
+      commandById: db.prepare<[number], { parent_id: number | null; name: string; description: string | null; tool: string }>(
+        "SELECT c.parent_id, c.name, c.description, t.name AS tool FROM commands c JOIN tools t ON t.id = c.tool_id WHERE c.id = ?",
+      ),
       optionValues: db.prepare<[number], ValueRow>("SELECT value, description FROM option_values WHERE option_id = ? ORDER BY ord"),
       listArguments: db.prepare<[number], ArgumentRow>("SELECT * FROM arguments WHERE command_id = ? ORDER BY position"),
       argumentValues: db.prepare<[number, number], ValueRow>(
@@ -308,6 +344,20 @@ class SqliteCatalog implements Catalog {
     return row ? this.#toOption(row) : undefined;
   }
 
+  searchOptions(text: string, limit = 20): SearchResult[] {
+    // Words only (the index tokenises names and descriptions the same way), each quoted so that no
+    // character of the user's text can be read as FTS5 query syntax.
+    const words = text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+    if (words.length === 0) return [];
+    const query = words.map((word, i) => `"${word}"${i === words.length - 1 ? "*" : ""}`).join(" ");
+    // A result whose option or command is missing (damaged Catalog) is skipped, never thrown.
+    return this.#statements.search.all(query, limit).flatMap((row) => {
+      const command = this.#commandFromId(row.command_id);
+      const option = this.#statements.optionById.get(row.id);
+      return command && option ? [{ command, option: this.#toOption(option) }] : [];
+    });
+  }
+
   listFormats(): Format[] {
     return this.#formats.map((format) => ({ ...format, suffixes: [...format.suffixes] }));
   }
@@ -350,6 +400,21 @@ class SqliteCatalog implements Catalog {
     this.#db.close();
   }
 
+  /** Rebuilds a Command from its id by walking up to the root; nothing if a command on the way is missing. */
+  #commandFromId(id: number): Command | undefined {
+    const path: string[] = [];
+    let row = this.#statements.commandById.get(id);
+    if (!row) return;
+    const { tool, description } = row;
+    while (row.parent_id !== null) {
+      path.unshift(row.name);
+      row = this.#statements.commandById.get(row.parent_id);
+      if (!row) return;
+    }
+    this.#commandIds.set(this.#commandKey(tool, path), id);
+    return { tool, path, description };
+  }
+
   #commandKey(tool: string, path: readonly string[]): string {
     return [tool, ...path].join("\0");
   }
@@ -375,6 +440,15 @@ class SqliteCatalog implements Catalog {
       deprecated: row.deprecated === 1,
       mate: row.mate_name,
       derive: row.derive_from_name !== null && row.derive_suffix !== null ? { from: row.derive_from_name, suffix: row.derive_suffix } : null,
+      rules: this.#statements.optionRules.all(row.id).map((rule) => ({
+        when: {
+          used: this.#statements.ruleUsed.all(row.id, rule.ord).map(({ name }) => name),
+          paired: rule.paired === null ? null : rule.paired === 1,
+          platform: rule.platform,
+          assay: rule.assay,
+        },
+        boost: rule.boost,
+      })),
     };
   }
 }

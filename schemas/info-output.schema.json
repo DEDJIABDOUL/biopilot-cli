@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/DEDJIABDOUL/biopilot-cli/schemas/info-output.schema.json",
   "title": "biopilot info --json output, format 1",
-  "description": "Contract of `biopilot info --json`. Adding a field does not change `format`; removing or renaming one increments it. Errors are reported on stderr with exit code 1 and nothing on stdout. `command.subcommands` and `command.arguments` were added in format 1 (ticket #6). Value details, version ranges, option forms, mates and derived outputs were added in format 1 (ticket #7).",
+  "description": "Contract of `biopilot info --json`. Adding a field does not change `format`; removing or renaming one increments it. Errors are reported on stderr with exit code 1 and nothing on stdout. `command.subcommands` and `command.arguments` were added in format 1 (ticket #6). Value details, version ranges, option forms, mates and derived outputs were added in format 1 (ticket #7). `option.rules` was added in format 1 (ticket #8).",
   "type": "object",
   "required": ["format"],
   "properties": {
@@ -162,7 +162,8 @@
         "hidden",
         "deprecated",
         "mate",
-        "derive"
+        "derive",
+        "rules"
       ],
       "properties": {
         "canonical_name": {
@@ -231,6 +232,44 @@
               }
             }
           ]
+        },
+        "rules": {
+          "type": "array",
+          "description": "Context rules, in Catalog order: `boost` is added to `rank` when `when` holds.",
+          "items": {
+            "type": "object",
+            "required": ["when", "boost"],
+            "properties": {
+              "when": {
+                "type": "object",
+                "required": ["used", "paired", "platform", "assay"],
+                "properties": {
+                  "used": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Canonical names of options that must already be on the command line."
+                  },
+                  "paired": {
+                    "type": ["boolean", "null"]
+                  },
+                  "platform": {
+                    "enum": ["illumina", "nanopore", null],
+                    "description": "Holds when the project's platforms contain it."
+                  },
+                  "assay": {
+                    "enum": ["rna-seq", "variant-calling", "unknown", null]
+                  }
+                }
+              },
+              "boost": {
+                "type": "integer",
+                "minimum": -100,
+                "maximum": 100
+              }
+            }
+          }
         }
       }
     },

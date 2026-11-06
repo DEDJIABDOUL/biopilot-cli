@@ -193,10 +193,21 @@ CREATE TABLE arguments (                 -- positionnels
   variadic    INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE rules (                     -- règles de contexte
+CREATE TABLE rules (                     -- règles de contexte ; chaque champ renseigné doit être vrai
   option_id   INTEGER NOT NULL REFERENCES options(id),
-  condition   TEXT NOT NULL,             -- JSON : {"used": ["--in1"], "paired": true, "platform": "nanopore", "assay": "rna-seq"}
+  ord         INTEGER NOT NULL,
+  paired      INTEGER,                   -- NULL : sans condition
+  platform    TEXT,                      -- vrai si les plateformes du projet la contiennent (décision 35)
+  assay       TEXT,
   boost       INTEGER NOT NULL           -- de -100 à +100
+);
+
+CREATE TABLE rule_used (                 -- condition `used` : options déjà présentes sur la ligne (toutes requises)
+  option_id      INTEGER NOT NULL,
+  rule_ord       INTEGER NOT NULL,
+  ord            INTEGER NOT NULL,
+  used_option_id INTEGER NOT NULL REFERENCES options(id),
+  PRIMARY KEY (option_id, rule_ord, ord)
 );
 
 CREATE TABLE formats (
@@ -212,7 +223,7 @@ CREATE TABLE metadata (                  -- version du schéma (entier) : le lec
   value TEXT NOT NULL
 );
 
-CREATE VIRTUAL TABLE options_fts USING fts5(names, description, content='options', content_rowid='id');
+CREATE VIRTUAL TABLE options_fts USING fts5(names, description);  -- rowid = options.id
 ```
 
 ### 6.3 Schéma de `user.db`

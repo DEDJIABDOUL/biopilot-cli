@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { CATALOG_SCHEMA_VERSION, type Assay, type FormatKind, type Platform, type ValueType } from "./schema.js";
-import { catalogCandidates } from "./location.js";
+import { catalogCandidates, sqliteAddonPath } from "./location.js";
 
 export type Tool = {
   name: string;
@@ -518,10 +518,31 @@ class SqliteCatalog implements Catalog {
   }
 }
 
-const openAt = (path: string): CatalogOpenResult => {
+/** Loaded addons by file: an addon is loaded (and initialised by better-sqlite3) once per process. */
+const loadedAddons = new Map<string, object>();
+
+/**
+ * Loads a native addon from its file. `process.dlopen`, not `require`: in the standalone binary `require`
+ * only knows Node's builtin modules (better-sqlite3 would `require` a path given as a string).
+ */
+const loadAddon = (file: string): object => {
+  let addon = loadedAddons.get(file);
+  if (!addon) {
+    const module = { exports: {} };
+    process.dlopen(module, file);
+    addon = module.exports;
+    loadedAddons.set(file, addon);
+  }
+  return addon;
+};
+
+const openAt = (path: string, addonPath: string | undefined): CatalogOpenResult => {
   let db: Database.Database | undefined;
   try {
-    db = new Database(path, { readonly: true, fileMustExist: true });
+    const nativeBinding = addonPath === undefined ? undefined : loadAddon(addonPath);
+    // better-sqlite3 13 takes the loaded addon object as `nativeBinding`; its types (9.x) only know a path.
+    const options = { readonly: true, fileMustExist: true, ...(nativeBinding && { nativeBinding }) } as Database.Options;
+    db = new Database(path, options);
     const meta = new Map(
       db
         .prepare<[], { key: string; value: string }>("SELECT key, value FROM metadata")
@@ -546,7 +567,8 @@ const openAt = (path: string): CatalogOpenResult => {
     }
     const code = String((error as { code?: string }).code ?? (error as Error).message);
     if (!code.startsWith("SQLITE_")) {
-      return { available: false, reason: "engine-unavailable", detail: `the SQLite engine could not be loaded (${code})` };
+      const from = addonPath === undefined ? "" : ` from ${addonPath}`;
+      return { available: false, reason: "engine-unavailable", detail: `the SQLite engine could not be loaded${from} (${code})` };
     }
     return { available: false, reason: "unreadable", detail: `${path} is unreadable or corrupt (${code})` };
   }
@@ -556,10 +578,12 @@ const openAt = (path: string): CatalogOpenResult => {
  * Opens the Catalog. Never throws: a missing, corrupt or incompatible Catalog is reported as unavailable,
  * so callers can fall back to the engine's own behaviour (spec principle "fail silently").
  * @param path explicit file; when omitted, the standard locations are searched in order.
+ * @param options.nativeBinding SQLite addon file to load (passed to better-sqlite3's `nativeBinding`);
+ * by default the one extracted by the standalone binary, or better-sqlite3's own from source.
  */
-export const openCatalog = (path?: string): CatalogOpenResult => {
+export const openCatalog = (path?: string, options: { nativeBinding?: string } = {}): CatalogOpenResult => {
   const candidates = path ? [path] : catalogCandidates();
   const found = candidates.find((candidate) => fs.existsSync(candidate));
   if (!found) return { available: false, reason: "not-found", detail: `no Catalog at ${candidates.join(", ")}` };
-  return openAt(found);
+  return openAt(found, options.nativeBinding ?? sqliteAddonPath());
 };

@@ -2,10 +2,18 @@
 // Licensed under the MIT License.
 
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { compileCatalog, type CompileResult } from "../../biopilot/knowledge/compile.js";
 import { SCHEMAS_DIR } from "../../biopilot/knowledge/yamlSource.js";
+
+/** better-sqlite3's prebuilt addon for this platform: the file the standalone binary ships and extracts. */
+export const prebuiltSqliteAddon = path.join(
+  path.dirname(createRequire(import.meta.url).resolve("better-sqlite3/package.json")),
+  "prebuilds",
+  `${process.platform}-${process.arch}.node`,
+);
 
 /** A fresh temporary folder; tests never touch the user's home. */
 export const tempDir = (): string => fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-test-"));

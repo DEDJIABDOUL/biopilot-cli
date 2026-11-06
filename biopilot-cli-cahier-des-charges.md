@@ -461,16 +461,15 @@ Prévue pour l'architecture, non développée en version 1.
 1. **Bibliothèque SQLite :** `better-sqlite3` — voir section 6.6 et [ADR-0001](./docs/adr/0001-better-sqlite3.md).
 2. **Nom de paquet :** `biopilot-cli` (npm, dépôt GitHub, feedstock conda-forge). La commande shell reste `biopilot` (M1, section 5). Disponibilité vérifiée le 6 novembre 2026 sur les trois plateformes ; `biopilot` seul a été écarté car l'organisation GitHub de ce nom est déjà prise et qu'un produit commercial existant (bioréacteur pilote) porte ce nom dans le même secteur.
 3. **Licence :** MIT, avec un fichier `NOTICE` préservant intégralement la licence et le copyright d'Inshellisense (`Copyright (c) Microsoft Corporation`).
-4. **Hébergement :** GitHub Releases, dépôt `biopilot-cli` sur le compte GitHub de l'auteur. *(Nom d'utilisateur/organisation GitHub exact à confirmer — voir décisions en attente ci-dessous.)*
+4. **Hébergement :** GitHub Releases, dépôt [`DEDJIABDOUL/biopilot-cli`](https://github.com/DEDJIABDOUL/biopilot-cli) (privé pour l'instant — à rendre public avant la distribution en section 10).
 
 ### Décisions encore ouvertes
 
 *Issues d'une session de "grilling" interrompue le 6 novembre 2026 — à reprendre.*
 
 5. Traduction ou non du présent document vers l'anglais (le glossaire de domaine et le code seront en anglais, cf. décision de langue du 6 novembre 2026).
-6. Nom d'utilisateur ou organisation GitHub exact sous lequel `biopilot-cli` sera hébergé, pour fixer les URL de la section 10.1.
-7. **Séparation `assay` / technologie de séquençage (section 8.1) :** la détection de projet mélange type d'analyse (`rna-seq`, `variant-calling`) et technologie de séquençage (`nanopore`) dans une seule énumération, alors que `tools.data_type` (section 6.2) distingue déjà la technologie. Un projet "variant-calling en reads longs nanopore" n'a pas de case. *Recommandation en attente de confirmation :* séparer en deux champs indépendants et détectés indépendamment — `assay` (`rna-seq` | `variant-calling` | `unknown`) et `platform` (`illumina` | `nanopore` | `generic`).
-8. **Granularité de `profile` (section 6.3) :** `profiles` est indexé par `(fingerprint, command)`, où `fingerprint` = chemin réel + taille + date du binaire. Deux installations identiques du même outil/version dans deux environnements conda différents ont deux chemins différents, donc deux empreintes différentes, donc `--help` est reparsé deux fois pour rien. *Recommandation en attente de confirmation :* chercher d'abord un profil existant par `(tool, version, command)`, réutilisable entre environnements, et ne garder `fingerprint` que comme vérification de fraîcheur une fois un candidat trouvé — pas comme clé primaire.
+6. **Séparation `assay` / technologie de séquençage (section 8.1) :** la détection de projet mélange type d'analyse (`rna-seq`, `variant-calling`) et technologie de séquençage (`nanopore`) dans une seule énumération, alors que `tools.data_type` (section 6.2) distingue déjà la technologie. Un projet "variant-calling en reads longs nanopore" n'a pas de case. *Recommandation en attente de confirmation :* séparer en deux champs indépendants et détectés indépendamment — `assay` (`rna-seq` | `variant-calling` | `unknown`) et `platform` (`illumina` | `nanopore` | `generic`).
+7. **Granularité de `profile` (section 6.3) :** `profiles` est indexé par `(fingerprint, command)`, où `fingerprint` = chemin réel + taille + date du binaire. Deux installations identiques du même outil/version dans deux environnements conda différents ont deux chemins différents, donc deux empreintes différentes, donc `--help` est reparsé deux fois pour rien. *Recommandation en attente de confirmation :* chercher d'abord un profil existant par `(tool, version, command)`, réutilisable entre environnements, et ne garder `fingerprint` que comme vérification de fraîcheur une fois un candidat trouvé — pas comme clé primaire.
 
 ---
 

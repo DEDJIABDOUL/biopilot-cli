@@ -14,29 +14,6 @@ const open = (catalogPath: string): Catalog => {
   return opened.catalog;
 };
 
-/**
- * A typical tool: 30 options on the root command, 3 subcommands of 15. Fifty of them is the spec's reference
- * size; a lookup that scans every option of every tool (a missing index) is then far over budget.
- */
-const syntheticTool = (name: string) => {
-  const options = (prefix: string, count: number, indent: string) =>
-    Array.from(
-      { length: count },
-      (_, i) => `${indent}- names: ["--${name}-${prefix}${i}"]
-${indent}  description: sets ${prefix} parameter ${i} of ${name}
-${indent}  value: { type: ${i % 3 === 0 ? "file" : "int"}${i % 3 === 0 ? ", format: fastq" : ""} }
-${indent}  rank: ${(i * 7) % 100}`,
-    ).join("\n");
-  const commands = ["sort", "index", "view"].map((sub) => `  - name: ${sub}\n    options:\n${options(sub, 15, "      ")}`).join("\n");
-  return `name: ${name}
-version: { args: ["--version"], regex: 'v(\\S+)' }
-options:
-${options("root", 30, "  ")}
-commands:
-${commands}
-`;
-};
-
 describe("Catalog budgets", () => {
   describe("size: < 5 MB for 50 tools, scaled to the tool count", () => {
     test("the budget is 5 MB for 50 tools, i.e. 100 kB per tool", () => {
@@ -58,7 +35,7 @@ describe("Catalog budgets", () => {
     });
   });
 
-  describe("query time: typical reader lookups < 2 ms (median, so that CI noise does not fail the check)", () => {
+  describe("query time: typical reader lookups < 2 ms (enforced by `npm run perf:catalog`, run alone in CI)", () => {
     test("the budget is 2 ms", () => {
       expect(LOOKUP_BUDGET_MS).toBe(2);
     });
@@ -82,22 +59,6 @@ describe("Catalog budgets", () => {
       const catalog = open(compileValid({}));
       try {
         expect(timeLookups(catalog, 5).map((timing) => timing.name)).toEqual(["formatOfFile", "searchOptions"]);
-      } finally {
-        catalog.close();
-      }
-    });
-
-    test.each([
-      ["the repository's own Catalog", () => compileRepositoryCatalog().catalogPath],
-      [
-        "a synthetic Catalog of 50 typical tools",
-        () => compileValid(Object.fromEntries(Array.from({ length: 50 }, (_, i) => [`t${i}.yml`, syntheticTool(`tool${i}`)]))),
-      ],
-    ])("%s: every lookup is under budget", (_, build) => {
-      const catalog = open(build());
-      try {
-        const over = timeLookups(catalog, 500).filter((timing) => timing.medianMs >= LOOKUP_BUDGET_MS);
-        expect(over).toEqual([]);
       } finally {
         catalog.close();
       }

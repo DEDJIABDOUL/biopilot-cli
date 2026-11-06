@@ -57,6 +57,8 @@ jobs:
 
       - run: npm test
 
+      - run: npm run perf:catalog  # BIOPILOT: spec §11 budgets, run alone so parallel tests do not skew timings
+
       - run: npm run build
 
       - run: npm link

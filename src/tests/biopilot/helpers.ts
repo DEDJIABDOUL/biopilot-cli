@@ -230,3 +230,44 @@ options:
       - when: {}
         boost: 5
 `;
+
+/** Formats for ALIGNER: a folder format with several markers. */
+export const ALIGNER_FORMATS = `
+formats:
+  - name: bam
+    pattern: '\\.bam$'
+  - name: sam
+    pattern: '\\.sam$'
+  - name: fastq
+    pattern: '\\.(fastq|fq)(\\.gz)?$'
+  - name: bwa-index
+    kind: prefix
+    suffixes: [".bwt", ".sa"]
+  - name: salmon-index
+    kind: dir
+    marker: [versionInfo.json, refseq.bin]
+`;
+
+/** Several formats per value, argument mates, bare help and version. */
+export const ALIGNER = `
+name: aligner
+version: { args: [], regex: 'Version: (\\S+)' }
+help: []
+commands:
+  - name: sort
+    options:
+      - names: ["-o"]
+        value: { type: file, format: [bam, sam] }
+    arguments:
+      - name: in
+        value: { type: file, format: [bam, sam] }
+  - name: mem
+    help: [mem]
+    arguments:
+      - name: reference
+        value: { type: file, format: bwa-index }
+      - name: in1
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: in2
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1 }
+`;

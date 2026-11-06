@@ -9,7 +9,9 @@
   "properties": {
     "formats": {
       "type": "array",
-      "items": { "$ref": "#/definitions/format" }
+      "items": {
+        "$ref": "#/definitions/format"
+      }
     }
   },
   "definitions": {
@@ -18,8 +20,15 @@
       "additionalProperties": false,
       "required": ["name"],
       "properties": {
-        "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Name the tools use in `value.format`, e.g. fastq, bwa-index." },
-        "description": { "type": "string", "minLength": 1 },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Name the tools use in `value.format`, e.g. fastq, bwa-index."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
         "kind": {
           "enum": ["file", "prefix", "dir"],
           "default": "file",
@@ -34,27 +43,120 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "description": "kind prefix: suffixes that must all exist after the prefix, e.g. [\".bwt\", \".sa\"]."
         },
-        "marker": { "type": "string", "minLength": 1, "description": "kind dir: file that must exist inside the folder, e.g. versionInfo.json." }
+        "marker": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ],
+          "description": "kind dir: file(s) identifying the folder; any one of them is enough (e.g. [versionInfo.json, refseq.bin] across salmon versions)."
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "kind": { "enum": ["prefix"] } }, "required": ["kind"] },
-          "then": { "required": ["suffixes"], "not": { "anyOf": [{ "required": ["pattern"] }, { "required": ["marker"] }] } }
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": ["prefix"]
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["suffixes"],
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["pattern"]
+                },
+                {
+                  "required": ["marker"]
+                }
+              ]
+            }
+          }
         },
         {
-          "if": { "properties": { "kind": { "enum": ["dir"] } }, "required": ["kind"] },
-          "then": { "required": ["marker"], "not": { "anyOf": [{ "required": ["pattern"] }, { "required": ["suffixes"] }] } }
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": ["dir"]
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["marker"],
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["pattern"]
+                },
+                {
+                  "required": ["suffixes"]
+                }
+              ]
+            }
+          }
         },
         {
-          "if": { "not": { "required": ["kind"] } },
-          "then": { "required": ["pattern"], "not": { "anyOf": [{ "required": ["suffixes"] }, { "required": ["marker"] }] } }
+          "if": {
+            "not": {
+              "required": ["kind"]
+            }
+          },
+          "then": {
+            "required": ["pattern"],
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["suffixes"]
+                },
+                {
+                  "required": ["marker"]
+                }
+              ]
+            }
+          }
         },
         {
-          "if": { "properties": { "kind": { "enum": ["file"] } }, "required": ["kind"] },
-          "then": { "required": ["pattern"], "not": { "anyOf": [{ "required": ["suffixes"] }, { "required": ["marker"] }] } }
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": ["file"]
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["pattern"],
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["suffixes"]
+                },
+                {
+                  "required": ["marker"]
+                }
+              ]
+            }
+          }
         }
       ]
     }

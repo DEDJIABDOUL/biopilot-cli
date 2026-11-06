@@ -52,7 +52,8 @@ formats:
   - name: salmon-index
     description: salmon index folder
     kind: dir
-    marker: versionInfo.json
+    # salmon 1.x writes versionInfo.json; 2.x no longer does, both write refseq.bin.
+    marker: [versionInfo.json, refseq.bin]
 # part A (ticket #11)
   - name: rad
     description: salmon / piscem mapping records (RAD)

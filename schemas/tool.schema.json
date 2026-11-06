@@ -69,10 +69,10 @@
   "definitions": {
     "args": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Arguments to pass; an empty list runs the tool bare (bwa prints its help and version that way)."
     },
     "option": {
       "type": "object",
@@ -272,8 +272,20 @@
           "description": "int, float, string, file, dir or enum. Only enum restricts the value to `values`."
         },
         "format": {
-          "type": "string",
-          "description": "type file or dir: a format declared in knowledge/formats.yml (fastq, bam, bwa-index…)."
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "type file or dir: one or several formats declared in knowledge/formats.yml (fastq, [bam, sam], bwa-index…), most common first."
         },
         "optional": {
           "type": "boolean",
@@ -314,6 +326,10 @@
         "read_role": {
           "enum": [1, 2],
           "description": "type file: read 1 or read 2 of a read pair."
+        },
+        "mate_of": {
+          "type": "string",
+          "description": "Name of the mate argument (same command), which has the other read role."
         }
       },
       "description": "What the argument takes."
@@ -328,8 +344,20 @@
           "description": "int, float, string, file, dir or enum. Only enum restricts the value to `values`."
         },
         "format": {
-          "type": "string",
-          "description": "type file or dir: a format declared in knowledge/formats.yml (fastq, bam, bwa-index…)."
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "type file or dir: one or several formats declared in knowledge/formats.yml (fastq, [bam, sam], bwa-index…), most common first."
         },
         "optional": {
           "type": "boolean",

@@ -27,8 +27,8 @@ export type Command = {
 /** What an option or a positional argument takes. */
 export type ValueSpec = {
   type: ValueType;
-  /** Declared file format, for type file or dir. */
-  format: string | null;
+  /** Accepted file formats, most common first (type file or dir); empty when none is declared. */
+  formats: string[];
   /** The value may be omitted (`--opt[=VAL]`). */
   optional: boolean;
   /** Several values follow the option. */
@@ -86,6 +86,8 @@ export type Argument = {
   defaultValue: string | null;
   since: string | null;
   until: string | null;
+  /** Name of the mate argument of a read pair, in either direction. */
+  mate: string | null;
 };
 
 export type Format = {
@@ -96,8 +98,8 @@ export type Format = {
   pattern: string | null;
   /** kind `prefix`: suffixes that must all exist after the prefix. */
   suffixes: string[];
-  /** kind `dir`: file that must exist inside the folder. */
-  marker: string | null;
+  /** kind `dir`: files identifying the folder; any one of them is enough. */
+  markers: string[];
 };
 
 /** An option found by `searchOptions`, with the command it belongs to. */
@@ -156,7 +158,7 @@ export type CatalogOpenResult =
 type ToolRow = { id: number; name: string; package: string | null; description: string | null; platforms: string };
 type ValueColumns = {
   value_type: ValueType | null;
-  value_format: string | null;
+  value_formats: string | null;
   value_optional: number;
   value_multiple: number;
   read_role: 1 | 2 | null;
@@ -187,9 +189,10 @@ type ArgumentRow = ValueColumns & {
   default_value: string | null;
   since_version: string | null;
   until_version: string | null;
+  mate_of: number | null;
 };
 
-type FormatRow = { name: string; kind: FormatKind; description: string | null; pattern: string | null; suffixes: string | null; marker: string | null };
+type FormatRow = { name: string; kind: FormatKind; description: string | null; pattern: string | null; suffixes: string | null; markers: string | null };
 type ValueRow = { value: string; description: string | null };
 type RuleRow = { option_id: number; ord: number; paired: number | null; platform: Platform | null; assay: Assay | null; boost: number };
 
@@ -218,7 +221,7 @@ const toRule = (rule: RuleRow, used: string[]): Rule => ({
 
 /** Options with their mate (in either direction) and the name of the option they derive from. */
 const OPTION_SELECT = `
-  SELECT o.id, o.canonical_name, o.description, o.value_type, o.value_format, o.value_optional, o.value_multiple, o.read_role,
+  SELECT o.id, o.canonical_name, o.description, o.value_type, o.value_formats, o.value_optional, o.value_multiple, o.read_role,
          o.default_value, o.rank, o.since_version, o.until_version, o.repeatable, o.hidden, o.deprecated, o.derive_suffix,
          COALESCE(m.canonical_name, (SELECT r.canonical_name FROM options r WHERE r.mate_of = o.id ORDER BY r.id LIMIT 1)) AS mate_name,
          d.canonical_name AS derive_from_name
@@ -231,7 +234,7 @@ const toValueSpec = (row: ValueColumns, values: ValueRow[]): ValueSpec | null =>
     ? null
     : {
         type: row.value_type,
-        format: row.value_format,
+        formats: row.value_formats ? (JSON.parse(row.value_formats) as string[]) : [],
         optional: row.value_optional === 1,
         multiple: row.value_multiple === 1,
         values: values.map(({ value, description }) => ({ value, description })),
@@ -263,9 +266,13 @@ class SqliteCatalog implements Catalog {
   ) {
     this.#db = db;
     this.#formats = db
-      .prepare<[], FormatRow>("SELECT name, kind, description, pattern, suffixes, marker FROM formats ORDER BY ord")
+      .prepare<[], FormatRow>("SELECT name, kind, description, pattern, suffixes, markers FROM formats ORDER BY ord")
       .all()
-      .map((row) => ({ ...row, suffixes: row.suffixes ? (JSON.parse(row.suffixes) as string[]) : [] }));
+      .map(({ markers, ...row }) => ({
+        ...row,
+        suffixes: row.suffixes ? (JSON.parse(row.suffixes) as string[]) : [],
+        markers: markers ? (JSON.parse(markers) as string[]) : [],
+      }));
     this.#filePatterns = this.#formats.flatMap((format) => {
       if (format.kind !== "file" || format.pattern === null) return [];
       try {
@@ -367,7 +374,17 @@ class SqliteCatalog implements Catalog {
   listArguments(command: Command): Argument[] {
     const id = this.#commandId(command);
     if (id === undefined) return [];
-    return this.#statements.listArguments.all(id).map((row) => ({
+    const rows = this.#statements.listArguments.all(id);
+    const nameAt = new Map(rows.map((row) => [row.position, row.name]));
+    // Mates in both directions: the argument declaring `mate_of`, and the one it names.
+    const mateOf = new Map<number, string>();
+    for (const row of rows) {
+      if (row.mate_of === null) continue;
+      const mate = nameAt.get(row.mate_of);
+      if (mate !== undefined) mateOf.set(row.position, mate);
+      if (!mateOf.has(row.mate_of)) mateOf.set(row.mate_of, row.name);
+    }
+    return rows.map((row) => ({
       name: row.name,
       description: row.description,
       variadic: row.variadic === 1,
@@ -375,6 +392,7 @@ class SqliteCatalog implements Catalog {
       defaultValue: row.default_value,
       since: row.since_version,
       until: row.until_version,
+      mate: mateOf.get(row.position) ?? null,
     }));
   }
 
@@ -400,7 +418,7 @@ class SqliteCatalog implements Catalog {
   }
 
   listFormats(): Format[] {
-    return this.#formats.map((format) => ({ ...format, suffixes: [...format.suffixes] }));
+    return this.#formats.map((format) => ({ ...format, suffixes: [...format.suffixes], markers: [...format.markers] }));
   }
 
   formatOfFile(fileName: string): Format | undefined {
@@ -428,7 +446,7 @@ class SqliteCatalog implements Catalog {
             const prefix = file.slice(0, -suffix.length);
             if (prefix && format.suffixes.every((s) => present.has(prefix + s))) add({ path: prefix, format: format.name });
           }
-        } else if (format.kind === "dir" && format.marker !== null && path.posix.basename(file) === format.marker) {
+        } else if (format.kind === "dir" && format.markers.includes(path.posix.basename(file))) {
           const folder = path.posix.dirname(file);
           if (folder !== ".") add({ path: folder, format: format.name });
         }

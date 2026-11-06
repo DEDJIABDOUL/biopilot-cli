@@ -1,0 +1,24 @@
+# Raw --help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/salmon.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below. `salmon help --help` is refused by salmon
+# (exit 2), so the help of the `help` subcommand is recorded with
+# `salmon help help`.
+tool: salmon
+package: salmon
+version: 2.11.0
+build: hfa8f182_0
+channel: bioconda
+licence: BSD-3-Clause
+copyright: Rob Patro and the salmon contributors (COMBINE-lab), https://github.com/COMBINE-lab/salmon
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: biopilot-tools
+used_by_catalog: true
+files:
+  root.txt: salmon --help
+  index.txt: salmon index --help
+  quant.txt: salmon quant --help
+  quantmerge.txt: salmon quantmerge --help
+  debug-map.txt: salmon debug-map --help
+  help.txt: salmon help help

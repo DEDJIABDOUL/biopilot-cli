@@ -6,7 +6,9 @@ We chose `better-sqlite3`: since v13 it ships precompiled Node-API binaries for 
 
 ## Consequences
 
-`better-sqlite3` 13 requires Node 22+ (v12 already required Node 20+; no version supports Node 18). The npm install variant therefore requires Node 22, capped below 23 by the Inshellisense engine. The standalone binary is unaffected: it embeds Node 22.
+`better-sqlite3` 13 requires Node 22+ (v12 already required Node 20+; no version supports Node 18). This floor applies to development and to running from source, capped below 23 by the Inshellisense engine. Users are unaffected: the standalone binary embeds Node 22, and the npm package is only a launcher for that binary.
+
+In the standalone binary, the addon is loaded from its extracted path through `better-sqlite3`'s `nativeBinding` option, so the bundle needs no loader patch.
 
 ## Correction (2026-11-06)
 

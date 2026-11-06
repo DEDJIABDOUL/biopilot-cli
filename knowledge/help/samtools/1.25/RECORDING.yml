@@ -1,0 +1,96 @@
+# Raw help recordings, kept as test data only, never edited (spec decision 31).
+# The Catalog YAML is written from them in our own words.
+tool: samtools
+package: samtools
+version: "1.25"
+licence: MIT
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: biopilot-tools (bioconda + conda-forge)
+files:
+  - file: root.txt
+    command: "samtools --help"
+  - file: dict.txt
+    command: "samtools dict --help"
+  - file: faidx.txt
+    command: "samtools faidx --help"
+  - file: fqidx.txt
+    command: "samtools fqidx --help"
+  - file: index.txt
+    command: "samtools index --help"
+  - file: calmd.txt
+    command: "samtools calmd --help"
+  - file: fixmate.txt
+    command: "samtools fixmate --help"
+  - file: reheader.txt
+    command: "samtools reheader --help"
+  - file: targetcut.txt
+    command: "samtools targetcut --help"
+  - file: addreplacerg.txt
+    command: "samtools addreplacerg --help"
+  - file: markdup.txt
+    command: "samtools markdup --help"
+  - file: ampliconclip.txt
+    command: "samtools ampliconclip --help"
+  - file: collate.txt
+    command: "samtools collate --help"
+  - file: cat.txt
+    command: "samtools cat --help"
+  - file: consensus.txt
+    command: "samtools consensus --help"
+  - file: merge.txt
+    command: "samtools merge --help"
+  - file: mpileup.txt
+    command: "samtools mpileup --help"
+  - file: sort.txt
+    command: "samtools sort --help"
+  - file: split.txt
+    command: "samtools split --help"
+  - file: quickcheck.txt
+    command: "samtools quickcheck --help"
+  - file: fastq.txt
+    command: "samtools fastq --help"
+  - file: fasta.txt
+    command: "samtools fasta --help"
+  - file: import.txt
+    command: "samtools import --help"
+  - file: reference.txt
+    command: "samtools reference --help"
+  - file: reset.txt
+    command: "samtools reset --help"
+  - file: bedcov.txt
+    command: "samtools bedcov --help"
+  - file: coverage.txt
+    command: "samtools coverage --help"
+  - file: depth.txt
+    command: "samtools depth --help"
+  - file: flagstat.txt
+    command: "samtools flagstat --help"
+  - file: idxstats.txt
+    command: "samtools idxstats --help"
+  - file: cram-size.txt
+    command: "samtools cram-size --help"
+  - file: phase.txt
+    command: "samtools phase --help"
+  - file: stats.txt
+    command: "samtools stats --help"
+  - file: ampliconstats.txt
+    command: "samtools ampliconstats --help"
+  - file: checksum.txt
+    command: "samtools checksum --help"
+  - file: flags.txt
+    command: "samtools flags --help"
+  - file: head.txt
+    command: "samtools head --help"
+  - file: tview.txt
+    command: "samtools tview --help"
+  - file: view.txt
+    command: "samtools view --help"
+  - file: depad.txt
+    command: "samtools depad --help"
+  - file: samples.txt
+    command: "samtools samples --help"
+  - file: help.txt
+    command: "samtools help"
+  - file: version.txt
+    command: "samtools version"

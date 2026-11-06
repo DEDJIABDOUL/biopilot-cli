@@ -1,0 +1,30 @@
+
+About:   Extracts fields from VCF/BCF file and prints them in user-defined format
+Usage:   bcftools query [options] <A.vcf.gz> [<B.vcf.gz> [...]]
+
+Options:
+    -e, --exclude EXPR                Exclude sites for which the expression is true (see man page for details)
+        --force-samples               Only warn about unknown subset samples
+    -F, --print-filtered STR          Output STR for samples failing the -i/-e filtering expression
+    -f, --format STRING               See man page for details
+    -H, --print-header                Print header, -HH to omit column indices
+    -i, --include EXPR                Select sites for which the expression is true (see man page for details)
+    -l, --list-samples                Print the list of samples and exit
+    -N, --disable-automatic-newline   Disable automatic addition of newline character when not present
+    -o, --output FILE                 Output file name [stdout]
+    -r, --regions REGION              Restrict to comma-separated list of regions
+    -R, --regions-file FILE           Restrict to regions listed in a file
+        --regions-overlap 0|1|2       Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+    -s, --samples LIST                List of samples to include
+    -S, --samples-file FILE           File of samples to include
+    -t, --targets REGION              Similar to -r but streams rather than index-jumps
+    -T, --targets-file FILE           Similar to -R but streams rather than index-jumps
+        --targets-overlap 0|1|2       Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+    -u, --allow-undef-tags            Print "." for undefined tags
+    -v, --vcf-list FILE               Process multiple VCFs listed in the file
+        --verbosity INT               Verbosity level
+
+Examples:
+	bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%SAMPLE=%GT]\n' file.vcf.gz
+	# For more examples see http://samtools.github.io/bcftools/bcftools.html#query
+

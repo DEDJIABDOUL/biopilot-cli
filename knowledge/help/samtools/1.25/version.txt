@@ -1,0 +1,28 @@
+samtools 1.25
+Using htslib 1.25
+Copyright (C) 2026 Genome Research Ltd.
+
+Samtools compilation details:
+    Features:       build=configure curses=yes 
+    CC:             x86_64-conda-linux-gnu-cc -std=gnu23
+    CPPFLAGS:       -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/abdoul/miniconda3/envs/biopilot-tools/include
+    CFLAGS:         -Wall -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -fno-merge-constants -isystem /home/abdoul/miniconda3/envs/biopilot-tools/include -fdebug-prefix-map=/opt/conda/conda-bld/samtools_1793107535567/work=/usr/local/src/conda/samtools-1.25 -fdebug-prefix-map=/home/abdoul/miniconda3/envs/biopilot-tools=/usr/local/src/conda-prefix
+    LDFLAGS:        -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/abdoul/miniconda3/envs/biopilot-tools/lib -Wl,-rpath-link,/home/abdoul/miniconda3/envs/biopilot-tools/lib -L/home/abdoul/miniconda3/envs/biopilot-tools/lib
+    HTSDIR:         
+    LIBS:           
+    CURSES_LIB:     -ltinfow -lncursesw
+
+HTSlib compilation details:
+    Features:       build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/home/abdoul/miniconda3/envs/biopilot-tools/libexec/htslib htscodecs=1.6.7
+    CC:             x86_64-conda-linux-gnu-cc -std=gnu23
+    CPPFLAGS:       -DNDEBUG -D_FORTIFY_SOURCE=2 -O2 -isystem /home/abdoul/miniconda3/envs/biopilot-tools/include
+    CFLAGS:         -Wall -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -fno-merge-constants -isystem /home/abdoul/miniconda3/envs/biopilot-tools/include -fdebug-prefix-map=/opt/conda/conda-bld/htslib_1793104724132/work=/usr/local/src/conda/htslib-1.25 -fdebug-prefix-map=/home/abdoul/miniconda3/envs/biopilot-tools=/usr/local/src/conda-prefix -fvisibility=hidden
+    LDFLAGS:        -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/abdoul/miniconda3/envs/biopilot-tools/lib -Wl,-rpath-link,/home/abdoul/miniconda3/envs/biopilot-tools/lib -L/home/abdoul/miniconda3/envs/biopilot-tools/lib -fvisibility=hidden -rdynamic
+
+HTSlib URL scheme handlers present:
+    built-in:	 file, preload, data
+    Amazon S3:	 s3+https, s3, s3+http
+    libcurl:	 gophers, smtp, wss, rtsp, tftp, mqtts, pop3, imaps, pop3s, ws, ftps, https, ftp, gopher, sftp, imap, http, smtps, scp, dict, mqtt, telnet
+    Google Cloud Storage:	 gs+http, gs+https, gs
+    crypt4gh-needed:	 crypt4gh
+    mem:	 mem

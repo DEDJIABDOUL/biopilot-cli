@@ -1,0 +1,2 @@
+cram-size: unrecognized option '--help'
+Usage: samtools cram_size [-ve] [-o out.size] [in.cram]

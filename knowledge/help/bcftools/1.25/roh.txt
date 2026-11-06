@@ -1,0 +1,49 @@
+roh: unrecognized option '--help'
+
+About:   HMM model for detecting runs of autozygosity.
+Usage:   bcftools roh [options] <in.vcf.gz>
+
+General Options:
+        --AF-dflt FLOAT              If AF is not known, use this allele frequency [skip]
+        --AF-tag TAG                 Use TAG for allele frequency
+        --AF-file FILE               read allele frequencies from file (CHR\tPOS\tREF,ALT\tAF)
+    -b  --buffer-size INT[,INT]      Buffer size and the number of overlapping sites, 0 for unlimited [0]
+                                       If the first number is negative, it is interpreted as the maximum memory to
+                                       use, in MB. The default overlap is set to roughly 1% of the buffer size.
+    -e, --estimate-AF [TAG],FILE     Estimate AF from FORMAT/TAG (GT or PL) of all samples ("-") or samples listed
+                                       in FILE. If TAG is not given, the frequency is estimated from GT by default
+        --exclude EXPR               Exclude sites for which the expression is true
+    -G, --GTs-only FLOAT             Use GTs and ignore PLs, instead using FLOAT for PL of the two least likely genotypes.
+                                       Safe value to use is 30 to account for GT errors.
+        --include EXPR               Select sites for which the expression is true
+    -i, --ignore-homref              Skip hom-ref genotypes (0/0)
+        --include-noalt              Include sites with no ALT allele (ignored by default)
+    -I, --skip-indels                Skip indels as their genotypes are enriched for errors
+    -m, --genetic-map FILE           Genetic map in IMPUTE2 format, single file or mask, where string "{CHROM}"
+                                       is replaced with chromosome name
+    -M, --rec-rate FLOAT             Constant recombination rate per bp
+    -o, --output FILE                Write output to a file [standard output]
+    -O, --output-type [srz]          Output s:per-site, r:regions, z:compressed [sr]
+    -r, --regions REGION             Restrict to comma-separated list of regions
+    -R, --regions-file FILE          Restrict to regions listed in a file
+        --regions-overlap 0|1|2      include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+    -s, --samples LIST               List of samples to analyze [all samples]
+    -S, --samples-file FILE          File of samples to analyze [all samples]
+    -t, --targets REGION             Similar to -r but streams rather than index-jumps
+    -T, --targets-file FILE          Similar to -R but streams rather than index-jumps
+        --targets-overlap 0|1|2      Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+        --threads INT                Use multithreading with <int> worker threads [0]
+    -v, --verbosity INT              Verbosity level
+
+HMM Options:
+    -a, --hw-to-az FLOAT             P(AZ|HW) transition probability from HW (Hardy-Weinberg) to AZ (autozygous) state [6.7e-8]
+    -H, --az-to-hw FLOAT             P(HW|AZ) transition probability from AZ to HW state [5e-9]
+    -V, --viterbi-training FLOAT     Estimate HMM parameters, FLOAT is the convergence threshold, e.g. 1e-10 (experimental)
+
+Example:
+   # Find RoH regions assuming default allele frequency 0.4
+   bcftools roh -G30 --AF-dflt 0.4 test.vcf -o out.txt
+
+   # Create HTML/JavaScript visualization with the accompanied roh-viz script
+   misc/roh-viz -i out.txt -v test.vcf -o out.html
+

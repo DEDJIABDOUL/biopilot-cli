@@ -1,0 +1,1 @@
+Usage: bwa fa2pac [-f] <in.fasta> [<out.prefix>]

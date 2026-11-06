@@ -1,0 +1,12 @@
+# Raw help recordings, kept as test data only, never edited (spec decision 31).
+# The Catalog YAML is written from them in our own words.
+tool: blastn
+package: blast
+version: "2.17.0"
+licence: NCBI-PD
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: biopilot-tools (bioconda + conda-forge)
+files:
+  - file: root.txt
+    command: "blastn -help"

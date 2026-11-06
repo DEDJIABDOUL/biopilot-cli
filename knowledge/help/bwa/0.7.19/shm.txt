@@ -1,0 +1,7 @@
+
+Usage: bwa shm [-d|-l] [-f tmpFile] [idxbase]
+
+Options: -d       destroy all indices in shared memory
+         -l       list names of indices in shared memory
+         -f FILE  temporary file to reduce peak memory
+

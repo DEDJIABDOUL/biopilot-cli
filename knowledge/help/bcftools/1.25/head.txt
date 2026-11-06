@@ -1,0 +1,11 @@
+head: unrecognized option '--help'
+
+About: Displays VCF/BCF headers and optionally the first few variant records
+Usage: bcftools head [OPTION]... [FILE]
+
+Options:
+  -h, --headers INT      Display INT header lines [all]
+  -n, --records INT      Display INT variant record lines [none]
+  -s, --samples INT      Display INT records starting with the #CHROM header line [none]
+  -v, --verbosity INT    Verbosity level
+

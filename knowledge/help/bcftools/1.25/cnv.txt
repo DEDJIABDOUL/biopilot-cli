@@ -1,0 +1,31 @@
+cnv: unrecognized option '--help'
+
+About:   Copy number variation caller, requires Illumina's B-allele frequency (BAF) and Log R
+         Ratio intensity (LRR). The HMM considers the following copy number states: CN 2
+         (normal), 1 (single-copy loss), 0 (complete loss), 3 (single-copy gain)
+Usage:   bcftools cnv [OPTIONS] FILE.vcf
+General Options:
+    -c, --control-sample STRING      Optional control sample name to highlight differences
+    -f, --AF-file FILE               Read allele frequencies from file (CHR\tPOS\tREF,ALT\tAF)
+    -o, --output-dir PATH            
+    -p, --plot-threshold FLOAT       Plot aberrant chromosomes with quality at least FLOAT
+    -r, --regions REGION             Restrict to comma-separated list of regions
+    -R, --regions-file FILE          Restrict to regions listed in a file
+        --regions-overlap 0|1|2      Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+    -s, --query-sample STRING        Query samply name
+    -t, --targets REGION             Similar to -r but streams rather than index-jumps
+    -T, --targets-file FILE          Similar to -R but streams rather than index-jumps
+        --targets-overlap 0|1|2      Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+    -v, --verbosity INT              Verbosity level
+HMM Options:
+    -a, --aberrant FLOAT[,FLOAT]     Fraction of aberrant cells in query and control [1.0,1.0]
+    -b, --BAF-weight FLOAT           Relative contribution from BAF [1]
+    -d, --BAF-dev FLOAT[,FLOAT]      Expected BAF deviation in query and control [0.04,0.04]
+    -e, --err-prob FLOAT             Uniform error probability [1e-4]
+    -k, --LRR-dev FLOAT[,FLOAT]      Expected LRR deviation [0.2,0.2]
+    -l, --LRR-weight FLOAT           Relative contribution from LRR [0.2]
+    -L, --LRR-smooth-win INT         Window of LRR moving average smoothing [10]
+    -O, --optimize FLOAT             Estimate fraction of aberrant cells down to FLOAT [1.0]
+    -P, --same-prob FLOA>            Prior probability of -s/-c being the same [0.5]
+    -x, --xy-prob FLOAT              P(x|y) transition probability [1e-9]
+

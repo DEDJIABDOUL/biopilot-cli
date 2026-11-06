@@ -1,0 +1,26 @@
+
+About:   Run user defined plugin
+Usage:   bcftools plugin <name> [OPTIONS] <file> [-- PLUGIN_OPTIONS]
+         bcftools +name [OPTIONS] <file>  [-- PLUGIN_OPTIONS]
+
+VCF input options:
+   -e, --exclude EXPR             Exclude sites for which the expression is true
+   -i, --include EXPR             Select sites for which the expression is true
+   -r, --regions REGION           Restrict to comma-separated list of regions
+   -R, --regions-file FILE        Restrict to regions listed in a file
+       --regions-overlap 0|1|2    Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+   -t, --targets REGION           Similar to -r but streams rather than index-jumps
+   -T, --targets-file FILE        Similar to -R but streams rather than index-jumps
+       --targets-overlap 0|1|2    Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+VCF output options:
+       --no-version               Do not append version and command line to the header
+   -o, --output FILE              Write output to a file [standard output]
+   -O, --output-type u|b|v|z[0-9] u/b: un/compressed BCF, v/z: un/compressed VCF, 0-9: compression level [v]
+       --threads INTT             Use multithreading with <int> worker threads [0]
+Plugin options:
+   -h, --help                     List plugin's options
+   -l, --list-plugins             List available plugins. See BCFTOOLS_PLUGINS environment variable and man page for details
+   -v, --verbosity INT            Verbosity level
+   -V, --version                  Print version string and exit
+   -W, --write-index[=FMT]        Automatically index the output files [off]
+

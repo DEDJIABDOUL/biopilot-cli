@@ -1,0 +1,60 @@
+# Raw help recordings, kept as test data only, never edited (spec decision 31).
+# The Catalog YAML is written from them in our own words.
+tool: bcftools
+package: bcftools
+version: "1.25"
+licence: GPL-3.0-or-later
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: biopilot-tools (bioconda + conda-forge)
+files:
+  - file: root.txt
+    command: "bcftools --help"
+  - file: index.txt
+    command: "bcftools index --help"
+  - file: annotate.txt
+    command: "bcftools annotate --help"
+  - file: concat.txt
+    command: "bcftools concat --help"
+  - file: convert.txt
+    command: "bcftools convert --help"
+  - file: head.txt
+    command: "bcftools head --help"
+  - file: isec.txt
+    command: "bcftools isec --help"
+  - file: merge.txt
+    command: "bcftools merge --help"
+  - file: norm.txt
+    command: "bcftools norm --help"
+  - file: plugin.txt
+    command: "bcftools plugin --help"
+  - file: query.txt
+    command: "bcftools query --help"
+  - file: reheader.txt
+    command: "bcftools reheader --help"
+  - file: sort.txt
+    command: "bcftools sort --help"
+  - file: view.txt
+    command: "bcftools view --help"
+  - file: call.txt
+    command: "bcftools call --help"
+  - file: consensus.txt
+    command: "bcftools consensus --help"
+  - file: cnv.txt
+    command: "bcftools cnv --help"
+  - file: csq.txt
+    command: "bcftools csq --help"
+  - file: filter.txt
+    command: "bcftools filter --help"
+  - file: gtcheck.txt
+    command: "bcftools gtcheck --help"
+  - file: polysomy.txt
+    command: "bcftools polysomy --help"
+  - file: roh.txt
+    command: "bcftools roh --help"
+  - file: stats.txt
+    command: "bcftools stats --help"
+  - file: mpileup.txt
+    command: "bcftools mpileup"
+  - file: plugin.list.txt
+    command: "bcftools plugin -lv"

@@ -1,0 +1,24 @@
+polysomy: unrecognized option '--help'
+
+About:   Detect number of chromosomal copies from Illumina's B-allele frequency (BAF)
+Usage:   bcftools polysomy [OPTIONS] FILE.vcf
+
+General options:
+    -o, --output-dir PATH          
+    -r, --regions REGION           Restrict to comma-separated list of regions
+    -R, --regions-file FILE        Restrict to regions listed in a file
+        --regions-overlap 0|1|2    Include if POS in the region (0), record overlaps (1), variant overlaps (2) [1]
+    -s, --sample NAME              Sample to analyze
+    -t, --targets REGION           Similar to -r but streams rather than index-jumps
+    -T, --targets-file FILE        Similar to -R but streams rather than index-jumps
+        --targets-overlap 0|1|2    Include if POS in the region (0), record overlaps (1), variant overlaps (2) [0]
+    -v, --verbosity INT            Verbosity level
+
+Algorithm options:
+    -b, --peak-size FLOAT          Minimum peak size (0-1, larger is stricter) [0.1]
+    -c, --cn-penalty FLOA>         Penalty for increasing CN (0-1, larger is stricter) [0.7]
+    -f, --fit-th FLOAT             Goodness of fit threshold (>0, smaller is stricter) [3.3]
+    -i, --include-aa               Include the AA peak in CN2 and CN3 evaluation
+    -m, --min-fraction FLOAT       Minimum distinguishable fraction of aberrant cells [0.1]
+    -p, --peak-symmetry FLOAT      Peak symmetry threshold (0-1, larger is stricter) [0.5]
+

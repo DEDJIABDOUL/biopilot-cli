@@ -65,3 +65,40 @@ options:
     value: { type: string }
     rank: 90
 `;
+
+/** A tool with subcommands (one nested level and a deeper one) and positional arguments. */
+export const SAMTOOLS = `
+name: samtools
+description: SAM/BAM/CRAM toolkit
+version: { args: ["--version"], regex: 'samtools (\\S+)' }
+options:
+  - names: ["-o"]
+    description: root-level option, unrelated to sort's -o
+commands:
+  - name: sort
+    help: ["sort"]
+    description: sort alignments
+    options:
+      - names: ["-o"]
+        description: output file
+        value: { type: string }
+        rank: 90
+      - names: ["-@", "--threads"]
+        value: { type: int }
+        rank: 75
+    arguments:
+      - name: in.bam
+        description: alignments to sort
+  - name: view
+    description: view and convert
+    arguments:
+      - name: in.bam
+      - name: region
+        variadic: true
+  - name: deep
+    commands:
+      - name: deeper
+        description: two levels down
+        options:
+          - names: ["--flag"]
+`;

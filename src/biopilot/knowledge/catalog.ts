@@ -34,6 +34,14 @@ export type Option = {
   rank: number;
 };
 
+export type Argument = {
+  /** Placeholder name, e.g. `in.bam`. */
+  name: string;
+  description: string | null;
+  /** Takes one or more values. */
+  variadic: boolean;
+};
+
 export interface Catalog {
   /** File the Catalog was read from. */
   readonly path: string;
@@ -44,8 +52,12 @@ export interface Catalog {
   getTool(name: string): Tool | undefined;
   /** Resolves a Command from a tool name and a subcommand path (empty path = root Command). */
   getCommand(tool: string, path?: readonly string[]): Command | undefined;
+  /** Direct subcommands of a Command, in Catalog order. */
+  listSubcommands(command: Command): Command[];
   /** Options of a Command, highest rank first, ties in Catalog order. */
   listOptions(command: Command): Option[];
+  /** Positional arguments of a Command, in order. */
+  listArguments(command: Command): Argument[];
   /** Finds an Option of a Command by any of its aliases (case-sensitive). */
   findOption(command: Command, alias: string): Option | undefined;
   close(): void;
@@ -99,11 +111,20 @@ class SqliteCatalog implements Catalog {
       rootCommand: db.prepare<[string], { id: number; description: string | null }>(
         "SELECT c.id, c.description FROM commands c JOIN tools t ON t.id = c.tool_id WHERE t.name = ? AND c.parent_id IS NULL",
       ),
+      subcommand: db.prepare<[number, string], { id: number; description: string | null }>(
+        "SELECT id, description FROM commands WHERE parent_id = ? AND name = ?",
+      ),
+      subcommands: db.prepare<[number], { id: number; name: string; description: string | null }>(
+        "SELECT id, name, description FROM commands WHERE parent_id = ? ORDER BY id",
+      ),
       listOptions: db.prepare<[number], OptionRow>(
         "SELECT id, canonical_name, description, value_type, default_value, rank FROM options WHERE command_id = ? ORDER BY rank DESC, id",
       ),
       findOption: db.prepare<[number, string], OptionRow>(
         "SELECT o.id, o.canonical_name, o.description, o.value_type, o.default_value, o.rank FROM option_names n JOIN options o ON o.id = n.option_id WHERE n.command_id = ? AND n.name = ?",
+      ),
+      listArguments: db.prepare<[number], { name: string; description: string | null; variadic: number }>(
+        "SELECT name, description, variadic FROM arguments WHERE command_id = ? ORDER BY position",
       ),
       optionNames: db.prepare<[number], { name: string }>("SELECT name FROM option_names WHERE option_id = ? ORDER BY ord"),
     };
@@ -119,16 +140,35 @@ class SqliteCatalog implements Catalog {
   }
 
   getCommand(tool: string, path: readonly string[] = []): Command | undefined {
-    if (path.length > 0) return; // subcommands arrive with the Catalog format for them
-    const row = this.#statements.rootCommand.get(tool);
+    let row = this.#statements.rootCommand.get(tool);
+    for (const name of path) {
+      if (!row) return;
+      row = this.#statements.subcommand.get(row.id, name);
+    }
     if (!row) return;
     this.#commandIds.set(this.#commandKey(tool, path), row.id);
-    return { tool, path: [], description: row.description };
+    return { tool, path: [...path], description: row.description };
+  }
+
+  listSubcommands(command: Command): Command[] {
+    const id = this.#commandId(command);
+    if (id === undefined) return [];
+    return this.#statements.subcommands.all(id).map((row) => {
+      const path = [...command.path, row.name];
+      this.#commandIds.set(this.#commandKey(command.tool, path), row.id);
+      return { tool: command.tool, path, description: row.description };
+    });
   }
 
   listOptions(command: Command): Option[] {
     const id = this.#commandId(command);
     return id === undefined ? [] : this.#statements.listOptions.all(id).map((row) => this.#toOption(row));
+  }
+
+  listArguments(command: Command): Argument[] {
+    const id = this.#commandId(command);
+    if (id === undefined) return [];
+    return this.#statements.listArguments.all(id).map((row) => ({ name: row.name, description: row.description, variadic: row.variadic === 1 }));
   }
 
   findOption(command: Command, alias: string): Option | undefined {

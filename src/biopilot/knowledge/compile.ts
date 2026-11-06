@@ -44,6 +44,18 @@ type OptionSource = {
   rank: number;
 };
 
+type ArgumentSource = { name: string; description?: string; variadic: boolean };
+
+type CommandSource = {
+  /** `""` for the root command. */
+  name: string;
+  description?: string;
+  helpArgs?: string[];
+  options: OptionSource[];
+  arguments: ArgumentSource[];
+  commands: CommandSource[];
+};
+
 type ToolSource = {
   file: string;
   name: string;
@@ -52,8 +64,7 @@ type ToolSource = {
   platforms: Platform[];
   versionArgs: string[];
   versionRegex: string;
-  helpArgs?: string[];
-  options: OptionSource[];
+  root: CommandSource;
 };
 
 type YamlOption = {
@@ -65,6 +76,17 @@ type YamlOption = {
   rules?: unknown[];
 };
 
+type YamlArgument = { name: string; description?: string; variadic?: boolean };
+
+type YamlCommand = {
+  name: string;
+  description?: string;
+  help?: string[];
+  options?: YamlOption[];
+  arguments?: YamlArgument[];
+  commands?: YamlCommand[];
+};
+
 type YamlTool = {
   name: string;
   package?: string;
@@ -73,6 +95,8 @@ type YamlTool = {
   version: { args: string[]; regex: string };
   help?: string[];
   options?: YamlOption[];
+  arguments?: YamlArgument[];
+  commands?: YamlCommand[];
 };
 
 /** The published schema (schemas/tool.schema.json), resolved from src/ or build/ alike. */
@@ -121,6 +145,21 @@ const schemaErrorDetails = (error: ErrorObject): { segments: Segment[]; message:
 /** Number of capture groups of a regular expression. */
 const captureGroups = (regex: RegExp): number => (new RegExp(`${regex.source}|`).exec("") as RegExpExecArray).length - 1;
 
+const toCommandSource = (command: YamlCommand): CommandSource => ({
+  name: command.name,
+  description: command.description,
+  helpArgs: command.help,
+  options: (command.options ?? []).map((option) => ({
+    names: option.names,
+    description: option.description,
+    valueType: option.value?.type ?? null,
+    defaultValue: option.default === undefined ? undefined : String(option.default),
+    rank: option.rank ?? 50,
+  })),
+  arguments: (command.arguments ?? []).map((argument) => ({ name: argument.name, description: argument.description, variadic: argument.variadic ?? false })),
+  commands: (command.commands ?? []).map(toCommandSource),
+});
+
 const toToolSource = (file: string, tool: YamlTool): ToolSource => ({
   file,
   name: tool.name,
@@ -129,14 +168,8 @@ const toToolSource = (file: string, tool: YamlTool): ToolSource => ({
   platforms: tool.platforms ?? [],
   versionArgs: tool.version.args,
   versionRegex: tool.version.regex,
-  helpArgs: tool.help,
-  options: (tool.options ?? []).map((option) => ({
-    names: option.names,
-    description: option.description,
-    valueType: option.value?.type ?? null,
-    defaultValue: option.default === undefined ? undefined : String(option.default),
-    rank: option.rank ?? 50,
-  })),
+  // The tool's own description stays on the tool; the root command has none of its own.
+  root: toCommandSource({ ...tool, name: "", description: undefined }),
 });
 
 /** Reads and checks one YAML file, appending every problem found to `errors`. */
@@ -180,17 +213,41 @@ const readToolSource = (sourcesDir: string, file: string, errors: CompileError[]
       fail(["version", "regex"], `is not a valid regular expression: ${(error as Error).message}`);
     }
   }
-  const seenNames = new Map<string, number>();
-  (Array.isArray(loose?.options) ? loose.options : []).forEach((option: unknown, i: number) => {
-    const names = (option as { names?: unknown })?.names;
-    if (!Array.isArray(names)) return;
-    names.forEach((name: unknown, j: number) => {
-      if (typeof name !== "string") return;
-      const previous = seenNames.get(name);
-      if (previous !== undefined) fail(["options", i, "names", j], `alias "${name}" is already used by options[${previous}]`);
-      else seenNames.set(name, i);
+  /** Per-command checks, recursively: unique aliases, unique subcommand names, variadic argument last. */
+  const checkCommand = (node: unknown, at: Segment[]) => {
+    const command = node as { options?: unknown; commands?: unknown; arguments?: unknown } | null;
+    if (typeof command !== "object" || command === null) return;
+    const seenNames = new Map<string, number>();
+    (Array.isArray(command.options) ? command.options : []).forEach((option: unknown, i: number) => {
+      const names = (option as { names?: unknown })?.names;
+      if (!Array.isArray(names)) return;
+      names.forEach((name: unknown, j: number) => {
+        if (typeof name !== "string") return;
+        const previous = seenNames.get(name);
+        if (previous !== undefined)
+          fail([...at, "options", i, "names", j], `alias "${name}" is already used by ${formatLocation([...at, "options", previous])}`);
+        else seenNames.set(name, i);
+      });
     });
-  });
+    const args = Array.isArray(command.arguments) ? command.arguments : [];
+    args.forEach((argument: unknown, i: number) => {
+      if ((argument as { variadic?: unknown })?.variadic === true && i < args.length - 1) {
+        fail([...at, "arguments", i, "variadic"], "only the last positional argument may be variadic");
+      }
+    });
+    const seenCommands = new Map<string, number>();
+    (Array.isArray(command.commands) ? command.commands : []).forEach((child: unknown, i: number) => {
+      const name = (child as { name?: unknown })?.name;
+      if (typeof name === "string") {
+        const previous = seenCommands.get(name);
+        if (previous !== undefined)
+          fail([...at, "commands", i, "name"], `subcommand "${name}" is already described at ${formatLocation([...at, "commands", previous])}`);
+        else seenCommands.set(name, i);
+      }
+      checkCommand(child, [...at, "commands", i]);
+    });
+  };
+  checkCommand(data, []);
   const tool = data as YamlTool;
   if (errors.length > before) return;
   return toToolSource(file, tool);
@@ -207,9 +264,10 @@ const writeCatalog = (tools: ToolSource[], outputPath: string, biopilotVersion: 
     const insertTool = db.prepare(
       "INSERT INTO tools (name, package, description, platforms, version_args, version_regex, help_args) VALUES (?, ?, ?, ?, ?, ?, ?)",
     );
-    const insertCommand = db.prepare("INSERT INTO commands (tool_id, parent_id, name, help_args, description) VALUES (?, NULL, '', ?, NULL)");
+    const insertCommand = db.prepare("INSERT INTO commands (tool_id, parent_id, name, help_args, description) VALUES (?, ?, ?, ?, ?)");
     const insertOption = db.prepare("INSERT INTO options (command_id, canonical_name, description, value_type, default_value, rank) VALUES (?, ?, ?, ?, ?, ?)");
     const insertName = db.prepare("INSERT INTO option_names (command_id, name, option_id, ord) VALUES (?, ?, ?, ?)");
+    const insertArgument = db.prepare("INSERT INTO arguments (command_id, position, name, description, variadic) VALUES (?, ?, ?, ?, ?)");
     db.transaction(() => {
       insertMeta.run("schema_version", String(CATALOG_SCHEMA_VERSION));
       insertMeta.run("biopilot_version", biopilotVersion);
@@ -222,20 +280,34 @@ const writeCatalog = (tools: ToolSource[], outputPath: string, biopilotVersion: 
           JSON.stringify(tool.platforms),
           JSON.stringify(tool.versionArgs),
           tool.versionRegex,
-          tool.helpArgs ? JSON.stringify(tool.helpArgs) : null,
+          tool.root.helpArgs ? JSON.stringify(tool.root.helpArgs) : null,
         ).lastInsertRowid;
-        const commandId = insertCommand.run(toolId, tool.helpArgs ? JSON.stringify(tool.helpArgs) : null).lastInsertRowid;
-        for (const option of tool.options) {
-          const optionId = insertOption.run(
-            commandId,
-            canonicalName(option.names),
-            option.description ?? null,
-            option.valueType,
-            option.defaultValue ?? null,
-            option.rank,
+        // Depth-first, in YAML order: a command's id always follows its parent's.
+        const insertTree = (command: CommandSource, parentId: number | bigint | null) => {
+          const commandId = insertCommand.run(
+            toolId,
+            parentId,
+            command.name,
+            command.helpArgs ? JSON.stringify(command.helpArgs) : null,
+            command.description ?? null,
           ).lastInsertRowid;
-          option.names.forEach((name, ord) => insertName.run(commandId, name, optionId, ord));
-        }
+          for (const option of command.options) {
+            const optionId = insertOption.run(
+              commandId,
+              canonicalName(option.names),
+              option.description ?? null,
+              option.valueType,
+              option.defaultValue ?? null,
+              option.rank,
+            ).lastInsertRowid;
+            option.names.forEach((name, ord) => insertName.run(commandId, name, optionId, ord));
+          }
+          command.arguments.forEach((argument, position) =>
+            insertArgument.run(commandId, position, argument.name, argument.description ?? null, argument.variadic ? 1 : 0),
+          );
+          for (const child of command.commands) insertTree(child, commandId);
+        };
+        insertTree(tool.root, null);
       }
     })();
     db.exec("VACUUM");

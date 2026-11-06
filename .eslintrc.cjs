@@ -8,6 +8,11 @@ module.exports = {
   },
   extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:react/recommended", "prettier"],
   overrides: [
+    // BIOPILOT: BioPilot's own files carry BioPilot's header, not Microsoft's.
+    {
+      files: ["src/biopilot/**", "src/tests/biopilot/**", "scripts/build-db.ts"],
+      rules: { "header/header": [2, "line", [" Copyright (c) BioPilot CLI contributors.", " Licensed under the MIT License."]] },
+    },
     {
       env: {
         node: true,

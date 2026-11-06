@@ -116,6 +116,7 @@ La liste est fermée. Toute modification supplémentaire doit être justifiée d
 | M6 | Commandes bio prioritaires dans la complétion du nom de commande, avec un bonus fixe si la plateforme de l'outil figure dans celles du projet | `runtime/runtime.ts` | `sam` doit proposer samtools en premier ; `mini` dans un projet nanopore, minimap2. |
 | M7 | Ligne d'état facultative sous la liste : environnement, version de l'outil, alerte éventuelle | `ui/` | Rendre visible ce que BioPilot a détecté. Désactivable. |
 | M8 | Correction de `complete` : chargement de la configuration, sortie vide sans plantage | `commands/complete.ts` | Permettre des tests automatisés sans terminal. |
+| M9 | Enregistrement des commandes BioPilot (`info`, puis les suivantes) et contrôle du catalogue dans `doctor` ; le code vit dans `src/biopilot/cli/`, chargé à la demande | `index.ts`, `ui/ui-doctor.ts` | Exposer les commandes de la section 9 sans toucher au démarrage de session. |
 
 Chaque modification est isolée dans un commit distinct et marquée `BIOPILOT:` dans le code.
 

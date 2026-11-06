@@ -3,12 +3,15 @@
 
 import chalk from "chalk";
 import { checkLegacyConfigs, checkShellConfigPlugin, checkShellConfigs } from "../utils/shell.js";
+// BIOPILOT: M9 Catalog health check.
+import { renderCatalogIssues } from "../biopilot/cli/doctor.js";
 
 export const render = async () => {
   let errors = 0;
   errors += await renderLegacyConfigIssues();
   errors += await renderShellPluginIssues();
   errors += renderShellConfigIssues();
+  errors += await renderCatalogIssues(); // BIOPILOT: M9 Catalog health
 
   process.exit(errors);
 };

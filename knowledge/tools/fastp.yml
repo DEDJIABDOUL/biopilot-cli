@@ -1,0 +1,58 @@
+# Minimal fastp description for the Catalog tracer bullet (ticket #4).
+# Root options only, flags and simple values; replaced by the full, curated
+# description from fastp's real --help in ticket #11.
+# Descriptions are written in our own words (spec decision 31).
+name: fastp
+package: fastp
+description: Quality control, trimming and filtering of FASTQ reads in one pass
+platforms: [illumina]
+version: { args: ["--version"], regex: 'fastp (\d[\w.]*)' }
+help: ["--help"]
+options:
+  - names: ["-i", "--in1"]
+    description: input file for read 1
+    value: { type: string }
+    rank: 95
+  - names: ["-o", "--out1"]
+    description: output file for read 1
+    value: { type: string }
+    rank: 90
+  - names: ["-I", "--in2"]
+    description: input file for read 2 (paired-end data)
+    value: { type: string }
+    rank: 60
+  - names: ["-O", "--out2"]
+    description: output file for read 2 (paired-end data)
+    value: { type: string }
+    rank: 60
+  - names: ["-w", "--thread"]
+    description: number of worker threads
+    value: { type: int }
+    default: 3
+    rank: 75
+  - names: ["-j", "--json"]
+    description: file name of the JSON report
+    value: { type: string }
+    default: fastp.json
+    rank: 70
+  - names: ["-h", "--html"]
+    description: file name of the HTML report
+    value: { type: string }
+    default: fastp.html
+    rank: 70
+  - names: ["-D", "--dedup"]
+    description: remove duplicated reads
+    rank: 45
+  - names: ["-q", "--qualified_quality_phred"]
+    description: minimum Phred quality for a base to count as qualified
+    value: { type: int }
+    default: 15
+    rank: 40
+  - names: ["-l", "--length_required"]
+    description: discard reads shorter than this length
+    value: { type: int }
+    default: 15
+    rank: 40
+  - names: ["-A", "--disable_adapter_trimming"]
+    description: turn off adapter trimming
+    rank: 30

@@ -36,7 +36,7 @@ const validateFormats = schemaValidator("formats.schema.json");
 
 type YamlValue = {
   type: ValueType;
-  format?: string;
+  format?: string | string[];
   optional?: boolean;
   multiple?: boolean;
   values?: (string | { value: string; description?: string })[];
@@ -65,6 +65,7 @@ type YamlArgument = {
   name: string;
   description?: string;
   variadic?: boolean;
+  /** `mate_of` here names another argument; `derive` doesn't apply. */
   value?: YamlValue;
   default?: string | number | boolean;
   since?: string;
@@ -86,14 +87,15 @@ type YamlTool = YamlCommand & {
   version: { args: string[]; regex: string };
 };
 
-type YamlFormat = { name: string; description?: string; kind?: FormatKind; pattern?: string; suffixes?: string[]; marker?: string };
+type YamlFormat = { name: string; description?: string; kind?: FormatKind; pattern?: string; suffixes?: string[]; marker?: string | string[] };
 
 // ---------------------------------------------------------------------------------------------
 // Normalised sources, ready to write
 
 type ValueSource = {
   type: ValueType;
-  format?: string;
+  /** Accepted formats, most common first. */
+  formats: string[];
   optional: boolean;
   multiple: boolean;
   values: { value: string; description?: string }[];
@@ -126,6 +128,8 @@ type ArgumentSource = {
   defaultValue?: string;
   since?: string;
   until?: string;
+  /** Name of the mate argument, in the same command. */
+  mateOf?: string;
 };
 
 type CommandSource = {
@@ -149,7 +153,10 @@ type ToolSource = {
   root: CommandSource;
 };
 
-type FormatSource = Required<Pick<YamlFormat, "name">> & YamlFormat & { kind: FormatKind };
+type FormatSource = Omit<YamlFormat, "marker"> & { kind: FormatKind; markers: string[] };
+
+/** A single string or a list, as a list. */
+const asList = (value: string | string[] | undefined): string[] => (value === undefined ? [] : Array.isArray(value) ? value : [value]);
 
 const scalar = (value: string | number | boolean | undefined) => (value === undefined ? undefined : String(value));
 
@@ -157,7 +164,7 @@ const toValueSource = (value: YamlValue | undefined): ValueSource | null =>
   value
     ? {
         type: value.type,
-        format: value.format,
+        formats: asList(value.format),
         optional: value.optional ?? false,
         multiple: value.multiple ?? false,
         values: (value.values ?? []).map((item) => (typeof item === "string" ? { value: item } : item)),
@@ -192,6 +199,7 @@ const toCommandSource = (command: YamlCommand): CommandSource => ({
     defaultValue: scalar(argument.default),
     since: argument.since,
     until: argument.until,
+    mateOf: argument.value?.mate_of,
   })),
   commands: (command.commands ?? []).map(toCommandSource),
 });
@@ -239,7 +247,7 @@ const readFormats = (formatsPath: string | undefined, errors: CompileError[]): F
     }
   });
   if (errors.length > before) return;
-  return (formats as YamlFormat[]).map((format) => ({ ...format, kind: format.kind ?? "file" }));
+  return (formats as YamlFormat[]).map(({ marker, ...format }) => ({ ...format, kind: format.kind ?? "file", markers: asList(marker) }));
 };
 
 /** Reads and checks one tool YAML file, appending every problem found to `errors`. */
@@ -264,13 +272,16 @@ const readToolSource = (sourcesDir: string, file: string, formats: Map<string, F
   /** Checks a value's type, format and enum values. */
   const checkValue = (value: Partial<YamlValue> | undefined, at: Segment[]) => {
     if (typeof value !== "object" || value === null) return;
-    if (typeof value.format === "string") {
-      const kind = formats.get(value.format);
-      if (!kind) fail([...at, "format"], `format "${value.format}" is not declared in the formats file`);
-      else if (value.type !== "file" && value.type !== "dir") fail([...at, "format"], `a format only applies to type file or dir, not ${value.type}`);
-      else if (value.type === "dir" && kind !== "dir") fail([...at, "format"], `format "${value.format}" is a ${kind}, not a folder: use type file`);
-      else if (value.type === "file" && kind === "dir") fail([...at, "format"], `format "${value.format}" is a folder: use type dir`);
-    }
+    const listed = Array.isArray(value.format);
+    (listed ? (value.format as unknown[]) : [value.format]).forEach((name, i) => {
+      if (typeof name !== "string") return;
+      const where = listed ? [...at, "format", i] : [...at, "format"];
+      const kind = formats.get(name);
+      if (!kind) fail(where, `format "${name}" is not declared in the formats file`);
+      else if (value.type !== "file" && value.type !== "dir") fail(where, `a format only applies to type file or dir, not ${value.type}`);
+      else if (value.type === "dir" && kind !== "dir") fail(where, `format "${name}" is a ${kind}, not a folder: use type file`);
+      else if (value.type === "file" && kind === "dir") fail(where, `format "${name}" is a folder: use type dir`);
+    });
     if (value.type === "enum" && !(Array.isArray(value.values) && value.values.length > 0)) fail([...at, "values"], "an enum needs at least one value");
     if (value.read_role !== undefined && value.type !== "file") fail([...at, "read_role"], "a read role only applies to type file");
   };
@@ -327,10 +338,30 @@ const readToolSource = (sourcesDir: string, file: string, formats: Map<string, F
     });
 
     const args = Array.isArray(command.arguments) ? command.arguments : [];
+    const argumentAt = new Map<string, number>();
+    args.forEach((argument: unknown, i: number) => {
+      const name = (argument as Partial<YamlArgument> | null)?.name;
+      if (typeof name === "string") argumentAt.set(name, i);
+    });
+    const argumentMateClaimedBy = new Map<number, number>();
     args.forEach((argument: unknown, i: number) => {
       const arg = argument as Partial<YamlArgument> | null;
       if (arg?.variadic === true && i < args.length - 1) fail([...at, "arguments", i, "variadic"], "only the last positional argument may be variadic");
-      checkValue(arg?.value, [...at, "arguments", i, "value"]);
+      const valueAt = [...at, "arguments", i, "value"];
+      checkValue(arg?.value, valueAt);
+      const value = arg?.value as Partial<YamlValue> | undefined;
+      if (value?.derive !== undefined) fail([...valueAt, "derive"], "a derived output only applies to options");
+      if (typeof value?.mate_of === "string") {
+        const mate = argumentAt.get(value.mate_of);
+        const mateValue = mate === undefined ? undefined : ((args[mate] as Partial<YamlArgument>)?.value as Partial<YamlValue> | undefined);
+        if (mate === undefined) fail([...valueAt, "mate_of"], `"${value.mate_of}" is not an argument of this command`);
+        else if (mate === i) fail([...valueAt, "mate_of"], "an argument cannot be its own mate");
+        else if (value.read_role === undefined || mateValue?.read_role === undefined || value.read_role === mateValue.read_role) {
+          fail([...valueAt, "mate_of"], "mates must have read roles 1 and 2");
+        } else if (argumentMateClaimedBy.has(mate)) {
+          fail([...valueAt, "mate_of"], `"${value.mate_of}" is already the mate of ${formatLocation([...at, "arguments", argumentMateClaimedBy.get(mate)!])}`);
+        } else argumentMateClaimedBy.set(mate, i);
+      }
     });
 
     const seenCommands = new Map<string, number>();
@@ -364,13 +395,13 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
   try {
     db.exec(CATALOG_DDL);
     const insertMeta = db.prepare("INSERT INTO metadata (key, value) VALUES (?, ?)");
-    const insertFormat = db.prepare("INSERT INTO formats (ord, name, kind, description, pattern, suffixes, marker) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    const insertFormat = db.prepare("INSERT INTO formats (ord, name, kind, description, pattern, suffixes, markers) VALUES (?, ?, ?, ?, ?, ?, ?)");
     const insertTool = db.prepare(
       "INSERT INTO tools (name, package, description, platforms, version_args, version_regex, help_args) VALUES (?, ?, ?, ?, ?, ?, ?)",
     );
     const insertCommand = db.prepare("INSERT INTO commands (tool_id, parent_id, name, help_args, description) VALUES (?, ?, ?, ?, ?)");
     const insertOption = db.prepare(
-      `INSERT INTO options (command_id, canonical_name, description, value_type, value_format, value_optional, value_multiple, read_role,
+      `INSERT INTO options (command_id, canonical_name, description, value_type, value_formats, value_optional, value_multiple, read_role,
         default_value, rank, since_version, until_version, repeatable, hidden, deprecated, derive_suffix)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
@@ -379,9 +410,9 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
     const indexOption = db.prepare("INSERT INTO options_fts (rowid, names, description) VALUES (?, ?, ?)");
     const insertOptionValue = db.prepare("INSERT INTO option_values (option_id, ord, value, description) VALUES (?, ?, ?, ?)");
     const insertArgument = db.prepare(
-      `INSERT INTO arguments (command_id, position, name, description, variadic, value_type, value_format, value_optional, value_multiple, read_role,
-        default_value, since_version, until_version)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO arguments (command_id, position, name, description, variadic, value_type, value_formats, value_optional, value_multiple, read_role,
+        default_value, since_version, until_version, mate_of)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const insertRule = db.prepare("INSERT INTO rules (option_id, ord, paired, platform, assay, boost) VALUES (?, ?, ?, ?, ?, ?)");
     const insertRuleUsed = db.prepare("INSERT INTO rule_used (option_id, rule_ord, ord, used_option_id) VALUES (?, ?, ?, ?)");
@@ -389,7 +420,7 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
 
     const valueColumns = (value: ValueSource | null) => [
       value?.type ?? null,
-      value?.format ?? null,
+      value && value.formats.length > 0 ? JSON.stringify(value.formats) : null,
       bool(value?.optional ?? false),
       bool(value?.multiple ?? false),
       value?.readRole ?? null,
@@ -406,7 +437,7 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
           format.description ?? null,
           format.pattern ?? null,
           format.suffixes ? JSON.stringify(format.suffixes) : null,
-          format.marker ?? null,
+          format.markers.length > 0 ? JSON.stringify(format.markers) : null,
         ),
       );
       // Deterministic order (reproducible builds): tools by name, then YAML order everywhere.
@@ -464,6 +495,7 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
               used.forEach((alias, u) => insertRuleUsed.run(optionIds[i], ord, u, idByAlias.get(alias)));
             });
           });
+          const argumentPosition = new Map(command.arguments.map((argument, position) => [argument.name, position]));
           command.arguments.forEach((argument, position) => {
             insertArgument.run(
               commandId,
@@ -475,6 +507,7 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
               argument.defaultValue ?? null,
               argument.since ?? null,
               argument.until ?? null,
+              argument.mateOf ? argumentPosition.get(argument.mateOf) ?? null : null,
             );
             argument.value?.values.forEach((item, ord) => insertArgumentValue.run(commandId, position, ord, item.value, item.description ?? null));
           });

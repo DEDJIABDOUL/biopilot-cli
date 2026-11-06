@@ -163,7 +163,7 @@ CREATE TABLE options (
   canonical_name TEXT NOT NULL,          -- premier nom long, sinon premier nom : --in1 (décision 11)
   description TEXT,
   value_type  TEXT,                      -- NULL (drapeau) | int | float | string | file | dir | enum
-  value_format TEXT,                     -- fastq | bam | fasta | ... si value_type = file
+  value_formats TEXT,                    -- JSON : formats acceptés, le plus courant d'abord, ex. ["bam", "sam"]
   read_role   INTEGER,                   -- 1 ou 2 pour les entrées appariées
   mate_of     INTEGER REFERENCES options(id), -- option du mate (annexe B : value.mate_of)
   derive_from INTEGER REFERENCES options(id), -- sortie dérivée : option source (annexe B : value.derive.from)
@@ -216,7 +216,7 @@ CREATE TABLE formats (
   kind     TEXT NOT NULL DEFAULT 'file', -- file | prefix (index : un préfixe + des suffixes) | dir (index : un dossier)
   pattern  TEXT,                         -- kind = file : '\.(fastq|fq)(\.gz|\.bz2)?$'
   suffixes TEXT,                         -- kind = prefix : JSON [".amb", ".ann", ".bwt", ".pac", ".sa"]
-  marker   TEXT                          -- kind = dir : fichier présent dans le dossier, ex. versionInfo.json
+  markers  TEXT                          -- kind = dir : JSON, fichiers repères dont un seul suffit, ex. ["versionInfo.json", "refseq.bin"]
 );
 
 CREATE TABLE metadata (                  -- version du schéma (entier) : le lecteur n'accepte que la sienne, à l'identique

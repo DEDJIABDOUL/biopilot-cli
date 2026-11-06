@@ -6,7 +6,7 @@
  * version equals this one exactly (spec decision 30): Catalog and reader always
  * ship together, so a mismatch means a broken install.
  */
-export const CATALOG_SCHEMA_VERSION = 4;
+export const CATALOG_SCHEMA_VERSION = 5;
 
 export const PLATFORMS = ["illumina", "nanopore"] as const;
 export type Platform = (typeof PLATFORMS)[number];
@@ -19,7 +19,7 @@ export type Assay = (typeof ASSAYS)[number];
 export const VALUE_TYPES = ["int", "float", "string", "file", "dir", "enum"] as const;
 export type ValueType = (typeof VALUE_TYPES)[number];
 
-/** How a file format is recognised: one file by its name, a reference index by prefix + suffixes, or by a folder + marker. */
+/** How a file format is recognised: one file by its name, a reference index by prefix + suffixes, or by a folder + one of its marker files. */
 export const FORMAT_KINDS = ["file", "prefix", "dir"] as const;
 export type FormatKind = (typeof FORMAT_KINDS)[number];
 
@@ -60,7 +60,7 @@ CREATE TABLE formats (
   description TEXT,
   pattern     TEXT,
   suffixes    TEXT,
-  marker      TEXT
+  markers     TEXT
 );
 
 CREATE TABLE options (
@@ -69,7 +69,7 @@ CREATE TABLE options (
   canonical_name TEXT NOT NULL,
   description    TEXT,
   value_type     TEXT,
-  value_format   TEXT,
+  value_formats  TEXT,
   value_optional INTEGER NOT NULL,
   value_multiple INTEGER NOT NULL,
   read_role      INTEGER,
@@ -129,13 +129,14 @@ CREATE TABLE arguments (
   description    TEXT,
   variadic       INTEGER NOT NULL,
   value_type     TEXT,
-  value_format   TEXT,
+  value_formats  TEXT,
   value_optional INTEGER NOT NULL,
   value_multiple INTEGER NOT NULL,
   read_role      INTEGER,
   default_value  TEXT,
   since_version  TEXT,
   until_version  TEXT,
+  mate_of        INTEGER,
   PRIMARY KEY (command_id, position)
 ) WITHOUT ROWID;
 

@@ -39,7 +39,7 @@ describe("biopilot info", () => {
       canonical_name: "--in1",
       aliases: ["-i", "--in1"],
       description: "read 1 input",
-      value: { type: "string", format: null, optional: false, multiple: false, values: [], read_role: null },
+      value: { type: "string", format: null, formats: [], optional: false, multiple: false, values: [], read_role: null },
       default: null,
       rank: 95,
       since: null,
@@ -133,10 +133,11 @@ describe("biopilot info", () => {
       name: "reads",
       description: null,
       variadic: true,
-      value: { type: "file", format: "fastq", optional: false, multiple: false, values: [], read_role: 1 },
+      value: { type: "file", format: "fastq", formats: ["fastq"], optional: false, multiple: false, values: [], read_role: 1 },
       default: "reads.fq",
       since: "1.0",
       until: null,
+      mate: null,
     });
   });
 

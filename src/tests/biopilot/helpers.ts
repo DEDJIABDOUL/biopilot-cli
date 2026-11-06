@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { compileCatalog, type CompileResult } from "../../biopilot/knowledge/compile.js";
+import { SCHEMAS_DIR } from "../../biopilot/knowledge/yamlSource.js";
 
 /** A fresh temporary folder; tests never touch the user's home. */
 export const tempDir = (): string => fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-test-"));
@@ -46,6 +47,19 @@ export const compileValid = (files: Record<string, string>, formats?: string): s
   const { result, catalogPath } = compile(files, formats);
   if (!result.ok) throw new Error(`fixture failed to compile: ${JSON.stringify(result.errors)}`);
   return catalogPath;
+};
+
+/** The repository's own knowledge sources (`knowledge/`), as `npm run build:db` compiles them. */
+export const REPOSITORY_KNOWLEDGE = {
+  sourcesDir: path.resolve(SCHEMAS_DIR, "..", "knowledge", "tools"),
+  formatsPath: path.resolve(SCHEMAS_DIR, "..", "knowledge", "formats.yml"),
+};
+
+/** Compiles the repository's own Catalog into `outputPath` (a new temporary file by default). */
+export const compileRepositoryCatalog = (outputPath: string = path.join(tempDir(), "knowledge.db")): { catalogPath: string; toolCount: number } => {
+  const result = compileCatalog({ ...REPOSITORY_KNOWLEDGE, outputPath, biopilotVersion: "test" });
+  if (!result.ok) throw new Error(`the repository's knowledge failed to compile: ${JSON.stringify(result.errors)}`);
+  return { catalogPath: outputPath, toolCount: result.toolCount };
 };
 
 export const FASTP = `

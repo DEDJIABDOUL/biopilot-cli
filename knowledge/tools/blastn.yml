@@ -1,0 +1,358 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# blastn 2.17.0 (conda package blast), written from the help recorded in
+# knowledge/help/blastn/2.17.0/ (ticket #12).
+# Descriptions are in our own words (spec decision 31); BLAST+ is public domain (NCBI-PD).
+# BLAST+ options take a single dash and a long name (-query, -db, -outfmt).
+name: blastn
+package: blast
+description: Search nucleotide sequences against a nucleotide database or other sequences
+version: { args: ["-version"], regex: 'blastn: (\d[\w.]*)' }
+help: ["-help"]
+options:
+  # Input and output.
+  - names: ["-query"]
+    description: FASTA file of the sequences to search (standard input by default)
+    value: { type: file, format: fasta }
+    default: "-"
+    rank: 98
+  - names: ["-db"]
+    description: name of the BLAST database to search, as built by makeblastdb
+    value: { type: file, format: blast-nucl-db }
+    rank: 96
+  - names: ["-out"]
+    description: file to write the results to (standard output by default)
+    value: { type: file }
+    default: "-"
+    rank: 92
+  - names: ["-subject"]
+    description: FASTA file of sequences to search against, instead of a database
+    value: { type: file, format: fasta }
+    rank: 80
+  - names: ["-outfmt"]
+    description: layout of the results; 6, 7 and 10 accept a list of fields, e.g. "6 qseqid sseqid pident evalue"
+    value:
+      type: string
+      values:
+        - { value: "0", description: pairwise alignments }
+        - { value: "6", description: tab-separated table }
+        - { value: "7", description: tab-separated table with comment lines }
+        - { value: "5", description: BLAST XML }
+        - { value: "10", description: comma-separated values }
+        - { value: "15", description: single-file BLAST JSON }
+        - { value: "17", description: SAM }
+        - { value: "1", description: query-anchored with identities }
+        - { value: "2", description: query-anchored without identities }
+        - { value: "3", description: flat query-anchored with identities }
+        - { value: "4", description: flat query-anchored without identities }
+        - { value: "8", description: Seqalign as text ASN.1 }
+        - { value: "9", description: Seqalign as binary ASN.1 }
+        - { value: "11", description: "BLAST archive (ASN.1), reformattable with blast_formatter" }
+        - { value: "12", description: Seqalign as JSON }
+        - { value: "13", description: "BLAST JSON, one file per query" }
+        - { value: "14", description: "BLAST XML2, one file per query" }
+        - { value: "16", description: single-file BLAST XML2 }
+        - { value: "18", description: organism report }
+        - { value: "20", description: comma-separated values with header lines }
+    default: "0"
+    rank: 88
+  - names: ["-task"]
+    description: search flavour, setting suitable defaults
+    value:
+      type: enum
+      values:
+        - { value: megablast, description: "very similar sequences, fastest (default)" }
+        - { value: dc-megablast, description: "discontiguous megablast, for more distant sequences" }
+        - { value: blastn, description: "traditional blastn, for distant sequences" }
+        - { value: blastn-short, description: queries shorter than 50 bases }
+        - { value: rmblastn, description: repeat masking with RepeatMasker }
+    default: megablast
+    rank: 80
+  - names: ["-num_threads"]
+    description: number of threads (not with -remote)
+    value: { type: int }
+    default: 1
+    rank: 82
+  - names: ["-evalue"]
+    description: keep hits whose expect value is below this (10 by default, 1000 for blastn-short)
+    value: { type: float, values: ["1e-5", "1e-10", "0.001"] }
+    default: 10
+    rank: 78
+  - names: ["-max_target_seqs"]
+    description: database sequences to keep per query, at most (5 or more recommended)
+    value: { type: int }
+    default: 500
+    rank: 72
+  - names: ["-max_hsps"]
+    description: alignments (HSPs) kept per query and subject, at most
+    value: { type: int }
+    rank: 60
+  - names: ["-perc_identity"]
+    description: lowest percent identity kept
+    value: { type: float }
+    rank: 60
+  - names: ["-qcov_hsp_perc"]
+    description: lowest percent of the query covered by each alignment
+    value: { type: float }
+    rank: 50
+  - names: ["-remote"]
+    description: run the search on the NCBI servers
+    rank: 45
+  - names: ["-query_loc"]
+    description: search only this part of the query, start-stop (1-based)
+    value: { type: string }
+    rank: 35
+  - names: ["-subject_loc"]
+    description: search only this part of the subject, start-stop (1-based)
+    value: { type: string }
+    rank: 30
+  - names: ["-strand"]
+    description: strands of the query to search
+    value: { type: enum, values: [both, plus, minus] }
+    default: both
+    rank: 45
+  # Search parameters.
+  - names: ["-word_size"]
+    description: length of the exact word that seeds a hit, 4 or more
+    value: { type: int }
+    rank: 50
+  - names: ["-gapopen"]
+    description: cost of opening a gap
+    value: { type: int }
+    rank: 35
+  - names: ["-gapextend"]
+    description: cost of extending a gap
+    value: { type: int }
+    rank: 35
+  - names: ["-penalty"]
+    description: mismatch penalty, 0 or negative
+    value: { type: int }
+    rank: 35
+  - names: ["-reward"]
+    description: match reward, 0 or positive
+    value: { type: int }
+    rank: 35
+  - names: ["-use_index"]
+    description: use a MegaBLAST database index
+    value: { type: enum, values: ["true", "false"] }
+    default: "false"
+    rank: 25
+  - names: ["-index_name"]
+    description: name of an old-style MegaBLAST index
+    value: { type: string }
+    deprecated: true
+    rank: 10
+  # Formatting.
+  - names: ["-show_gis"]
+    description: show NCBI GIs in the definition lines
+    rank: 20
+  - names: ["-num_descriptions"]
+    description: database sequences listed with a one-line description (outfmt 0 to 4; not with -max_target_seqs)
+    value: { type: int }
+    default: 500
+    rank: 35
+  - names: ["-num_alignments"]
+    description: database sequences shown with their alignments (not with -max_target_seqs)
+    value: { type: int }
+    default: 250
+    rank: 35
+  - names: ["-line_length"]
+    description: line length of the alignments (outfmt 0 to 4)
+    value: { type: int }
+    default: 60
+    rank: 20
+  - names: ["-html"]
+    description: write HTML
+    rank: 30
+  - names: ["-sorthits"]
+    description: order of the hits (outfmt 0 to 4)
+    value:
+      type: enum
+      values:
+        - { value: "0", description: by expect value }
+        - { value: "1", description: by bit score }
+        - { value: "2", description: by total score }
+        - { value: "3", description: by percent identity }
+        - { value: "4", description: by query coverage }
+    rank: 30
+  - names: ["-sorthsps"]
+    description: order of the alignments within a hit (outfmt 0)
+    value:
+      type: enum
+      values:
+        - { value: "0", description: by expect value }
+        - { value: "1", description: by score }
+        - { value: "2", description: by query start }
+        - { value: "3", description: by percent identity }
+        - { value: "4", description: by subject start }
+    rank: 25
+  # Query filtering.
+  - names: ["-dust"]
+    description: mask low-complexity query regions with DUST, 'yes', 'no' or 'level window linker'
+    value: { type: string, values: ["yes", "no", "20 64 1"] }
+    default: "20 64 1"
+    rank: 40
+  - names: ["-filtering_db"]
+    description: BLAST database of repeats used to mask the query
+    value: { type: file, format: blast-nucl-db }
+    rank: 25
+  - names: ["-window_masker_taxid"]
+    description: mask the query with WindowMasker data of this taxonomy ID
+    value: { type: int }
+    rank: 25
+  - names: ["-window_masker_db"]
+    description: mask the query with this WindowMasker repeats database
+    value: { type: file }
+    rank: 20
+  - names: ["-soft_masking"]
+    description: masked regions only stop seeding, alignments may still cross them
+    value: { type: enum, values: ["true", "false"] }
+    default: "true"
+    rank: 30
+  - names: ["-lcase_masking"]
+    description: treat lower-case letters of the query and subjects as masked
+    rank: 30
+  # Restricting the search.
+  - names: ["-taxids"]
+    description: search only sequences of these taxonomy IDs and their descendants, comma-separated
+    value: { type: string }
+    rank: 45
+  - names: ["-negative_taxids"]
+    description: skip sequences of these taxonomy IDs and their descendants
+    value: { type: string }
+    rank: 35
+  - names: ["-taxidlist"]
+    description: file of taxonomy IDs to search only
+    value: { type: file }
+    rank: 35
+  - names: ["-negative_taxidlist"]
+    description: file of taxonomy IDs to skip
+    value: { type: file }
+    rank: 30
+  - names: ["-no_taxid_expansion"]
+    description: use the given taxonomy IDs alone, not their descendants
+    rank: 20
+  - names: ["-seqidlist"]
+    description: file of sequence IDs to search only
+    value: { type: file }
+    rank: 40
+  - names: ["-negative_seqidlist"]
+    description: file of sequence IDs to skip
+    value: { type: file }
+    rank: 30
+  - names: ["-gilist"]
+    description: file of GIs to search only
+    value: { type: file }
+    rank: 15
+  - names: ["-negative_gilist"]
+    description: file of GIs to skip
+    value: { type: file }
+    rank: 15
+  - names: ["-entrez_query"]
+    description: Entrez query limiting a -remote search
+    value: { type: string }
+    rank: 25
+  - names: ["-db_soft_mask"]
+    description: masking algorithm of the database applied as a soft mask
+    value: { type: string }
+    rank: 20
+  - names: ["-db_hard_mask"]
+    description: masking algorithm of the database applied as a hard mask
+    value: { type: string }
+    rank: 20
+  - names: ["-culling_limit"]
+    description: drop a hit whose query range is covered by at least this many better hits
+    value: { type: int }
+    rank: 30
+  - names: ["-best_hit_overhang"]
+    description: overhang of the best-hit filter, between 0 and 0.5 (0.1 recommended)
+    value: { type: float }
+    rank: 25
+  - names: ["-best_hit_score_edge"]
+    description: score edge of the best-hit filter, between 0 and 0.5 (0.1 recommended)
+    value: { type: float }
+    rank: 25
+  - names: ["-subject_besthit"]
+    description: keep only the best alignment for each non-overlapping query region
+    rank: 35
+  # Discontiguous MegaBLAST.
+  - names: ["-template_type"]
+    description: discontiguous MegaBLAST template (needs -template_length)
+    value: { type: enum, values: [coding, coding_and_optimal, optimal] }
+    rank: 25
+  - names: ["-template_length"]
+    description: discontiguous MegaBLAST template length (needs -template_type)
+    value: { type: enum, values: ["16", "18", "21"] }
+    rank: 25
+  # Statistics.
+  - names: ["-dbsize"]
+    description: effective database length used in the statistics
+    value: { type: int }
+    rank: 20
+  - names: ["-searchsp"]
+    description: effective search space used in the statistics
+    value: { type: int }
+    rank: 20
+  # Search strategy.
+  - names: ["-import_search_strategy"]
+    description: rerun a search strategy saved earlier
+    value: { type: file }
+    rank: 20
+  - names: ["-export_search_strategy"]
+    description: save the search strategy to this file
+    value: { type: file }
+    rank: 20
+  # Extension.
+  - names: ["-xdrop_ungap"]
+    description: X-dropoff of ungapped extensions, in bits
+    value: { type: float }
+    rank: 20
+  - names: ["-xdrop_gap"]
+    description: X-dropoff of preliminary gapped extensions, in bits
+    value: { type: float }
+    rank: 20
+  - names: ["-xdrop_gap_final"]
+    description: X-dropoff of the final gapped alignment, in bits
+    value: { type: float }
+    rank: 20
+  - names: ["-no_greedy"]
+    description: use non-greedy dynamic programming for extensions
+    rank: 25
+  - names: ["-min_raw_gapped_score"]
+    description: lowest raw gapped score kept during the gapped stages
+    value: { type: int }
+    rank: 20
+  - names: ["-ungapped"]
+    description: align without gaps only
+    rank: 25
+  - names: ["-window_size"]
+    description: window of the two-hit seeding (0 for one hit)
+    value: { type: int }
+    rank: 20
+  - names: ["-off_diagonal_range"]
+    description: off-diagonals searched for the second hit (0 turns it off)
+    value: { type: int }
+    default: 0
+    rank: 15
+  # Miscellaneous.
+  - names: ["-parse_deflines"]
+    description: parse the definition lines of the query and subjects for sequence IDs
+    rank: 40
+  - names: ["-mt_mode"]
+    description: how threads share the work (needs -num_threads)
+    value:
+      type: enum
+      values:
+        - { value: "0", description: chosen automatically }
+        - { value: "1", description: split by query }
+        - { value: "2", description: split by database }
+    default: "0"
+    rank: 35
+  - names: ["-h"]
+    description: print a short usage and exit
+    rank: 10
+  - names: ["-help"]
+    description: print the full help and exit
+    rank: 10
+  - names: ["-version"]
+    description: print the version and exit
+    rank: 10

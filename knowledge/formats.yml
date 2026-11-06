@@ -53,3 +53,11 @@ formats:
     description: salmon index folder
     kind: dir
     marker: versionInfo.json
+# part A (ticket #11)
+  - name: rad
+    description: salmon / piscem mapping records (RAD)
+    pattern: '\.rad$'
+  - name: salmon-quant
+    description: salmon quant result folder
+    kind: dir
+    marker: quant.sf

@@ -1,0 +1,5 @@
+# Compute unknown profiles in a detached process while the user types
+
+BioPilot's design principle is that nothing costly happens on a keystroke: no blocking process, no network, no full disk walk. Yet when the user types an installed tool whose profile is unknown, BioPilot launches that tool's `--help` (and version probe) in a detached process right away, showing Catalog options meanwhile and switching to the real profile once it lands. It runs at most once per fingerprint, with a 2.5 s timeout and stdin closed, and the keystroke never waits for it.
+
+The alternative was to compute profiles only through explicit commands (`biopilot sync`, `biopilot learn`). We rejected it because the core promise — options match the installed version — would then silently fail after any `conda activate` or tool upgrade until the user remembered to run `sync`; acceptance scenario 7 (switching from fastp 0.23.4 to 0.20.1 in the same session) could not pass. "No background service" in the spec therefore means no permanent daemon, not no child process ever.

@@ -59,7 +59,7 @@ L'outil doit être utile dès l'installation, sans compte, sans réseau et sans 
 | **Local-first** | Aucune requête réseau à l'exécution. Pas de télémétrie. |
 | **La vérité vient du binaire** | Les options affichées sont celles de la version installée. La base apporte le classement, les types et les règles. |
 | **Échec silencieux** | Une erreur de BioPilot ne bloque jamais le terminal. Le moteur retombe sur le comportement d'Inshellisense. |
-| **Rien à chaque frappe qui coûte** | Pas de processus lancé, pas d'accès réseau, pas de parcours disque complet pendant la frappe. Tout ce qui est coûteux est mis en cache. |
+| **Rien à chaque frappe qui coûte** | Pas de processus *bloquant*, pas d'accès réseau, pas de parcours disque complet pendant la frappe. Seule exception : le calcul détaché d'un profil inconnu (section 6.5). Tout ce qui est coûteux est mis en cache. |
 | **AI-optional** | Toute fonctionnalité de la version 1 marche sans LLM. |
 
 ---
@@ -113,7 +113,7 @@ La liste est fermée. Toute modification supplémentaire doit être justifiée d
 | M3 | Point d'ancrage avant le chargement d'une spec : le noyau BioPilot fournit la spec des outils bio | `runtime/runtime.ts` | Brancher la base SQLite. |
 | M4 | Respect de la priorité des options, y compris avant toute saisie | `runtime/suggestion.ts` | Le moteur d'origine force les options à une priorité fixe tant que rien n'est tapé. |
 | M5 | Une option inconnue n'interrompt plus l'analyse de la ligne | `runtime/runtime.ts` | Le moteur d'origine cesse de suggérer après une option absente de la spec. |
-| M6 | Commandes bio prioritaires dans la complétion du nom de commande | `runtime/runtime.ts` | `sam` doit proposer samtools en premier. |
+| M6 | Commandes bio prioritaires dans la complétion du nom de commande, avec un bonus fixe si la plateforme de l'outil figure dans celles du projet | `runtime/runtime.ts` | `sam` doit proposer samtools en premier ; `mini` dans un projet nanopore, minimap2. |
 | M7 | Ligne d'état facultative sous la liste : environnement, version de l'outil, alerte éventuelle | `ui/` | Rendre visible ce que BioPilot a détecté. Désactivable. |
 | M8 | Correction de `complete` : chargement de la configuration, sortie vide sans plantage | `commands/complete.ts` | Permettre des tests automatisés sans terminal. |
 
@@ -140,7 +140,7 @@ CREATE TABLE tools (
   name        TEXT NOT NULL UNIQUE,      -- nom de l'exécutable : fastp
   package     TEXT,                      -- nom du paquet conda, s'il diffère
   description TEXT,
-  data_type   TEXT,                      -- illumina | nanopore | generic
+  platform    TEXT,                      -- illumina | nanopore | generic
   version_args TEXT NOT NULL,            -- JSON : ["--version"]
   version_regex TEXT NOT NULL            -- 'fastp (\d[\w.]*)'
 );
@@ -185,7 +185,7 @@ CREATE TABLE arguments (                 -- positionnels
 
 CREATE TABLE rules (                     -- règles de contexte
   option_id   INTEGER NOT NULL REFERENCES options(id),
-  condition   TEXT NOT NULL,             -- JSON : {"used": ["--in1"], "paired": true}
+  condition   TEXT NOT NULL,             -- JSON : {"used": ["--in1"], "paired": true, "platform": "nanopore", "assay": "rna-seq"}
   boost       INTEGER NOT NULL
 );
 
@@ -200,25 +200,26 @@ CREATE VIRTUAL TABLE options_fts USING fts5(names, description, content='options
 ### 6.3 Schéma de `user.db`
 
 ```sql
-CREATE TABLE profiles (                  -- options réelles d'un binaire précis
-  fingerprint TEXT NOT NULL,             -- chemin réel + taille + date du binaire
+CREATE TABLE profiles (                  -- options réelles d'une version d'une commande
   tool        TEXT NOT NULL,
+  version     TEXT NOT NULL,             -- version détectée ; à défaut, 'fp:' + empreinte
   command     TEXT NOT NULL,             -- '' ou 'sort'
-  version     TEXT,
   options     TEXT NOT NULL,             -- JSON issu du --help
+  fingerprint TEXT NOT NULL,             -- empreinte du binaire analysé : contrôle de fraîcheur, pas clé
   created_at  INTEGER NOT NULL,
-  PRIMARY KEY (fingerprint, command)
+  PRIMARY KEY (tool, version, command)   -- partagé entre environnements conda
 );
 
-CREATE TABLE learned_tools (             -- outils absents de knowledge.db
+CREATE TABLE learned_tools (             -- outils absents du catalogue
   name        TEXT PRIMARY KEY,
-  definition  TEXT NOT NULL              -- même structure que l'annexe B, en JSON
+  definition  TEXT NOT NULL              -- JSON : comment l'interroger (sous-commandes, version, aide),
+                                         -- sans options : celles-ci viennent des profils
 );
 
 CREATE TABLE usage (
   tool        TEXT NOT NULL,
   command     TEXT NOT NULL,
-  option_name TEXT NOT NULL,
+  option_name TEXT NOT NULL,             -- nom canonique : premier nom long, sinon premier nom
   count       INTEGER NOT NULL DEFAULT 0,
   last_used   INTEGER NOT NULL,
   PRIMARY KEY (tool, command, option_name)
@@ -229,17 +230,17 @@ CREATE TABLE usage (
 
 1. **Sources :** un fichier YAML par outil dans `knowledge/tools/`, versionné dans Git et relu comme du code (format en annexe B).
 2. **Compilation :** `npm run build:db` valide chaque fichier YAML avec un schéma, puis produit `knowledge.db`. La CI refuse un YAML invalide.
-3. **Import local :** `biopilot learn <outil>` lance le `--help`, l'analyse et enregistre le résultat dans `user.db`.
-4. **Usage :** chaque option acceptée par l'utilisateur incrémente `usage`. Ces données ne quittent jamais la machine.
+3. **Import local :** `biopilot learn <outil>` lance le `--help`, l'analyse et enregistre le résultat dans `user.db`. Les sous-commandes listées dans l'aide racine sont découvertes automatiquement (`<outil> <sub> --help`), sur un seul niveau et au plus 50. La version est cherchée dans `conda-meta/`, sinon par les sondes `--version`, `-V` puis `version` (2,5 s, entrée standard fermée), sinon le profil est indexé par l'empreinte ; la méthode retenue est enregistrée dans `learned_tools`.
+4. **Usage :** chaque option acceptée par l'utilisateur incrémente `usage`, sous son nom canonique (`-i` et `--in1` comptent pour `--in1`). L'usage est global à la machine, pas par projet. Ces données ne quittent jamais la machine.
 
 ### 6.5 Fusion à l'exécution
 
 | Situation | Options affichées | Classement |
 |---|---|---|
 | Outil installé, profil connu | Celles du profil (`--help` réel) | Règles de `knowledge.db` + usage |
-| Outil installé, profil inconnu | Celles de `knowledge.db`, puis profil calculé en arrière-plan | Idem |
+| Outil installé, profil inconnu | Celles de `knowledge.db`, puis profil calculé par un processus détaché (une fois par empreinte, 2,5 s au plus, jamais attendu par la frappe) | Idem |
 | Outil absent de la machine | Celles de `knowledge.db` | Règles seules |
-| Outil absent de `knowledge.db` | Celles de `learned_tools` | Usage seul |
+| Outil appris (absent de `knowledge.db`) | Celles de son profil, obtenu comme ci-dessus à partir de `learned_tools` | Usage seul |
 
 ### 6.6 Bibliothèque SQLite — décision
 
@@ -285,13 +286,16 @@ Critères de décision : temps d'ouverture, taille ajoutée, absence de compilat
 - **Racine :** premier dossier parent contenant `.git`, `environment.yml`, `Snakefile`, `nextflow.config` ou `.biopilot.toml`.
 - **Parcours :** profondeur 3, au plus 2 000 entrées, sans dossiers cachés, `node_modules`, `work/` ni `.snakemake/`.
 - **Lecture :** seuls les noms de fichiers sont lus, plus `environment.yml` (64 Ko au plus).
-- **Résultat :** type d'analyse (rna-seq, variant-calling, nanopore, inconnu), présence de reads appariés, formats présents.
+- **Résultat :** deux champs détectés indépendamment, plus la présence de reads appariés et les formats présents :
+  - `platform` : **ensemble** de plateformes (`illumina`, `nanopore`), vide = `generic`. *nanopore* si `*.pod5`, `*.fast5`, `sequencing_summary*.txt` ou un dossier `fastq_pass/` ; *illumina* si des paires R1/R2 complètes ou les motifs `_L00N_` / `_SN_`. Les paquets d'`environment.yml` ne servent que d'indice secondaire.
+  - `assay` (`rna-seq` | `variant-calling` | `unknown`), déduit des seuls formats : `.gtf`/`.gff`, index salmon ou `quant.sf` → `rna-seq` ; `.vcf`/`.bcf`, ou `.bam` avec une référence `.fa` indexée et sans annotation → `variant-calling` ; sinon `unknown`. Jamais déduit des outils de l'environnement.
+  - `.biopilot.toml` a toujours le dernier mot.
 - **Cache :** 10 s par racine.
 
 ### 8.2 Fichiers proposés
 
 - Seuls les fichiers du format attendu sont proposés, du plus pertinent au moins pertinent.
-- **Reads appariés :** schémas `_R1`, `_1`, `.R1` et `_R1_001`. Après une entrée R1, son mate R2 passe en tête.
+- **Reads appariés :** schémas `_R1`, `_1`, `.R1` et `_R1_001`. Une paire n'est reconnue que si les deux mates existent, avec des noms identiques au marqueur près (`rep_1.fastq.gz` seul n'est pas apparié). Après une entrée R1, son mate R2 passe en tête.
 - **Sorties :** nom dérivé de l'entrée, placé dans `results/` si ce dossier existe (`ctrl_R1.trimmed.fastq.gz`).
 - **Index :** les fichiers d'un même index sont regroupés en un seul préfixe (`genome.fa` pour `genome.fa.bwt`, `.sa`…).
 
@@ -300,6 +304,7 @@ Critères de décision : temps d'ouverture, taille ajoutée, absence de compilat
 ```text
 priorité = rang de base (knowledge.db)
          + bonus des règles dont la condition est vraie
+           (conditions possibles : options utilisées, reads appariés, platform, assay)
          + bonus d'usage (plafonné à +15)
 ```
 
@@ -310,6 +315,7 @@ Les options déjà saisies disparaissent de la liste. En cas d'égalité, l'ordr
 ```toml
 # .biopilot.toml
 assay = "rna-seq"
+platform = ["illumina"]
 reference = "ref/GRCh38.fa"
 results_dir = "results"
 threads = 8
@@ -463,19 +469,32 @@ Prévue pour l'architecture, non développée en version 1.
 3. **Licence :** MIT, avec un fichier `NOTICE` préservant intégralement la licence et le copyright d'Inshellisense (`Copyright (c) Microsoft Corporation`).
 4. **Hébergement :** GitHub Releases, dépôt [`DEDJIABDOUL/biopilot-cli`](https://github.com/DEDJIABDOUL/biopilot-cli) (privé pour l'instant — à rendre public avant la distribution en section 10).
 
+5. **Langue :** ce document reste en français tant qu'il est une proposition. Le glossaire (`GLOSSARY.md`), le code, le README et la documentation publique (phase 6) sont en anglais.
+6. **`assay` et `platform` :** deux champs indépendants (section 8.1). `platform` remplace `tools.data_type` et reprend son vocabulaire.
+7. **Profils partagés :** un profil est indexé par `(tool, version, command)` et réutilisé d'un environnement conda à l'autre. L'empreinte ne sert qu'au contrôle de fraîcheur, ou de clé de repli si la version est inconnue (section 6.3).
+8. **Vocabulaire :** la connaissance fournie s'appelle le *Catalog*, celle produite localement le *User store* (voir `GLOSSARY.md`).
+9. **Calcul détaché d'un profil :** autorisé pendant la frappe, sans jamais la bloquer (sections 3 et 6.5). « Aucun service en arrière-plan » signifie aucun démon permanent. Voir [ADR-0002](./docs/adr/0002-detached-profile-computation.md).
+10. **Outils appris :** `learned_tools` décrit seulement comment interroger l'outil. Ses options viennent de ses profils, comme pour un outil du catalogue.
+11. **Usage :** compté par option, sous son nom canonique (section 6.4).
+
+12. **Plateformes multiples :** `platform` est un ensemble (section 8.1).
+13. **Détection de `platform` et `assay` :** à partir des seuls noms de fichiers ; `environment.yml` n'est qu'un indice secondaire pour `platform` et n'intervient jamais pour `assay` ; `.biopilot.toml` prime (section 8.1).
+14. **Paires de reads :** reconnues seulement si les deux mates existent (section 8.2).
+15. **Sous-commandes des outils appris :** découverte automatique, un niveau, 50 au plus (section 6.4).
+
+16. **Classement par plateforme :** les règles peuvent porter sur `platform` et `assay` (sections 6.2 et 8.3), et M6 favorise les outils de la plateforme du projet.
+17. **Usage global :** compté pour toute la machine, pas par projet (section 6.4).
+18. **Version d'un outil appris :** `conda-meta/`, puis sondes `--version`, `-V`, `version`, puis empreinte (section 6.4).
+
 ### Décisions encore ouvertes
 
-*Issues d'une session de "grilling" interrompue le 6 novembre 2026 — à reprendre.*
-
-5. Traduction ou non du présent document vers l'anglais (le glossaire de domaine et le code seront en anglais, cf. décision de langue du 6 novembre 2026).
-6. **Séparation `assay` / technologie de séquençage (section 8.1) :** la détection de projet mélange type d'analyse (`rna-seq`, `variant-calling`) et technologie de séquençage (`nanopore`) dans une seule énumération, alors que `tools.data_type` (section 6.2) distingue déjà la technologie. Un projet "variant-calling en reads longs nanopore" n'a pas de case. *Recommandation en attente de confirmation :* séparer en deux champs indépendants et détectés indépendamment — `assay` (`rna-seq` | `variant-calling` | `unknown`) et `platform` (`illumina` | `nanopore` | `generic`).
-7. **Granularité de `profile` (section 6.3) :** `profiles` est indexé par `(fingerprint, command)`, où `fingerprint` = chemin réel + taille + date du binaire. Deux installations identiques du même outil/version dans deux environnements conda différents ont deux chemins différents, donc deux empreintes différentes, donc `--help` est reparsé deux fois pour rien. *Recommandation en attente de confirmation :* chercher d'abord un profil existant par `(tool, version, command)`, réutilisable entre environnements, et ne garder `fingerprint` que comme vérification de fraîcheur une fois un candidat trouvé — pas comme clé primaire.
+Aucune. Session de "grilling" close le 6 novembre 2026.
 
 ---
 
 ## Annexe A — Outils de la version 1
 
-| Outil | Usage | Type de données |
+| Outil | Usage | Plateforme |
 |---|---|---|
 | fastp | Nettoyage des reads | Illumina |
 | Porechop | Retrait des adaptateurs | Nanopore |
@@ -496,7 +515,7 @@ Les options de chaque outil sont importées depuis son `--help` officiel, puis c
 name: fastp
 package: fastp
 description: All-in-one FASTQ preprocessor
-data_type: illumina
+platform: illumina
 version: { args: ["--version"], regex: 'fastp (\d[\w.]*)' }
 help: ["--help"]
 options:

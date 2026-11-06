@@ -24,6 +24,18 @@ _Avoid_: Subtool, verb
 A named switch of a command, which may have several aliases (`-i`, `--in1`). It is identified by its **canonical name**: its first long name, otherwise its first name.
 _Avoid_: Flag (a flag is an option that takes no value), argument (an argument is positional)
 
+**Rank**:
+The Catalog's fixed priority of an option, from 0 to 100, set by a domain expert on a shared scale.
+_Avoid_: Weight, score, priority (priority is the computed result)
+
+**Boost**:
+The amount, from −100 to +100, that a rule adds to an option's rank when its condition holds in the current context.
+_Avoid_: Bonus, weight
+
+**Reference index**:
+The set of files a tool builds from a reference genome and reads as one unit, named either by a common prefix (bwa) or by a folder (salmon).
+_Avoid_: Index files, database
+
 **Learned tool**:
 A tool absent from the Catalog that the user imported. BioPilot only records how to query it (subcommands, version command, help command); its options come from its profiles.
 _Avoid_: Custom tool, imported tool

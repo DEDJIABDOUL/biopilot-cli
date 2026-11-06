@@ -164,8 +164,9 @@ CREATE TABLE options (
   value_type  TEXT,                      -- NULL (drapeau) | int | float | string | file | dir | enum
   value_format TEXT,                     -- fastq | bam | fasta | ... si value_type = file
   read_role   INTEGER,                   -- 1 ou 2 pour les entrées appariées
-  mate_of     INTEGER REFERENCES options(id), -- option du mate (annexe B : mate_of)
-  derive      TEXT,                      -- JSON : {"from": "--in1", "suffix": ".trimmed"} (annexe B)
+  mate_of     INTEGER REFERENCES options(id), -- option du mate (annexe B : value.mate_of)
+  derive_from INTEGER REFERENCES options(id), -- sortie dérivée : option source (annexe B : value.derive.from)
+  derive_suffix TEXT,                    -- sortie dérivée : suffixe ajouté, ex. .trimmed
   value_optional INTEGER NOT NULL DEFAULT 0, -- --opt[=VAL]
   value_multiple INTEGER NOT NULL DEFAULT 0, -- plusieurs valeurs après l'option
   repeatable  INTEGER NOT NULL DEFAULT 0,
@@ -565,14 +566,14 @@ options:
     rank: 95
   - names: ["-I", "--in2"]
     description: read2 input file name
-    value: { type: file, format: fastq, read_role: 2, mate_of: ["-i", "--in1"] }
+    value: { type: file, format: fastq, read_role: 2, mate_of: "--in1" }   # un alias suffit
     rank: 60
     rules:
       - when: { used: ["-i", "--in1"], paired: true }
         boost: 35
   - names: ["-o", "--out1"]
     description: read1 output file name
-    value: { type: file, derive: { from: ["-i", "--in1"], suffix: ".trimmed" } }
+    value: { type: file, format: fastq, derive: { from: "--in1", suffix: ".trimmed" } }
     rank: 65
     rules:
       - when: { used: ["-i", "--in1"] }

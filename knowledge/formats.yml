@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../schemas/formats.schema.json
+# File formats the tools refer to (`value.format`), declared once.
+# kind file: `pattern` is matched against the file name, case-insensitively.
+# kind prefix / dir: reference indexes, recognised from a directory listing.
+formats:
+  - name: fastq
+    description: sequencing reads with base qualities
+    pattern: '\.(fastq|fq)(\.gz|\.bz2|\.zst)?$'
+  - name: fasta
+    description: sequences (references, assemblies)
+    pattern: '\.(fasta|fa|fna|ffn|faa|fas)(\.gz|\.bz2)?$'
+  - name: sam
+    description: alignments, text
+    pattern: '\.sam$'
+  - name: bam
+    description: alignments, binary
+    pattern: '\.bam$'
+  - name: cram
+    description: alignments, reference-compressed
+    pattern: '\.cram$'
+  - name: vcf
+    description: variant calls, text
+    pattern: '\.vcf(\.gz)?$'
+  - name: bcf
+    description: variant calls, binary
+    pattern: '\.bcf$'
+  - name: bed
+    description: genomic intervals
+    pattern: '\.bed(\.gz)?$'
+  - name: gtf
+    description: gene annotation (GTF)
+    pattern: '\.gtf(\.gz)?$'
+  - name: gff
+    description: gene annotation (GFF3)
+    pattern: '\.(gff|gff3)(\.gz)?$'
+  - name: fai
+    description: FASTA index (samtools faidx)
+    pattern: '\.fai$'
+  - name: json
+    description: JSON report
+    pattern: '\.json$'
+  - name: html
+    description: HTML report
+    pattern: '\.html?$'
+  - name: minimap2-index
+    description: minimap2 prebuilt index
+    pattern: '\.mmi$'
+  - name: bwa-index
+    description: bwa index, named by the reference it was built from
+    kind: prefix
+    suffixes: [".amb", ".ann", ".bwt", ".pac", ".sa"]
+  - name: salmon-index
+    description: salmon index folder
+    kind: dir
+    marker: versionInfo.json

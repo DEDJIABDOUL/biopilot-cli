@@ -93,15 +93,7 @@
           "minLength": 1
         },
         "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["type"],
-          "properties": {
-            "type": {
-              "enum": ["int", "float", "string"]
-            }
-          },
-          "description": "What the option takes. Omit for a flag."
+          "$ref": "#/definitions/optionValue"
         },
         "default": {
           "type": ["string", "number", "boolean"]
@@ -118,6 +110,31 @@
           "items": {
             "$ref": "#/definitions/rule"
           }
+        },
+        "since": {
+          "type": "string",
+          "minLength": 1,
+          "description": "First tool version that has the option, when known."
+        },
+        "until": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Last tool version that has the option, when known."
+        },
+        "repeatable": {
+          "type": "boolean",
+          "default": false,
+          "description": "May be given several times."
+        },
+        "hidden": {
+          "type": "boolean",
+          "default": false,
+          "description": "Known (for parsing a command line) but never suggested."
+        },
+        "deprecated": {
+          "type": "boolean",
+          "default": false,
+          "description": "Still accepted but obsolete; give it a low rank."
         }
       }
     },
@@ -202,8 +219,157 @@
           "type": "boolean",
           "default": false,
           "description": "Takes one or more values; only the last argument may be variadic."
+        },
+        "value": {
+          "$ref": "#/definitions/argumentValue"
+        },
+        "default": {
+          "type": ["string", "number", "boolean"]
+        },
+        "since": {
+          "type": "string",
+          "minLength": 1,
+          "description": "First tool version that has the option, when known."
+        },
+        "until": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Last tool version that has the option, when known."
         }
       }
+    },
+    "argumentValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["int", "float", "string", "file", "dir", "enum"],
+          "description": "int, float, string, file, dir or enum. Only enum restricts the value to `values`."
+        },
+        "format": {
+          "type": "string",
+          "description": "type file or dir: a format declared in knowledge/formats.yml (fastq, bam, bwa-index…)."
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "The value may be omitted: --opt[=VAL]."
+        },
+        "multiple": {
+          "type": "boolean",
+          "default": false,
+          "description": "Takes several values after the option."
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["value"],
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "description": "Suggested values; for type enum, the only allowed ones."
+        },
+        "read_role": {
+          "enum": [1, 2],
+          "description": "type file: read 1 or read 2 of a read pair."
+        }
+      },
+      "description": "What the argument takes."
+    },
+    "optionValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["int", "float", "string", "file", "dir", "enum"],
+          "description": "int, float, string, file, dir or enum. Only enum restricts the value to `values`."
+        },
+        "format": {
+          "type": "string",
+          "description": "type file or dir: a format declared in knowledge/formats.yml (fastq, bam, bwa-index…)."
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "The value may be omitted: --opt[=VAL]."
+        },
+        "multiple": {
+          "type": "boolean",
+          "default": false,
+          "description": "Takes several values after the option."
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["value"],
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "description": "Suggested values; for type enum, the only allowed ones."
+        },
+        "read_role": {
+          "enum": [1, 2],
+          "description": "type file: read 1 or read 2 of a read pair."
+        },
+        "mate_of": {
+          "type": "string",
+          "description": "Alias of the mate option (same command), which has the other read role."
+        },
+        "derive": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "suffix"],
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "Alias of the option whose value this output is derived from."
+            },
+            "suffix": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Added before the extensions, e.g. .trimmed → ctrl_R1.trimmed.fastq.gz."
+            }
+          },
+          "description": "type file: output name derived from another option's value."
+        }
+      },
+      "description": "What the option takes. Omit for a flag."
     }
   }
 }

@@ -53,10 +53,12 @@ describe("Catalog reader: subcommands and positional arguments", () => {
 
   test("lists a command's positional arguments in order; variadic defaults to false", () => {
     expect(catalog.listArguments(catalog.getCommand("samtools", ["view"])!)).toEqual([
-      { name: "in.bam", description: null, variadic: false },
-      { name: "region", description: null, variadic: true },
+      expect.objectContaining({ name: "in.bam", description: null, variadic: false }),
+      expect.objectContaining({ name: "region", description: null, variadic: true }),
     ]);
-    expect(catalog.listArguments(catalog.getCommand("samtools", ["sort"])!)).toEqual([{ name: "in.bam", description: "alignments to sort", variadic: false }]);
+    expect(catalog.listArguments(catalog.getCommand("samtools", ["sort"])!)).toEqual([
+      expect.objectContaining({ name: "in.bam", description: "alignments to sort", variadic: false }),
+    ]);
     expect(catalog.listArguments(catalog.getCommand("samtools")!)).toEqual([]);
   });
 

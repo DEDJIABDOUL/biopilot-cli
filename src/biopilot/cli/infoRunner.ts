@@ -6,7 +6,7 @@
 // option name and is never parsed as a BioPilot flag (fastp itself has a `--json` option).
 
 import chalk from "chalk";
-import { openCatalog, type Argument, type Catalog, type Command, type Option, type Tool } from "../knowledge/catalog.js";
+import { openCatalog, type Argument, type Catalog, type Command, type Option, type Tool, type ValueSpec } from "../knowledge/catalog.js";
 
 /** Version of the `--json` output contract (schemas/info-output.schema.json). */
 export const INFO_JSON_FORMAT = 1;
@@ -71,13 +71,39 @@ const commandJson = (catalog: Catalog, command: Command) => ({
   path: command.path,
   description: command.description,
   subcommands: catalog.listSubcommands(command).map((sub) => ({ name: commandWord(sub), description: sub.description })),
-  arguments: catalog.listArguments(command).map((argument) => ({ name: argument.name, description: argument.description, variadic: argument.variadic })),
+  arguments: catalog.listArguments(command).map(argumentJson),
+});
+
+const valueJson = (value: ValueSpec | null) =>
+  value === null
+    ? null
+    : {
+        type: value.type,
+        format: value.format,
+        optional: value.optional,
+        multiple: value.multiple,
+        values: value.values,
+        read_role: value.readRole,
+      };
+
+const argumentJson = (argument: Argument) => ({
+  name: argument.name,
+  description: argument.description,
+  variadic: argument.variadic,
+  value: valueJson(argument.value),
+  default: argument.defaultValue,
+  since: argument.since,
+  until: argument.until,
 });
 
 /** Last word of a command's path: `sort` for `samtools sort`. */
 const commandWord = (command: Command) => command.path[command.path.length - 1];
 
-const argumentText = (argument: Argument) => `<${argument.name}>${argument.variadic ? "..." : ""}`;
+/** `<in.bam>`, `<region>...` (variadic or several values), `[<level>]` (optional). */
+const argumentText = (argument: Argument) => {
+  const text = `<${argument.name}>${argument.variadic || argument.value?.multiple ? "..." : ""}`;
+  return argument.value?.optional ? `[${text}]` : text;
+};
 
 /** Two-column list: `  name   description`. */
 const twoColumnText = (rows: [string, string | null][]) => {
@@ -89,17 +115,64 @@ const optionJson = (option: Option) => ({
   canonical_name: option.canonicalName,
   aliases: option.aliases,
   description: option.description,
-  value: option.valueType === null ? null : { type: option.valueType },
+  value: valueJson(option.value),
   default: option.defaultValue,
   rank: option.rank,
+  since: option.since,
+  until: option.until,
+  repeatable: option.repeatable,
+  hidden: option.hidden,
+  deprecated: option.deprecated,
+  mate: option.mate,
+  derive: option.derive,
 });
+
+/** `<fastq>`, `<fast|slow>`, `[=<int>]`, `<string>...`: what follows the option name. */
+const valuePlaceholder = (value: ValueSpec) => {
+  const inner = value.type === "enum" ? value.values.map((v) => v.value).join("|") : value.format ?? value.type;
+  const placeholder = `<${inner}>${value.multiple ? "..." : ""}`;
+  return value.optional ? `[=${placeholder}]` : ` ${placeholder}`;
+};
+
+const suggestions = (value: ValueSpec | null) =>
+  value && value.type !== "enum" && value.values.length > 0 ? `e.g. ${value.values.map((v) => v.value).join(", ")}` : undefined;
+
+const readRole = (value: ValueSpec | null) => (value?.readRole ? `R${value.readRole}` : undefined);
+
+/** What the text output says about an option, after its description. */
+const optionFacts = (option: Option): string[] =>
+  [
+    readRole(option.value),
+    option.mate ? `mate ${option.mate}` : undefined,
+    option.derive ? `derived from ${option.derive.from} + ${option.derive.suffix}` : undefined,
+    suggestions(option.value),
+    ...(option.value?.type === "enum" ? option.value.values.filter((v) => v.description).map((v) => `${v.value}: ${v.description}`) : []),
+    option.defaultValue !== null ? `default ${option.defaultValue}` : undefined,
+    option.repeatable ? "repeatable" : undefined,
+    option.hidden ? "hidden" : undefined,
+    option.deprecated ? "deprecated" : undefined,
+    option.since ? `since ${option.since}` : undefined,
+    option.until ? `until ${option.until}` : undefined,
+    `rank ${option.rank}`,
+  ].filter((fact): fact is string => fact !== undefined);
+
+/** What the text output says about a positional argument, after its description. */
+const argumentFacts = (argument: Argument): string[] =>
+  [
+    argument.value ? argument.value.format ?? argument.value.type : undefined,
+    readRole(argument.value),
+    suggestions(argument.value),
+    argument.defaultValue !== null ? `default ${argument.defaultValue}` : undefined,
+    argument.since ? `since ${argument.since}` : undefined,
+    argument.until ? `until ${argument.until}` : undefined,
+  ].filter((fact): fact is string => fact !== undefined);
 
 const platformsText = (tool: Tool) => (tool.platforms.length > 0 ? tool.platforms.join(", ") : "generic");
 
 const optionSignature = (option: Option) => {
   const others = option.aliases.filter((alias) => alias !== option.canonicalName);
   const names = [option.canonicalName, ...others].join(", ");
-  return option.valueType === null ? names : `${names} <${option.valueType}>`;
+  return option.value === null ? names : `${names}${valuePlaceholder(option.value)}`;
 };
 
 const optionsText = (options: Option[]) => {
@@ -107,7 +180,7 @@ const optionsText = (options: Option[]) => {
   const width = Math.min(Math.max(0, ...signatures.map((s) => s.length)), 40);
   return options
     .map((option, i) => {
-      const extras = [option.defaultValue !== null ? `default ${option.defaultValue}` : undefined, `rank ${option.rank}`].filter(Boolean).join(", ");
+      const extras = optionFacts(option).join(", ");
       return `  ${signatures[i].padEnd(width)}  ${option.description ?? ""} ${chalk.dim(`(${extras})`)}`.trimEnd();
     })
     .join("\n");
@@ -159,7 +232,17 @@ const run = (catalog: Catalog, request: Request, io: InfoIO): number => {
     const args = catalog.listArguments(command);
     if (args.length > 0) {
       sections.push(`usage: ${[commandName, options.length > 0 ? "[options]" : "", ...args.map(argumentText)].filter(Boolean).join(" ")}`);
-      sections.push(`arguments:\n${twoColumnText(args.map((argument) => [argumentText(argument), argument.description]))}`);
+      sections.push(
+        `arguments:\n${twoColumnText(
+          args.map((argument) => {
+            const facts = argumentFacts(argument);
+            return [
+              argumentText(argument),
+              [argument.description, facts.length > 0 ? chalk.dim(`(${facts.join(", ")})`) : undefined].filter(Boolean).join(" "),
+            ];
+          }),
+        )}`,
+      );
     }
     const subcommands = catalog.listSubcommands(command);
     if (subcommands.length > 0) sections.push(`commands:\n${twoColumnText(subcommands.map((sub) => [commandWord(sub), sub.description]))}`);

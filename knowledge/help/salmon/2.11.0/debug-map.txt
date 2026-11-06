@@ -1,0 +1,13 @@
+Diagnostic: per-read best-mapping detail (placement, seed coverage, score)
+
+Usage: salmon debug-map [OPTIONS] --index <INDEX> --reads <READS>
+
+Options:
+  -i, --index <INDEX>     
+  -r, --reads <READS>     Single-end FASTQ (plain text)
+      --sparseSeeds       Seed with sparse fixed-k k-mer anchors instead of the default unitig-constrained uni-MEMs
+      --refMEMs           Seed with reference-extended MEMs (cross unitig boundaries)
+      --uniMEMs           Seed with true unitig-constrained uni-MEMs (pufferfish-style; default)
+  -q, --quiet             Reduce logging to warnings and errors only
+      --no-version-check  Accepted for compatibility with C++ salmon. salmon 2.0 never contacts the network to check for a newer release, so this flag (and the `SALMON_NO_VERSION_CHECK` environment variable) is a no-op
+  -h, --help              Print help

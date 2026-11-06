@@ -1,0 +1,18 @@
+# Raw --help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/porechop.yml. The .txt files are the tool's own text (stdout
+# and stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below. Note: the default shown for --threads depends
+# on the recording machine's CPU count.
+tool: porechop
+package: porechop
+version: 0.2.4
+build: py312hf731ba3_9
+channel: bioconda
+licence: GPL-3.0-only
+copyright: Ryan Wick, https://github.com/rrwick/Porechop
+recorded_on: 2026-11-06
+platform: linux-64
+conda_env: biopilot-tools
+used_by_catalog: true
+files:
+  root.txt: porechop --help

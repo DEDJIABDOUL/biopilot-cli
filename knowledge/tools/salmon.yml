@@ -1,0 +1,717 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# salmon, written from its recorded --help: knowledge/help/salmon/2.11.0/*.txt
+# (BSD-3-Clause; attribution in RECORDING.yml next to them), root and every
+# subcommand. Every option of those helps is described here, in our own words
+# (spec decision 31). Ranks follow the shared scale of spec §6.4.
+# salmon 2.x is a rewrite: options the help calls "accepted for compatibility,
+# no effect" are marked deprecated (rank 10); options it calls "not yet
+# implemented" get rank 10 too.
+name: salmon
+package: salmon
+description: Fast transcript-level quantification of RNA-seq reads against a transcriptome index
+platforms: [illumina]
+version: { args: ["--version"], regex: 'salmon (\d[\w.]*)' }
+help: ["--help"]
+options:
+  - names: ["-q", "--quiet"]
+    description: log only warnings and errors
+    rank: 40
+  - names: ["--no-version-check"]
+    description: kept for compatibility with the C++ salmon; salmon 2 never checks online, so it does nothing
+    deprecated: true
+    rank: 10
+  - names: ["-h", "--help"]
+    description: show the help and exit
+    rank: 10
+  - names: ["-V", "--version"]
+    description: print the version and exit
+    rank: 10
+commands:
+  # ===========================================================================
+  - name: index
+    help: ["index", "--help"]
+    description: build the salmon index of a transcriptome
+    options:
+      - names: ["-t", "--transcripts"]
+        description: transcriptome FASTA file(s) to index (decoy sequences, if any, at the end)
+        value: { type: file, format: fasta, multiple: true }
+        rank: 95
+      - names: ["-i", "--index"]
+        description: folder to write the index into
+        value: { type: dir, format: salmon-index }
+        rank: 90
+      - names: ["-d", "--decoys"]
+        description: file naming the decoy sequences, one per line; they must come last in the FASTA
+        value: { type: file }
+        rank: 55
+      - names: ["-p", "--threads"]
+        description: worker threads (0 uses every core)
+        value: { type: int }
+        default: 0
+        rank: 75
+      - names: ["-k", "--kmerLen"]
+        description: k-mer size, odd and at most 31; smaller values suit short reads
+        value: { type: int, values: ["31", "25", "23", "19"] }
+        default: 31
+        rank: 60
+      - names: ["--gencode"]
+        description: GENCODE transcript names - keep only the part before the first |
+        rank: 55
+      - names: ["--keepDuplicates"]
+        description: index identical transcript sequences separately instead of collapsing them
+        rank: 35
+      - names: ["-m", "--minimizerLen"]
+        description: minimizer size (0 picks it from the k-mer size)
+        value: { type: int }
+        default: 0
+        rank: 25
+      - names: ["-n", "--no-clip"]
+        description: keep poly-A tails at transcript ends (by default a final run of 10 or more A is removed)
+        rank: 30
+      - names: ["--tmpdir"]
+        description: folder for intermediate build files (the index folder by default)
+        value: { type: dir }
+        rank: 30
+      - names: ["--sshashTmpDir"]
+        description: scratch folder for the external minimizer sort (under --tmpdir by default); put it on a fast disk
+        value: { type: dir }
+        rank: 20
+      - names: ["--ramLimit"]
+        description: memory ceiling in GiB for the minimizer sort; lower values spill to disk sooner
+        value: { type: int }
+        default: 8
+        rank: 35
+      - names: ["--keepIntermediate"]
+        description: keep the intermediate de Bruijn graph files
+        rank: 20
+      - names: ["--keepFixedFasta"]
+        description: keep the cleaned reference FASTA (non-ACGT bases replaced) instead of deleting it
+        rank: 20
+      - names: ["-q", "--quiet"]
+        description: log only warnings and errors
+        rank: 30
+      - names: ["--filterSize"]
+        description: kept for compatibility with the C++ salmon; has no effect
+        value: { type: int }
+        deprecated: true
+        rank: 10
+      - names: ["--no-version-check"]
+        description: kept for compatibility with the C++ salmon; does nothing
+        deprecated: true
+        rank: 10
+      - names: ["-h", "--help"]
+        description: show the help and exit
+        rank: 10
+  # ===========================================================================
+  - name: quant
+    help: ["quant", "--help"]
+    description: estimate transcript abundances from reads or alignments
+    options:
+      # --- Inputs and output ------------------------------------------------
+      - names: ["-i", "--index"]
+        description: salmon index to map the reads against (reads mode)
+        value: { type: dir, format: salmon-index }
+        rank: 95
+        rules:
+          - when: { used: ["--alignments"] }
+            boost: -50
+      - names: ["-1", "--mates1"]
+        description: FASTQ file(s) of read 1, for paired-end reads
+        value: { type: file, format: fastq, multiple: true, read_role: 1 }
+        rank: 90
+        rules:
+          - when: { paired: false }
+            boost: -30
+          - when: { used: ["--alignments"] }
+            boost: -60
+      - names: ["-2", "--mates2"]
+        description: FASTQ file(s) of read 2, for paired-end reads
+        value: { type: file, format: fastq, multiple: true, read_role: 2, mate_of: "--mates1" }
+        rank: 60
+        rules:
+          # -2 must accompany -1, whatever the project looks like.
+          - when: { used: ["--mates1"] }
+            boost: 35
+      - names: ["-r", "--unmatedReads"]
+        description: FASTQ file(s) of single-end reads; not with -1/-2
+        value: { type: file, format: fastq, multiple: true }
+        rank: 70
+        rules:
+          - when: { paired: false }
+            boost: 20
+          - when: { paired: true }
+            boost: -20
+          - when: { used: ["--mates1"] }
+            boost: -60
+      - names: ["-o", "--output"]
+        description: folder for the results (quant.sf and friends)
+        value: { type: dir, format: salmon-quant }
+        rank: 90
+      - names: ["-l", "--libType"]
+        description: library type, orientation and strandedness; A detects it
+        value:
+          type: string
+          values:
+            - { value: A, description: detect automatically }
+            - { value: IU, description: "paired, inward, unstranded" }
+            - { value: ISR, description: "paired, inward, stranded, read 1 from the reverse strand (dUTP)" }
+            - { value: ISF, description: "paired, inward, stranded, read 1 from the forward strand" }
+            - { value: U, description: "single-end, unstranded" }
+            - { value: SR, description: "single-end, stranded, reverse strand" }
+            - { value: SF, description: "single-end, stranded, forward strand" }
+        default: A
+        rank: 85
+      - names: ["-p", "--threads"]
+        description: worker threads (0 uses every core); one more thread reads the input
+        value: { type: int }
+        default: 0
+        rank: 75
+      - names: ["-g", "--geneMap"]
+        description: transcript-to-gene table (GTF, GFF or two-column TSV, possibly compressed); adds gene-level estimates
+        value: { type: file, format: [gtf, gff] }
+        rank: 60
+      - names: ["--ignoreTxVersion"]
+        description: ignore version suffixes (.2) of transcript names when matching them to --geneMap
+        rank: 35
+        rules:
+          - when: { used: ["--geneMap"] }
+            boost: 20
+      - names: ["-a", "--alignments"]
+        description: alignment mode - BAM of reads aligned to the transcriptome (or to the genome, with --annotation); not with read inputs
+        value: { type: file, format: bam }
+        rank: 60
+      - names: ["-t", "--targets"]
+        description: transcriptome FASTA for alignment and RAD modes (needed for bias correction); ignored in reads mode
+        value: { type: file, format: fasta }
+        rank: 35
+        rules:
+          - when: { used: ["--alignments"] }
+            boost: 35
+          - when: { used: ["--rad"] }
+            boost: 35
+      - names: ["--rad"]
+        description: RAD mode - quantify an existing RAD file of mappings
+        value: { type: file, format: rad }
+        rank: 35
+      - names: ["--annotation"]
+        description: genome alignment mode - GTF or GFF annotation used to project genome alignments (-a) onto transcripts
+        value: { type: file, format: gtf }
+        rank: 30
+        rules:
+          - when: { used: ["--alignments"] }
+            boost: 25
+      - names: ["--genome"]
+        description: genome alignment mode - genome FASTA, only needed for bias correction
+        value: { type: file, format: fasta }
+        rank: 25
+        rules:
+          - when: { used: ["--annotation"] }
+            boost: 25
+      - names: ["--juncMissDiscount"]
+        description: genome alignment mode - penalty factor per mismatched junction (1.0 means none)
+        value: { type: float }
+        rank: 20
+        rules:
+          - when: { used: ["--annotation"] }
+            boost: 10
+      # --- Bias, uncertainty, extra outputs --------------------------------------
+      - names: ["--gcBias"]
+        description: correct for fragment GC bias
+        rank: 60
+        rules:
+          - when: { paired: true }
+            boost: 10
+      - names: ["--seqBias"]
+        description: correct for sequence-specific bias at fragment ends
+        rank: 55
+      - names: ["--posBias"]
+        description: correct for positional bias along transcripts
+        rank: 40
+      - names: ["--numBootstraps"]
+        description: number of bootstrap rounds for abundance uncertainty (needed by tools such as sleuth)
+        value: { type: int }
+        default: 0
+        rank: 55
+      - names: ["--numGibbsSamples"]
+        description: number of Gibbs samples for abundance uncertainty; not with --numBootstraps
+        value: { type: int }
+        default: 0
+        rank: 40
+      - names: ["--thinningFactor"]
+        description: keep one Gibbs sample in this many (16 when unset)
+        value: { type: int }
+        rank: 20
+        rules:
+          - when: { used: ["--numGibbsSamples"] }
+            boost: 20
+      - names: ["--writeUnmappedNames"]
+        description: list the names of unmapped fragments in aux_info/unmapped_names.txt
+        rank: 40
+      - names: ["--dumpEq"]
+        description: write the equivalence classes to aux_info/eq_classes.txt.gz
+        rank: 40
+      - names: ["--dumpEqWeights"]
+        description: like --dumpEq, with the weight of each transcript in each class
+        rank: 30
+      - names: ["-z", "--writeMappings", "--writeSam"]
+        description: write every mapping as a SAM record to this file
+        value: { type: file, format: sam }
+        rank: 35
+      - names: ["--writeBam"]
+        description: write every mapping as a BAM record to this file; not with --writeMappings
+        value: { type: file, format: bam }
+        rank: 35
+      - names: ["--bamCompressThreads"]
+        description: BAM compression threads for --writeBam, on top of -p (about one per three mapping threads, at most 8, by default)
+        value: { type: int }
+        rank: 20
+        rules:
+          - when: { used: ["--writeBam"] }
+            boost: 25
+      - names: ["--writeRad"]
+        description: also save the per-fragment mappings as a RAD file, re-quantifiable later with --rad
+        value: { type: file, format: rad }
+        rank: 30
+      - names: ["--skipQuant"]
+        description: map and detect the library type only; the RAD of mappings is the result
+        rank: 25
+      # --- Mapping mode and algorithm ---------------------------------------------
+      - names: ["--sketch"]
+        description: alignment-free pseudoalignment instead of selective alignment
+        rank: 45
+      - names: ["--sketchStrictOrphans"]
+        description: sketch mode - report an orphan only when its mate had no k-mer hit at all
+        rank: 20
+        rules:
+          - when: { used: ["--sketch"] }
+            boost: 15
+      - names: ["--useEM"]
+        description: optimise with standard EM rather than variational Bayes EM
+        rank: 35
+      - names: ["--meta"]
+        description: settings for metagenomic references (plain EM, simpler equivalence classes, uniform start)
+        rank: 35
+      - names: ["--deterministic"]
+        description: two-phase run whose results do not depend on the thread count; already the default, so a no-op
+        rank: 15
+      - names: ["--online"]
+        description: the older one-pass algorithm, whose results vary with thread count; due for removal
+        deprecated: true
+        rank: 10
+      - names: ["--keepRad"]
+        description: keep the intermediate RAD of the deterministic run instead of deleting it
+        rank: 20
+      - names: ["--radScratchDir"]
+        description: folder for the intermediate RAD (the output folder by default); a fast local disk helps
+        value: { type: dir }
+        rank: 20
+      - names: ["--radCompress"]
+        description: compression of RAD files written by the run
+        value:
+          type: enum
+          values:
+            - { value: lz4, description: default }
+            - { value: zstd, description: smaller files }
+            - none
+        rank: 20
+      - names: ["--noCompressRad"]
+        description: write RAD chunks uncompressed (overrides --radCompress)
+        rank: 15
+      - names: ["--decoder"]
+        description: gzip decoding strategy; parallel=N reserves N slots per input; shares the -p budget with mapping
+        value:
+          type: string
+          values:
+            - { value: auto, description: parallel only when there are enough threads }
+            - serial
+            - parallel
+        default: auto
+        rank: 25
+      - names: ["--threadPolicy"]
+        description: JSON file overriding the thread and decoder policy; unknown fields are refused
+        value: { type: file, format: json }
+        rank: 15
+      - names: ["--no-progress"]
+        description: hide the live progress spinner
+        rank: 30
+      - names: ["--rangeFactorizationBins"]
+        description: number of range-factorization bins in equivalence classes (0 turns it off)
+        value: { type: int }
+        default: 4
+        rank: 25
+      - names: ["--incompatPrior"]
+        description: prior weight of mappings on the wrong strand for the library type (0 drops them)
+        value: { type: float }
+        default: 0
+        rank: 30
+      - names: ["--vbPrior"]
+        description: Dirichlet prior weight per feature in variational Bayes EM
+        value: { type: float }
+        default: 0.01
+        rank: 25
+      - names: ["--perTranscriptPrior"]
+        description: --vbPrior applies per transcript
+        rank: 20
+      - names: ["--perNucleotidePrior"]
+        description: --vbPrior applies per nucleotide, scaled by effective length
+        rank: 20
+      - names: ["--emAccel"]
+        description: speed-up of EM convergence; results differ slightly from none
+        value:
+          type: enum
+          values:
+            - { value: none, description: plain iteration }
+            - { value: squarem, description: SQUAREM - far fewer steps }
+            - { value: daarem, description: "damped Anderson acceleration; fastest, needs --useEM" }
+        default: none
+        rank: 25
+      - names: ["--initUniform"]
+        description: start the optimiser from uniform abundances
+        rank: 20
+      - names: ["--sigDigits"]
+        description: significant digits of the EffectiveLength and NumReads columns of quant.sf
+        value: { type: int }
+        default: 3
+        rank: 20
+      # --- Fragment length --------------------------------------------------------
+      - names: ["--fldMean"]
+        description: mean of the prior fragment-length distribution; observed fragments outweigh it (useful for single-end)
+        value: { type: int }
+        default: 250
+        rank: 40
+        rules:
+          - when: { paired: false }
+            boost: 10
+      - names: ["--fldSD"]
+        description: standard deviation of the prior fragment-length distribution
+        value: { type: int }
+        default: 25
+        rank: 35
+        rules:
+          - when: { paired: false }
+            boost: 10
+      - names: ["--fldMax"]
+        description: longest fragment length the distribution tracks
+        value: { type: int }
+        default: 1000
+        rank: 25
+      - names: ["--fldPolicy"]
+        description: RAD mode - where the fragment-length distribution comes from
+        value:
+          type: enum
+          values:
+            - { value: baked, description: the one stored in the RAD file }
+            - { value: derive, description: recomputed from the RAD pairs }
+            - { value: prior, description: --fldMean and --fldSD only }
+        default: baked
+        rank: 20
+        rules:
+          - when: { used: ["--rad"] }
+            boost: 20
+      - names: ["--noFragLengthDist"]
+        description: leave fragment-length agreement out of fragment probabilities
+        rank: 20
+      - names: ["--noSingleFragProb"]
+        description: give orphan reads a flat penalty instead of a fragment-length based weight
+        rank: 15
+      - names: ["--noLengthCorrection"]
+        description: same effective length for every transcript (for 3' tag protocols such as QuantSeq)
+        rank: 30
+      - names: ["--noEffectiveLengthCorrection"]
+        description: divide by the raw transcript length instead of the effective length
+        rank: 20
+      # --- Selective alignment tuning ------------------------------------------
+      - names: ["--validateMappings"]
+        description: obsolete - selective alignment is already the default; does nothing
+        deprecated: true
+        rank: 10
+      - names: ["--minScoreFraction"]
+        description: lowest alignment score kept, as a fraction of a perfect score (0.65 when unset)
+        value: { type: float }
+        rank: 35
+      - names: ["--softclip"]
+        description: clip unaligned read ends instead of penalising them
+        rank: 30
+      - names: ["--softclipOverhangs"]
+        description: clip only read bases that run past a transcript end
+        rank: 30
+      - names: ["--ma"]
+        description: match score (2 when unset)
+        value: { type: int }
+        rank: 20
+      - names: ["--mp"]
+        description: mismatch penalty, sign ignored (4 when unset)
+        value: { type: int }
+        rank: 20
+      - names: ["--go"]
+        description: gap-open penalty (6 when unset)
+        value: { type: int }
+        rank: 20
+      - names: ["--ge"]
+        description: gap-extension penalty (2 when unset)
+        value: { type: int }
+        rank: 20
+      - names: ["--bandwidth"]
+        description: band width of the ksw2 dynamic programming
+        value: { type: int }
+        rank: 15
+      - names: ["--fullLengthAlignment"]
+        description: score the whole read with one alignment rather than between seed matches
+        rank: 20
+      - names: ["--sparseSeeds"]
+        description: seed with sparse fixed-size k-mers instead of unitig-bounded matches
+        rank: 15
+      - names: ["--refMEMs"]
+        description: seed with matches that may cross unitig boundaries
+        rank: 15
+      - names: ["--uniMEMs"]
+        description: seed with unitig-bounded matches (the default)
+        rank: 10
+      - names: ["--consensusSlack"]
+        description: keep a target only if its best chain scores at least (1 - slack) of the best one (1.0 keeps all)
+        value: { type: float }
+        rank: 20
+      - names: ["--maxOccsPerHit"]
+        description: ignore k-mers whose unitig lies in more references than this
+        value: { type: int }
+        rank: 20
+      - names: ["-w", "--maxReadOcc"]
+        description: drop a fragment that maps to more places than this
+        value: { type: int }
+        rank: 30
+      - names: ["--orphanChainSubThresh"]
+        description: chain sub-optimality threshold for orphan candidates (0.0 aligns them all)
+        value: { type: float }
+        rank: 15
+      - names: ["--preMergeChainSubThresh"]
+        description: before pairing, keep chains scoring at least this fraction of the best (0 to 1)
+        value: { type: float }
+        rank: 15
+      - names: ["--postMergeChainSubThresh"]
+        description: after pairing, keep pairs covering at least this fraction of the best pair (0 to 1; 0 is off)
+        value: { type: float }
+        rank: 15
+      - names: ["--orphansRequireUnmappedMate"]
+        description: report an orphan only when its mate did not map at all
+        rank: 20
+      - names: ["--allowDovetail"]
+        description: count mates that extend past each other as concordant
+        rank: 25
+      - names: ["--recoverOrphans"]
+        description: try to place the missing mate of an orphan near its partner
+        rank: 25
+      - names: ["--discardOrphansQuasi"]
+        description: reads mode - keep only concordant pairs, drop orphans
+        rank: 25
+      - names: ["--decoyThreshold"]
+        description: a transcript alignment scoring below this fraction of the best decoy score is rejected
+        value: { type: float }
+        rank: 20
+      - names: ["--allowDecoyOrphans"]
+        description: keep the transcript placement of fragments that align better to a decoy
+        rank: 15
+      - names: ["--minAlnProb"]
+        description: drop mappings whose probability, relative to the best one, is below this
+        value: { type: float }
+        rank: 20
+      - names: ["--scoreExp"]
+        description: how steeply worse alignments lose weight (1.0 when unset)
+        value: { type: float }
+        rank: 20
+      - names: ["--hardFilter"]
+        description: keep only the best-scoring mapping(s), equally weighted, instead of soft weights
+        rank: 25
+      - names: ["--biasSpeedSamp"]
+        description: sampling step of fragment lengths in GC bias correction; larger is faster and coarser
+        value: { type: int }
+        rank: 15
+      - names: ["--noBiasLengthThreshold"]
+        description: experimental - let bias correction shorten effective lengths without a lower bound
+        rank: 10
+      - names: ["--numGCBins"]
+        description: number of fragment-GC bins of the GC bias model
+        value: { type: int }
+        rank: 15
+      - names: ["--conditionalGCBins"]
+        description: number of context bins of the GC bias model
+        value: { type: int }
+        rank: 15
+      # --- Alignment-mode and online-path tuning -----------------------------------
+      - names: ["--errorModel"]
+        description: alignment mode - train an alignment error model (extra BAM pass, needs -t) instead of scoring by the AS tag
+        rank: 25
+        rules:
+          - when: { used: ["--alignments"] }
+            boost: 15
+      - names: ["--noErrorModel"]
+        description: alignment mode - turn the alignment error model off; the opposite of --errorModel
+        rank: 20
+        rules:
+          - when: { used: ["--alignments"] }
+            boost: 10
+      - names: ["--numErrorBins"]
+        description: alignment mode - number of read-position bins of the error model
+        value: { type: int }
+        rank: 15
+      - names: ["--discardOrphans"]
+        description: alignment mode - drop single-mate alignments of a paired library
+        rank: 20
+        rules:
+          - when: { used: ["--alignments"] }
+            boost: 10
+      - names: ["-f", "--forgettingFactor"]
+        description: online path only (--online) - forgetting factor, in (0.5, 1.0]
+        value: { type: float }
+        rank: 10
+      - names: ["--numAuxModelSamples"]
+        description: online path only (--online) - fragments used to train the auxiliary models
+        value: { type: int }
+        rank: 10
+      - names: ["--numPreAuxModelSamples"]
+        description: online path only (--online) - fragments seen before the fragment-length model applies
+        value: { type: int }
+        rank: 10
+      - names: ["--ont"]
+        description: Oxford Nanopore model - not supported (oarfish is the suggested tool)
+        rank: 10
+      # --- No effect or not yet implemented --------------------------------------
+      - names: ["--mappingCacheMemoryLimit"]
+        description: kept for compatibility with the C++ salmon; has no effect
+        value: { type: int }
+        deprecated: true
+        rank: 10
+      - names: ["--disableChainingHeuristic"]
+        description: kept for compatibility with the C++ salmon; has no effect
+        deprecated: true
+        rank: 10
+      - names: ["--mismatchSeedSkip"]
+        description: kept for compatibility with the C++ salmon; no effect yet
+        value: { type: int }
+        deprecated: true
+        rank: 10
+      - names: ["--reduceGCMemory"]
+        description: kept for compatibility; its behaviour is now always on
+        deprecated: true
+        rank: 10
+      - names: ["--eqclasses"]
+        description: not implemented yet - quantify from an equivalence-class file
+        value: { type: file }
+        rank: 10
+      - names: ["-s", "--sampleOut"]
+        description: not implemented yet - BAM of posterior-sampled alignments
+        rank: 10
+      - names: ["-u", "--sampleUnaligned"]
+        description: not implemented yet - unaligned reads in the sampled BAM
+        rank: 10
+      - names: ["--writeQualities"]
+        description: not implemented yet - base qualities in the sampled BAM
+        rank: 10
+      - names: ["--hitFilterPolicy"]
+        description: not implemented yet - when hits are filtered during selective alignment
+        value: { type: string, values: [BEFORE, AFTER, BOTH, NONE] }
+        rank: 10
+      - names: ["--maxRecoverReadOcc"]
+        description: not implemented yet - cap on candidates during orphan recovery
+        value: { type: int }
+        rank: 10
+      # --- Common ------------------------------------------------------------
+      - names: ["-q", "--quiet"]
+        description: log only warnings and errors
+        rank: 35
+      - names: ["--no-version-check"]
+        description: kept for compatibility with the C++ salmon; does nothing
+        deprecated: true
+        rank: 10
+      - names: ["-h", "--help"]
+        description: show the help (-h gives a short summary) and exit
+        rank: 10
+  # ===========================================================================
+  - name: quantmerge
+    help: ["quantmerge", "--help"]
+    description: combine one column of several samples' results into a single table
+    options:
+      - names: ["--quants"]
+        description: result folders of salmon quant, one per sample
+        value: { type: dir, format: salmon-quant, multiple: true }
+        rank: 95
+      - names: ["-o", "--output"]
+        description: file for the merged table
+        value: { type: file }
+        rank: 90
+      - names: ["-c", "--column"]
+        description: quant.sf column to merge
+        value:
+          type: string
+          values:
+            - { value: tpm, description: transcripts per million }
+            - { value: numreads, description: estimated read count }
+            - { value: len, description: transcript length }
+            - { value: elen, description: effective length }
+        default: TPM
+        rank: 70
+      - names: ["--names"]
+        description: sample names for the columns, in the order of --quants (folder names by default)
+        value: { type: string, multiple: true }
+        rank: 50
+      - names: ["--genes"]
+        description: merge the gene-level quant.genes.sf files instead of quant.sf
+        rank: 50
+      - names: ["--missing"]
+        description: value written when a sample lacks a target
+        value: { type: string }
+        default: NA
+        rank: 30
+      - names: ["-q", "--quiet"]
+        description: log only warnings and errors
+        rank: 30
+      - names: ["--no-version-check"]
+        description: kept for compatibility with the C++ salmon; does nothing
+        deprecated: true
+        rank: 10
+      - names: ["-h", "--help"]
+        description: show the help and exit
+        rank: 10
+  # ===========================================================================
+  - name: debug-map
+    help: ["debug-map", "--help"]
+    description: diagnostic - show in detail how each read maps
+    options:
+      - names: ["-i", "--index"]
+        description: salmon index to map against
+        value: { type: dir, format: salmon-index }
+        rank: 95
+      - names: ["-r", "--reads"]
+        description: uncompressed single-end FASTQ file to map
+        value: { type: file, format: fastq }
+        rank: 90
+      - names: ["--sparseSeeds"]
+        description: seed with sparse fixed-size k-mers instead of unitig-bounded matches
+        rank: 30
+      - names: ["--refMEMs"]
+        description: seed with matches that may cross unitig boundaries
+        rank: 30
+      - names: ["--uniMEMs"]
+        description: seed with unitig-bounded matches (the default)
+        rank: 25
+      - names: ["-q", "--quiet"]
+        description: log only warnings and errors
+        rank: 30
+      - names: ["--no-version-check"]
+        description: kept for compatibility with the C++ salmon; does nothing
+        deprecated: true
+        rank: 10
+      - names: ["-h", "--help"]
+        description: show the help and exit
+        rank: 10
+  # ===========================================================================
+  - name: help
+    help: ["help", "help"]
+    description: show the help of salmon or of one of its subcommands
+    arguments:
+      - name: command
+        description: subcommand whose help to show
+        variadic: true
+        value:
+          type: enum
+          optional: true
+          values: [index, quant, quantmerge, debug-map, help]

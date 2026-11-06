@@ -140,7 +140,7 @@ CREATE TABLE tools (
   name        TEXT NOT NULL UNIQUE,      -- nom de l'exécutable : fastp
   package     TEXT,                      -- nom du paquet conda, s'il diffère
   description TEXT,
-  platform    TEXT,                      -- illumina | nanopore | generic
+  platforms   TEXT NOT NULL DEFAULT '[]', -- JSON : ["illumina", "nanopore"] ; [] = generic
   version_args TEXT NOT NULL,            -- JSON : ["--version"]
   version_regex TEXT NOT NULL            -- 'fastp (\d[\w.]*)'
 );
@@ -165,13 +165,18 @@ CREATE TABLE options (
   read_role   INTEGER,                   -- 1 ou 2 pour les entrées appariées
   mate_of     INTEGER REFERENCES options(id), -- option du mate (annexe B : mate_of)
   derive      TEXT,                      -- JSON : {"from": "--in1", "suffix": ".trimmed"} (annexe B)
+  value_optional INTEGER NOT NULL DEFAULT 0, -- --opt[=VAL]
+  value_multiple INTEGER NOT NULL DEFAULT 0, -- plusieurs valeurs après l'option
+  repeatable  INTEGER NOT NULL DEFAULT 0,
+  hidden      INTEGER NOT NULL DEFAULT 0, -- connue (analyse de la ligne), jamais proposée
+  deprecated  INTEGER NOT NULL DEFAULT 0,
   default_value TEXT,
-  rank        INTEGER NOT NULL DEFAULT 50,
+  rank        INTEGER NOT NULL DEFAULT 50, -- barème en section 6.4
   since_version TEXT,                    -- facultatif, si connu
   until_version TEXT
 );
 
-CREATE TABLE option_values (             -- valeurs proposées
+CREATE TABLE option_values (             -- valeurs proposées ; fermées seulement si value_type = enum
   option_id   INTEGER NOT NULL REFERENCES options(id),
   value       TEXT NOT NULL,             -- BAM
   description TEXT
@@ -189,15 +194,18 @@ CREATE TABLE arguments (                 -- positionnels
 CREATE TABLE rules (                     -- règles de contexte
   option_id   INTEGER NOT NULL REFERENCES options(id),
   condition   TEXT NOT NULL,             -- JSON : {"used": ["--in1"], "paired": true, "platform": "nanopore", "assay": "rna-seq"}
-  boost       INTEGER NOT NULL
+  boost       INTEGER NOT NULL           -- de -100 à +100
 );
 
 CREATE TABLE formats (
-  name    TEXT PRIMARY KEY,              -- fastq
-  pattern TEXT NOT NULL                  -- '\.(fastq|fq)(\.gz|\.bz2)?$'
+  name     TEXT PRIMARY KEY,             -- fastq | bwa-index | salmon-index
+  kind     TEXT NOT NULL DEFAULT 'file', -- file | prefix (index : un préfixe + des suffixes) | dir (index : un dossier)
+  pattern  TEXT,                         -- kind = file : '\.(fastq|fq)(\.gz|\.bz2)?$'
+  suffixes TEXT,                         -- kind = prefix : JSON [".amb", ".ann", ".bwt", ".pac", ".sa"]
+  marker   TEXT                          -- kind = dir : fichier présent dans le dossier, ex. versionInfo.json
 );
 
-CREATE TABLE metadata (                  -- version du schéma : le lecteur refuse un schéma qu'il ne connaît pas
+CREATE TABLE metadata (                  -- version du schéma (entier) : le lecteur n'accepte que la sienne, à l'identique
   key   TEXT PRIMARY KEY,                -- schema_version | biopilot_version
   value TEXT NOT NULL
 );
@@ -237,6 +245,9 @@ CREATE TABLE usage (
 ### 6.4 Alimentation
 
 1. **Sources :** un fichier YAML par outil dans `knowledge/tools/`, versionné dans Git et relu comme du code (format en annexe B).
+   - **Barème des rangs :** 90–100 entrées et sorties principales, référence ; 70–89 options réglées très souvent (threads, preset, format de sortie) ; 50 par défaut ; 30–49 réglages fins ; 10–29 options rares, de débogage ou obsolètes. Les rangs proposés sont relus par un expert du domaine avant fusion.
+   - **Descriptions :** reformulées, jamais copiées du `--help` (licences GPL de certains outils).
+   - **`--help` de référence :** enregistrés depuis un environnement conda dédié `biopilot-tools` (bioconda + conda-forge, linux-64), avec outil, version, commande et date, et une attribution par licence. Version la plus récente à l'enregistrement, sauf fastp en 0.23.4.
 2. **Compilation :** `npm run build:db` valide chaque fichier YAML avec un schéma, puis produit `knowledge.db`. La CI refuse un YAML invalide.
 3. **Import local :** `biopilot learn <outil>` lance le `--help`, l'analyse et enregistre le résultat dans `user.db`. Les sous-commandes listées dans l'aide racine sont découvertes automatiquement (`<outil> <sub> --help`), sur un seul niveau et au plus 50. La version est cherchée dans `conda-meta/`, sinon par les sondes `--version`, `-V` puis `version` (2,5 s, entrée standard fermée), sinon le profil est indexé par l'empreinte ; la méthode retenue est enregistrée dans `learned_tools`.
 4. **Usage :** chaque option acceptée par l'utilisateur incrémente `usage`, sous son nom canonique (`-i` et `--in1` comptent pour `--in1`). L'usage est global à la machine, pas par projet. Ces données ne quittent jamais la machine.
@@ -497,9 +508,21 @@ Prévue pour l'architecture, non développée en version 1.
 19. **Plancher Node 22 pour la variante npm** (section 10.2) : `better-sqlite3` exige Node 22+ ; l'argument de l'ADR-0001 contre `node:sqlite` fondé sur Node 18 était faux et a été corrigé. Le binaire autonome embarque déjà Node 22.
 20. **Schéma du catalogue aligné sur l'annexe B** (section 6.2) : ajout de `canonical_name`, `mate_of`, `derive` et d'une table `metadata` portant la version du schéma.
 
+21. **JSON de `biopilot info` :** contrat versionné (`"format": 1`), champs nommés d'après le glossaire en snake_case, publié comme JSON Schema. Ajouter un champ ne casse rien ; retirer ou renommer un champ incrémente `format`.
+22. **Emplacement du catalogue :** `BIOPILOT_CATALOG`, puis `~/.local/share/biopilot/knowledge.db`, puis le catalogue compilé à côté du build ; sinon indisponible.
+23. **`--help` de référence :** environnement `biopilot-tools`, version la plus récente sauf fastp 0.23.4, linux-64, avec métadonnées (section 6.4).
+24. **Barème des rangs** (section 6.4), relu par un expert du domaine.
+25. **Index de référence :** formats de genre `prefix` (bwa) ou `dir` (salmon) ; `.mmi` et `.fai` restent des formats `file` (section 6.2).
+26. **Formes d'options :** `optional`, `multiple`, `repeatable`, `hidden`, `deprecated` ; `--x` et `--no-x` sont deux options distinctes.
+27. **Plateformes d'un outil :** ensemble `platforms` ; vide = `generic` (remplace `platform`).
+28. **Valeurs suggérées :** `values` autorisé sur tout type ; seul `enum` est fermé.
+29. **`boost` :** de −100 à +100.
+30. **Version du schéma :** entier, accepté seulement à l'identique ; sinon catalogue indisponible, signalé par `biopilot doctor`.
+31. **Licences :** descriptions reformulées ; `--help` bruts conservés comme données de test avec attribution (avis juridique à prendre avant de rendre le dépôt public).
+
 ### Décisions encore ouvertes
 
-Précisions manquantes relevées sur la spec de la phase 1 (issue #3) : contrat JSON de `biopilot info`, emplacement du catalogue en développement, source et versions des `--help`, barème des rangs, index de référence (préfixe bwa, dossier salmon), formes d'options (valeur facultative, multiple, répétable, négative, cachée), plateforme d'un outil (valeur ou ensemble), valeurs suggérées non fermées, signe du `boost`, politique de version du schéma, licences des textes d'aide. À trancher avant la phase 1.
+Aucune. Session de "grilling" du 6 novembre 2026 (phase 1) close.
 
 ---
 
@@ -526,7 +549,7 @@ Les options de chaque outil sont importées depuis son `--help` officiel, puis c
 name: fastp
 package: fastp
 description: All-in-one FASTQ preprocessor
-platform: illumina
+platforms: [illumina]
 version: { args: ["--version"], regex: 'fastp (\d[\w.]*)' }
 help: ["--help"]
 options:

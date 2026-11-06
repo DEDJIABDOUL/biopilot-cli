@@ -197,6 +197,43 @@ describe("Catalog compiler", () => {
       expect(result.ok).toBe(true);
     });
 
+    test("checks every format of a list, at its own index", () => {
+      expect(errorsOf(tool("    value: { type: file, format: [fastq, bam] }"))).toEqual([
+        expect.objectContaining({ location: "options[0].value.format[1]", message: expect.stringContaining("not declared") }),
+      ]);
+    });
+
+    test.each([
+      [
+        "a mate that is not an argument",
+        "  - name: a\n    value: { type: file, read_role: 2, mate_of: nope }",
+        "arguments[0].value.mate_of",
+        "not an argument",
+      ],
+      [
+        "mates with the same read role",
+        "  - name: a\n    value: { type: file, read_role: 1 }\n  - name: b\n    value: { type: file, read_role: 1, mate_of: a }",
+        "arguments[1].value.mate_of",
+        "1 and 2",
+      ],
+      [
+        "two arguments claiming the same mate",
+        "  - name: a\n    value: { type: file, read_role: 1 }\n  - name: b\n    value: { type: file, read_role: 2, mate_of: a }\n  - name: c\n    value: { type: file, read_role: 2, mate_of: a }",
+        "arguments[2].value.mate_of",
+        "already the mate",
+      ],
+      [
+        "a derived output on an argument",
+        "  - name: a\n    value: { type: file, derive: { from: a, suffix: .x } }",
+        "arguments[0].value.derive",
+        "only applies to options",
+      ],
+    ])("rejects %s", (_, args, location, message) => {
+      expect(errorsOf(tool("", `arguments:\n${args}`))).toEqual(
+        expect.arrayContaining([expect.objectContaining({ location, message: expect.stringContaining(message) })]),
+      );
+    });
+
     test("rejects two options claiming the same mate", () => {
       const source = tool(
         `    value: { type: file, read_role: 1 }\n  - names: ["-I"]\n    value: { type: file, read_role: 2, mate_of: "-o" }\n  - names: ["-J"]\n    value: { type: file, read_role: 2, mate_of: "--out" }`,

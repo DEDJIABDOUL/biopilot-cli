@@ -2,9 +2,18 @@
 // Licensed under the MIT License.
 
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { compileCatalog, type CompileResult } from "../../biopilot/knowledge/compile.js";
+import { SCHEMAS_DIR } from "../../biopilot/knowledge/yamlSource.js";
+
+/** better-sqlite3's prebuilt addon for this platform: the file the standalone binary ships and extracts. */
+export const prebuiltSqliteAddon = path.join(
+  path.dirname(createRequire(import.meta.url).resolve("better-sqlite3/package.json")),
+  "prebuilds",
+  `${process.platform}-${process.arch}.node`,
+);
 
 /** A fresh temporary folder; tests never touch the user's home. */
 export const tempDir = (): string => fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-test-"));
@@ -46,6 +55,19 @@ export const compileValid = (files: Record<string, string>, formats?: string): s
   const { result, catalogPath } = compile(files, formats);
   if (!result.ok) throw new Error(`fixture failed to compile: ${JSON.stringify(result.errors)}`);
   return catalogPath;
+};
+
+/** The repository's own knowledge sources (`knowledge/`), as `npm run build:db` compiles them. */
+export const REPOSITORY_KNOWLEDGE = {
+  sourcesDir: path.resolve(SCHEMAS_DIR, "..", "knowledge", "tools"),
+  formatsPath: path.resolve(SCHEMAS_DIR, "..", "knowledge", "formats.yml"),
+};
+
+/** Compiles the repository's own Catalog into `outputPath` (a new temporary file by default). */
+export const compileRepositoryCatalog = (outputPath: string = path.join(tempDir(), "knowledge.db")): { catalogPath: string; toolCount: number } => {
+  const result = compileCatalog({ ...REPOSITORY_KNOWLEDGE, outputPath, biopilotVersion: "test" });
+  if (!result.ok) throw new Error(`the repository's knowledge failed to compile: ${JSON.stringify(result.errors)}`);
+  return { catalogPath: outputPath, toolCount: result.toolCount };
 };
 
 export const FASTP = `
@@ -207,4 +229,45 @@ options:
         boost: 20
       - when: {}
         boost: 5
+`;
+
+/** Formats for ALIGNER: a folder format with several markers. */
+export const ALIGNER_FORMATS = `
+formats:
+  - name: bam
+    pattern: '\\.bam$'
+  - name: sam
+    pattern: '\\.sam$'
+  - name: fastq
+    pattern: '\\.(fastq|fq)(\\.gz)?$'
+  - name: bwa-index
+    kind: prefix
+    suffixes: [".bwt", ".sa"]
+  - name: salmon-index
+    kind: dir
+    marker: [versionInfo.json, refseq.bin]
+`;
+
+/** Several formats per value, argument mates, bare help and version. */
+export const ALIGNER = `
+name: aligner
+version: { args: [], regex: 'Version: (\\S+)' }
+help: []
+commands:
+  - name: sort
+    options:
+      - names: ["-o"]
+        value: { type: file, format: [bam, sam] }
+    arguments:
+      - name: in
+        value: { type: file, format: [bam, sam] }
+  - name: mem
+    help: [mem]
+    arguments:
+      - name: reference
+        value: { type: file, format: bwa-index }
+      - name: in1
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: in2
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1 }
 `;

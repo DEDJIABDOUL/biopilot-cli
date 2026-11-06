@@ -117,6 +117,7 @@ La liste est fermée. Toute modification supplémentaire doit être justifiée d
 | M7 | Ligne d'état facultative sous la liste : environnement, version de l'outil, alerte éventuelle | `ui/` | Rendre visible ce que BioPilot a détecté. Désactivable. |
 | M8 | Correction de `complete` : chargement de la configuration, sortie vide sans plantage | `commands/complete.ts` | Permettre des tests automatisés sans terminal. |
 | M9 | Enregistrement des commandes BioPilot (`info`, puis les suivantes) et contrôle du catalogue dans `doctor` ; le code vit dans `src/biopilot/cli/`, chargé à la demande | `index.ts`, `ui/ui-doctor.ts` | Exposer les commandes de la section 9 sans toucher au démarrage de session. |
+| M10 | Catalogue et addon natif de `better-sqlite3` embarqués dans le binaire autonome : l'addon rejoint les natifs de `node-pty`, le catalogue est écrasé à chaque décompression ; `reinit` le remplace et conserve le magasin utilisateur (`user.db`), y compris en quittant l'ancien dossier `~/.biopilot` | `scripts/pkg.ts`, `utils/node.ts`, `ui/ui-reinit.ts` | Le binaire autonome doit répondre depuis le catalogue comme l'installation npm (ADR-0001, décision 33). |
 
 Chaque modification est isolée dans un commit distinct et marquée `BIOPILOT:` dans le code.
 
@@ -162,7 +163,7 @@ CREATE TABLE options (
   canonical_name TEXT NOT NULL,          -- premier nom long, sinon premier nom : --in1 (décision 11)
   description TEXT,
   value_type  TEXT,                      -- NULL (drapeau) | int | float | string | file | dir | enum
-  value_format TEXT,                     -- fastq | bam | fasta | ... si value_type = file
+  value_formats TEXT,                    -- JSON : formats acceptés, le plus courant d'abord, ex. ["bam", "sam"]
   read_role   INTEGER,                   -- 1 ou 2 pour les entrées appariées
   mate_of     INTEGER REFERENCES options(id), -- option du mate (annexe B : value.mate_of)
   derive_from INTEGER REFERENCES options(id), -- sortie dérivée : option source (annexe B : value.derive.from)
@@ -215,7 +216,7 @@ CREATE TABLE formats (
   kind     TEXT NOT NULL DEFAULT 'file', -- file | prefix (index : un préfixe + des suffixes) | dir (index : un dossier)
   pattern  TEXT,                         -- kind = file : '\.(fastq|fq)(\.gz|\.bz2)?$'
   suffixes TEXT,                         -- kind = prefix : JSON [".amb", ".ann", ".bwt", ".pac", ".sa"]
-  marker   TEXT                          -- kind = dir : fichier présent dans le dossier, ex. versionInfo.json
+  markers  TEXT                          -- kind = dir : JSON, fichiers repères dont un seul suffit, ex. ["versionInfo.json", "refseq.bin"]
 );
 
 CREATE TABLE metadata (                  -- version du schéma (entier) : le lecteur n'accepte que la sienne, à l'identique

@@ -7,6 +7,8 @@ import fsAsync from "node:fs/promises";
 import fs from "node:fs";
 import { allResourcesPath, getResourcePaths, versionResourcePath } from "./constants.js";
 import { getVersion } from "./version.js";
+// BIOPILOT: M10 the Catalog ships with the standalone binary.
+import { CATALOG_ASSET_KEY, installCatalog } from "../biopilot/resources.js";
 
 const ASSET_PATH_SEP = "____";
 
@@ -19,7 +21,9 @@ const getAssetKeys = (assetType: AssetType) => {
   const allKeys = sea.getAssetKeys();
   switch (assetType) {
     case "native":
-      return allKeys.filter((key) => !key.includes("shellIntegration") && !key.includes("preexec") && !key.endsWith(".js"));
+      return allKeys.filter(
+        (key) => !key.includes("shellIntegration") && !key.includes("preexec") && !key.endsWith(".js") && key !== CATALOG_ASSET_KEY, // BIOPILOT: M10
+      );
     case "shell":
       return allKeys.filter((key) => key.includes("shellIntegration") || key.includes("preexec"));
     case "spec":
@@ -114,6 +118,13 @@ const unpackShellFiles = async (resources: ResourcePaths): Promise<void> => {
   }
 };
 
+// BIOPILOT: M10 the Catalog is overwritten on every unpack (other resources are only copied when absent).
+// From source there is nothing to unpack: the Catalog compiled next to the build is read instead.
+const unpackCatalog = async (resourcesPath: string): Promise<void> => {
+  if (!sea.isSea()) return;
+  await installCatalog(resourcesPath, Buffer.from(sea.getRawAsset(CATALOG_ASSET_KEY)));
+};
+
 const setUnpackedVersion = async (resources: ResourcePaths): Promise<void> => {
   const version = getVersion();
   await fsAsync.writeFile(resources.version, version, "utf-8");
@@ -134,5 +145,6 @@ export const unpackResources = async (resourcesPath = allResourcesPath): Promise
   await permissionNativeModules(resources);
   await unpackShellFiles(resources);
   await unpackSpecs(resources);
+  await unpackCatalog(resourcesPath); // BIOPILOT: M10
   await setUnpackedVersion(resources);
 };

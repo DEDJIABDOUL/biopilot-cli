@@ -52,7 +52,8 @@ formats:
   - name: salmon-index
     description: salmon index folder
     kind: dir
-    marker: versionInfo.json
+    # salmon 1.x writes versionInfo.json; 2.x no longer does, both write refseq.bin.
+    marker: [versionInfo.json, refseq.bin]
   # part B (ticket #12)
   - name: paf
     description: pairwise alignments, text (minimap2)

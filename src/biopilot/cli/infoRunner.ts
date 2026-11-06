@@ -79,7 +79,9 @@ const valueJson = (value: ValueSpec | null) =>
     ? null
     : {
         type: value.type,
-        format: value.format,
+        // `format` (the first) predates `formats` and stays for format-1 consumers.
+        format: value.formats[0] ?? null,
+        formats: value.formats,
         optional: value.optional,
         multiple: value.multiple,
         values: value.values,
@@ -94,6 +96,7 @@ const argumentJson = (argument: Argument) => ({
   default: argument.defaultValue,
   since: argument.since,
   until: argument.until,
+  mate: argument.mate,
 });
 
 /** Last word of a command's path: `sort` for `samtools sort`. */
@@ -143,7 +146,7 @@ const ruleText = (rule: Rule) => {
 
 /** `<fastq>`, `<fast|slow>`, `[=<int>]`, `<string>...`: what follows the option name. */
 const valuePlaceholder = (value: ValueSpec) => {
-  const inner = value.type === "enum" ? value.values.map((v) => v.value).join("|") : value.format ?? value.type;
+  const inner = value.type === "enum" ? value.values.map((v) => v.value).join("|") : value.formats.length > 0 ? value.formats.join("|") : value.type;
   const placeholder = `<${inner}>${value.multiple ? "..." : ""}`;
   return value.optional ? `[=${placeholder}]` : ` ${placeholder}`;
 };
@@ -174,8 +177,9 @@ const optionFacts = (option: Option): string[] =>
 /** What the text output says about a positional argument, after its description. */
 const argumentFacts = (argument: Argument): string[] =>
   [
-    argument.value ? argument.value.format ?? argument.value.type : undefined,
+    argument.value ? (argument.value.formats.length > 0 ? argument.value.formats.join(", ") : argument.value.type) : undefined,
     readRole(argument.value),
+    argument.mate ? `mate ${argument.mate}` : undefined,
     suggestions(argument.value),
     argument.defaultValue !== null ? `default ${argument.defaultValue}` : undefined,
     argument.since ? `since ${argument.since}` : undefined,

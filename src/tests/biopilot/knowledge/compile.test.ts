@@ -39,7 +39,9 @@ describe("Catalog compiler", () => {
 
   test("the repository's own tool sources compile", () => {
     const sourcesDir = path.resolve(path.dirname(TOOL_SCHEMA_PATH), "..", "knowledge", "tools");
-    const result = compileCatalog({ sourcesDir, outputPath: path.join(tempDir(), "k.db"), biopilotVersion: "test" });
+    // Real tool sources refer to formats (fastq, bam…), so they compile with the formats file.
+    const formatsPath = path.resolve(path.dirname(TOOL_SCHEMA_PATH), "..", "knowledge", "formats.yml");
+    const result = compileCatalog({ sourcesDir, formatsPath, outputPath: path.join(tempDir(), "k.db"), biopilotVersion: "test" });
     expect(result.ok).toBe(true);
   });
 

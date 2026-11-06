@@ -12,6 +12,8 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
 import type { ReadableStream } from "node:stream/web";
+// BIOPILOT: M10 the Catalog and the SQLite addon ship with the standalone binary.
+import { CATALOG_ASSET_KEY, CATALOG_FILE_NAME, SQLITE_ADDON_FILE_NAME } from "../src/biopilot/resources.js";
 
 const require = createRequire(import.meta.url);
 
@@ -38,6 +40,13 @@ const NODE_SHASUMS: Record<string, string> = {
 
 const getNodePtyPath = (): string => path.dirname(require.resolve("node-pty"));
 const getAutocompletePath = (): string => path.dirname(require.resolve("@withfig/autocomplete"));
+// BIOPILOT: M10 compiled by `npm run build:db`; better-sqlite3 ships one prebuilt addon per platform.
+const CATALOG_PATH = path.join("build", CATALOG_FILE_NAME);
+const getSqliteAddonPath = (): string => {
+  const isMusl = process.platform === "linux" && !(process.report.getReport() as { header: { glibcVersionRuntime?: string } }).header.glibcVersionRuntime;
+  const target = `${isMusl ? "linuxmusl" : process.platform}-${process.arch}`;
+  return path.join(path.dirname(require.resolve("better-sqlite3/package.json")), "prebuilds", `${target}.node`);
+};
 
 const getVersion = (): string => {
   const packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
@@ -166,11 +175,7 @@ const applyBundlePatches = async (): Promise<void> => {
   );
 
   // Patch to handle absolute paths correctly (skip relative prefixes for absolute paths)
-  patchBundle(
-    'var dir = r + "/" + d;',
-    'var dir = path_1.isAbsolute(d) ? d : r + "/" + d;',
-    "absolute path handling",
-  );
+  patchBundle('var dir = r + "/" + d;', 'var dir = path_1.isAbsolute(d) ? d : r + "/" + d;', "absolute path handling");
 
   // Patch worker inline
   const workerCode = await bundleNodePtyWorker();
@@ -193,6 +198,16 @@ const copyNodePtyNatives = (): void => {
   fs.mkdirSync(path.dirname(destDir), { recursive: true });
   fs.cpSync(srcDir, destDir, { recursive: true });
   console.log(`Copied natives: ${srcDir} -> ${destDir}`);
+};
+
+// BIOPILOT: M10 the addon joins node-pty's natives: extracted to the native resources, loaded by the Catalog reader.
+const copySqliteAddon = (): void => {
+  const srcPath = getSqliteAddonPath();
+  if (!fs.existsSync(srcPath)) throw new Error(`No better-sqlite3 prebuilt addon for ${PLATFORM_ARCH}: ${srcPath}`);
+  const destPath = path.join(PKG_DIR, "prebuilds", PLATFORM_ARCH, SQLITE_ADDON_FILE_NAME);
+  fs.mkdirSync(path.dirname(destPath), { recursive: true });
+  fs.copyFileSync(srcPath, destPath);
+  console.log(`Copied SQLite addon: ${srcPath} -> ${destPath}`);
 };
 
 const copyAutocompleteSpecs = (): void => {
@@ -222,7 +237,7 @@ const generateSeaConfig = (): void => {
     .filter((file) => file.endsWith(".js"))
     .filter((file) => fs.statSync(path.join(specsDir, file)).isFile())
     .filter((file) => !["gcloud", "az", "aws"].some((name) => file.startsWith(name + path.sep)));
-  
+
   const assets: Record<string, string> = {};
   shellAssets.forEach((file) => (assets[file] = `shell/${file}`));
   nativeAssets.forEach((file) => {
@@ -231,6 +246,9 @@ const generateSeaConfig = (): void => {
   specAssets.forEach((file) => {
     assets[file.replaceAll(path.sep, ASSET_PATH_SEP)] = `pkg/specs/${file}`.replaceAll(path.sep, "/");
   });
+  // BIOPILOT: M10 the Catalog, unpacked into the data directory.
+  if (!fs.existsSync(CATALOG_PATH)) throw new Error(`No Catalog at ${CATALOG_PATH}: run npm run build:db first`);
+  assets[CATALOG_ASSET_KEY] = CATALOG_PATH.replaceAll(path.sep, "/");
 
   const seaConfig = {
     main: BUNDLE_PATH,
@@ -295,6 +313,7 @@ const main = async (): Promise<void> => {
   await buildBundle();
   await applyBundlePatches();
   copyNodePtyNatives();
+  copySqliteAddon(); // BIOPILOT: M10
   copyAutocompleteSpecs();
   await copyNodeExecutable();
   generateSeaConfig();

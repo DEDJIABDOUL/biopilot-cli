@@ -1,7 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`getSubcommandSuggestions cd 1`] = `undefined`;
-
 exports[`parseCommand alreadyUsedOption 1`] = `
 {
   "activeToken": {

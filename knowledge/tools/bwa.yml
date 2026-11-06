@@ -1,0 +1,690 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# bwa 0.7.19, written from the help recorded in knowledge/help/bwa/0.7.19/ (ticket #12).
+# Descriptions are in our own words (spec decision 31); bwa is GPL-3.0-or-later.
+# bwa has no --help nor --version: the root prints its usage and version only when run
+# without arguments, and each subcommand prints its usage when run without arguments.
+# The format requires at least one argument for `version.args` and `help`, so the root
+# help is left out and the version probe below cannot succeed (reported in ticket #12).
+name: bwa
+description: Short-read aligner based on the Burrows-Wheeler transform
+platforms: [illumina]
+version: { args: ["--version"], regex: 'Version: (\d[\w.-]*)' }
+commands:
+  - name: index
+    help: ["index"]
+    description: build the FM-index of a reference FASTA, needed before aligning
+    options:
+      - names: ["-p"]
+        description: name prefix of the index files (the FASTA name by default)
+        value: { type: string }
+        rank: 80
+      - names: ["-a"]
+        description: algorithm that builds the BWT (chosen from the genome size by default)
+        value:
+          type: enum
+          values:
+            - { value: bwtsw, description: for large genomes }
+            - { value: is, description: for small genomes only }
+            - { value: rb2, description: low-memory construction }
+        rank: 45
+      - names: ["-b"]
+        description: block size used by the bwtsw algorithm
+        value: { type: int }
+        default: 10000000
+        rank: 30
+      - names: ["-6"]
+        description: name the index files <reference>.64.* instead of <reference>.*
+        rank: 20
+    arguments:
+      - name: in.fasta
+        description: reference sequences to index
+        value: { type: file, format: fasta }
+
+  - name: mem
+    help: ["mem"]
+    description: align reads with the BWA-MEM algorithm, the usual choice for 70 bp and longer
+    options:
+      - names: ["-t"]
+        description: number of threads
+        value: { type: int }
+        default: 1
+        rank: 85
+      - names: ["-o"]
+        description: SAM file to write (standard output by default)
+        value: { type: file, format: sam }
+        rank: 90
+      - names: ["-R"]
+        description: read group header line, e.g. '@RG\tID:s1\tSM:s1', added to every read
+        value: { type: string }
+        rank: 75
+        rules:
+          - when: { assay: variant-calling }
+            boost: 15
+      - names: ["-M"]
+        description: flag the shorter parts of split reads as secondary (for Picard compatibility)
+        rank: 65
+        rules:
+          - when: { assay: variant-calling }
+            boost: 10
+      - names: ["-p"]
+        description: interleaved input, read 1 and read 2 alternate in a single file
+        rank: 60
+      - names: ["-x"]
+        description: preset for a read type, changing several scoring parameters at once
+        value:
+          type: enum
+          values:
+            - { value: pacbio, description: PacBio reads against a reference }
+            - { value: ont2d, description: Oxford Nanopore 2D reads against a reference }
+            - { value: intractg, description: contigs of the same species against a reference }
+        rank: 45
+        rules:
+          - when: { platform: nanopore }
+            boost: 20
+      - names: ["-k"]
+        description: shortest seed kept
+        value: { type: int }
+        default: 19
+        rank: 45
+      - names: ["-w"]
+        description: band width of the banded alignment
+        value: { type: int }
+        default: 100
+        rank: 35
+      - names: ["-d"]
+        description: X-dropoff away from the diagonal
+        value: { type: int }
+        default: 100
+        rank: 30
+      - names: ["-r"]
+        description: reseed inside seeds longer than -k times this factor
+        value: { type: float }
+        default: 1.5
+        rank: 30
+      - names: ["-y"]
+        description: occurrence threshold of the third seeding round
+        value: { type: int }
+        default: 20
+        rank: 25
+      - names: ["-c"]
+        description: ignore seeds occurring more often than this
+        value: { type: int }
+        default: 500
+        rank: 30
+      - names: ["-D"]
+        description: drop chains shorter than this fraction of the longest overlapping one
+        value: { type: float }
+        default: 0.5
+        rank: 30
+      - names: ["-W"]
+        description: drop chains with fewer seeded bases than this
+        value: { type: int }
+        default: 0
+        rank: 30
+      - names: ["-m"]
+        description: rounds of mate rescue per read, at most
+        value: { type: int }
+        default: 50
+        rank: 30
+      - names: ["-S"]
+        description: do not rescue mates
+        rank: 30
+      - names: ["-P"]
+        description: do not pair reads (mates are still rescued unless -S is set)
+        rank: 30
+      - names: ["-A"]
+        description: match score; scales the other penalties unless they are set
+        value: { type: int }
+        default: 1
+        rank: 35
+      - names: ["-B"]
+        description: mismatch penalty
+        value: { type: int }
+        default: 4
+        rank: 35
+      - names: ["-O"]
+        description: gap open penalty, for deletions and insertions (one or two values)
+        value: { type: string }
+        default: "6,6"
+        rank: 35
+      - names: ["-E"]
+        description: gap extension penalty, for deletions and insertions (one or two values)
+        value: { type: string }
+        default: "1,1"
+        rank: 35
+      - names: ["-L"]
+        description: clipping penalty at the 5' and 3' ends (one or two values)
+        value: { type: string }
+        default: "5,5"
+        rank: 35
+      - names: ["-U"]
+        description: penalty for leaving a read pair unpaired
+        value: { type: int }
+        default: 17
+        rank: 30
+      - names: ["-H"]
+        description: header lines to insert, given as text starting with @ or as a file
+        value: { type: string }
+        rank: 35
+      - names: ["-j"]
+        description: ignore the .alt file and treat ALT contigs as primary assembly
+        rank: 25
+      - names: ["-5"]
+        description: in split alignments, make the part with the smallest read coordinate primary
+        rank: 30
+      - names: ["-q"]
+        description: keep the mapping quality of supplementary alignments unchanged
+        rank: 25
+      - names: ["-K"]
+        description: bases processed per batch whatever the threads, for reproducible output
+        value: { type: int }
+        rank: 35
+      - names: ["-v"]
+        description: how much to log (1 errors, 2 warnings, 3 messages, 4 and more debugging)
+        value: { type: int }
+        default: 3
+        rank: 20
+      - names: ["-T"]
+        description: do not output alignments scoring below this
+        value: { type: int }
+        default: 30
+        rank: 40
+      - names: ["-h"]
+        description: report alternative hits in XA when fewer than this many are close to the best score
+        value: { type: string }
+        default: "5,200"
+        rank: 25
+      - names: ["-z"]
+        description: fraction of the best score used with -h
+        value: { type: float }
+        default: 0.8
+        rank: 20
+      - names: ["-a"]
+        description: also output secondary alignments of single-end and unpaired reads
+        rank: 35
+      - names: ["-C"]
+        description: copy the FASTA/FASTQ comment of each read into the SAM output
+        rank: 40
+      - names: ["-V"]
+        description: put the reference FASTA header into the XR tag
+        rank: 20
+      - names: ["-Y"]
+        description: soft-clip supplementary alignments instead of hard-clipping them
+        rank: 40
+      - names: ["-I"]
+        description: insert size distribution as mean[,std[,max[,min]]], instead of inferring it
+        value: { type: string }
+        rank: 30
+      - names: ["-u"]
+        description: write the XB tag (XA plus score and mapping quality) instead of XA
+        rank: 20
+    arguments:
+      - name: idxbase
+        description: prefix of the bwa index of the reference
+        value: { type: file, format: bwa-index }
+      - name: in1.fq
+        description: reads, or read 1 of the pairs
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: in2.fq
+        description: read 2 of the pairs, for paired-end data
+        value: { type: file, format: fastq, read_role: 2, optional: true }
+
+  - name: fastmap
+    help: ["fastmap"]
+    description: find super-maximal exact matches of reads in the index
+    options:
+      - names: ["-l"]
+        description: shortest match to report
+        value: { type: int }
+        default: 17
+        rank: 50
+      - names: ["-w"]
+        description: largest interval whose coordinates are looked up
+        value: { type: int }
+        default: 20
+        rank: 30
+      - names: ["-i"]
+        description: smallest interval size to keep
+        value: { type: int }
+        default: 1
+        rank: 30
+      - names: ["-L"]
+        description: longest match length
+        value: { type: int }
+        default: 2147483647
+        rank: 20
+      - names: ["-I"]
+        description: stop when a match longer than -l has an interval smaller than this
+        value: { type: int }
+        default: 0
+        rank: 20
+    arguments:
+      - name: idxbase
+        description: prefix of the bwa index of the reference
+        value: { type: file, format: bwa-index }
+      - name: in.fq
+        description: reads to search
+        value: { type: file, format: fastq }
+
+  - name: pemerge
+    help: ["pemerge"]
+    description: merge overlapping read pairs into single reads (experimental)
+    options:
+      - names: ["-m"]
+        description: write merged reads only
+        rank: 60
+      - names: ["-u"]
+        description: write reads that could not be merged only
+        rank: 60
+      - names: ["-t"]
+        description: number of threads
+        value: { type: int }
+        default: 1
+        rank: 75
+      - names: ["-T"]
+        description: shortest overlap between the two reads
+        value: { type: int }
+        default: 10
+        rank: 40
+      - names: ["-Q"]
+        description: highest summed error allowed in the overlap
+        value: { type: int }
+        default: 70
+        rank: 35
+    arguments:
+      - name: read1.fq
+        description: read 1, or interleaved pairs when read 2 is not given
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: read2.fq
+        description: read 2 of the pairs
+        value: { type: file, format: fastq, read_role: 2, optional: true }
+
+  - name: aln
+    help: ["aln"]
+    description: align short reads with the older backtrack algorithm, writing a .sai file
+    options:
+      - names: ["-f"]
+        description: .sai file to write (standard output by default)
+        value: { type: file, format: sai }
+        rank: 90
+      - names: ["-t"]
+        description: number of threads
+        value: { type: int }
+        default: 1
+        rank: 85
+      - names: ["-n"]
+        description: differences allowed, as a count, or as a missing probability when fractional
+        value: { type: float }
+        default: 0.04
+        rank: 45
+      - names: ["-o"]
+        description: gap opens allowed, as a count or a fraction
+        value: { type: int }
+        default: 1
+        rank: 35
+      - names: ["-e"]
+        description: gap extensions allowed (-1 disables long gaps)
+        value: { type: int }
+        default: -1
+        rank: 35
+      - names: ["-i"]
+        description: no indel within this many bases of the read ends
+        value: { type: int }
+        default: 5
+        rank: 30
+      - names: ["-d"]
+        description: occurrence limit when extending a long deletion
+        value: { type: int }
+        default: 10
+        rank: 25
+      - names: ["-l"]
+        description: seed length
+        value: { type: int }
+        default: 32
+        rank: 40
+      - names: ["-k"]
+        description: differences allowed inside the seed
+        value: { type: int }
+        default: 2
+        rank: 40
+      - names: ["-m"]
+        description: size limit of the search queue
+        value: { type: int }
+        default: 2000000
+        rank: 20
+      - names: ["-M"]
+        description: mismatch penalty
+        value: { type: int }
+        default: 3
+        rank: 30
+      - names: ["-O"]
+        description: gap open penalty
+        value: { type: int }
+        default: 11
+        rank: 30
+      - names: ["-E"]
+        description: gap extension penalty
+        value: { type: int }
+        default: 4
+        rank: 30
+      - names: ["-R"]
+        description: stop once more than this many equally good hits are found
+        value: { type: int }
+        default: 30
+        rank: 30
+      - names: ["-q"]
+        description: quality threshold for trimming read ends (down to 35 bp)
+        value: { type: int }
+        default: 0
+        rank: 40
+      - names: ["-B"]
+        description: length of a barcode at the start of the reads
+        value: { type: int }
+        rank: 30
+      - names: ["-L"]
+        description: log-scaled gap penalty for long deletions
+        rank: 20
+      - names: ["-N"]
+        description: exhaustive search of every hit within the allowed differences (very slow)
+        rank: 15
+      - names: ["-I"]
+        description: qualities use the old Illumina 1.3+ encoding
+        rank: 20
+      - names: ["-b"]
+        description: the reads come from a BAM file
+        rank: 40
+      - names: ["-0"]
+        description: with -b, keep single-end reads only
+        rank: 25
+      - names: ["-1"]
+        description: with -b, take read 1 of each pair
+        rank: 25
+      - names: ["-2"]
+        description: with -b, take read 2 of each pair
+        rank: 25
+      - names: ["-Y"]
+        description: drop reads flagged as filtered by Casava
+        rank: 25
+    arguments:
+      - name: prefix
+        description: prefix of the bwa index of the reference
+        value: { type: file, format: bwa-index }
+      - name: in.fq
+        description: reads to align
+        value: { type: file, format: fastq }
+
+  - name: samse
+    help: ["samse"]
+    description: turn single-end bwa aln results into SAM
+    options:
+      - names: ["-f"]
+        description: SAM file to write (standard output by default)
+        value: { type: file, format: sam }
+        rank: 90
+      - names: ["-n"]
+        description: report every hit in XA when a read has at most this many
+        value: { type: int }
+        rank: 40
+      - names: ["-r"]
+        description: read group header line, e.g. '@RG\tID:s1\tSM:s1'
+        value: { type: string }
+        rank: 75
+    arguments:
+      - name: prefix
+        description: prefix of the bwa index of the reference
+        value: { type: file, format: bwa-index }
+      - name: in.sai
+        description: alignments from bwa aln
+        value: { type: file, format: sai }
+      - name: in.fq
+        description: the reads given to bwa aln
+        value: { type: file, format: fastq }
+
+  - name: sampe
+    help: ["sampe"]
+    description: pair the bwa aln results of read 1 and read 2 and write SAM
+    options:
+      - names: ["-f"]
+        description: SAM file to write (standard output by default)
+        value: { type: file, format: sam }
+        rank: 90
+      - names: ["-r"]
+        description: read group header line, e.g. '@RG\tID:s1\tSM:s1'
+        value: { type: string }
+        rank: 75
+      - names: ["-a"]
+        description: largest insert size for a proper pair
+        value: { type: int }
+        default: 500
+        rank: 45
+      - names: ["-o"]
+        description: occurrence limit of one end of a pair
+        value: { type: int }
+        default: 100000
+        rank: 30
+      - names: ["-n"]
+        description: hits reported per properly paired read, at most
+        value: { type: int }
+        default: 3
+        rank: 30
+      - names: ["-N"]
+        description: hits reported per discordant pair, at most
+        value: { type: int }
+        default: 10
+        rank: 30
+      - names: ["-c"]
+        description: prior chimeric rate (lower bound)
+        value: { type: float }
+        default: 0.00001
+        rank: 20
+      - names: ["-P"]
+        description: load the whole index in memory first
+        rank: 40
+      - names: ["-s"]
+        description: no Smith-Waterman alignment of the unmapped mate
+        rank: 25
+      - names: ["-A"]
+        description: no insert size estimation (implies -s)
+        rank: 25
+    arguments:
+      - name: prefix
+        description: prefix of the bwa index of the reference
+        value: { type: file, format: bwa-index }
+      - name: in1.sai
+        description: bwa aln alignments of read 1
+        value: { type: file, format: sai }
+      - name: in2.sai
+        description: bwa aln alignments of read 2
+        value: { type: file, format: sai }
+      - name: in1.fq
+        description: read 1 of the pairs
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: in2.fq
+        description: read 2 of the pairs
+        value: { type: file, format: fastq, read_role: 2 }
+
+  - name: bwasw
+    help: ["bwasw"]
+    description: align long reads or contigs with the BWA-SW algorithm (deprecated, prefer mem)
+    options:
+      - names: ["-f"]
+        description: SAM file to write (standard output by default)
+        value: { type: file, format: sam }
+        rank: 90
+      - names: ["-t"]
+        description: number of threads
+        value: { type: int }
+        default: 1
+        rank: 85
+      - names: ["-a"]
+        description: match score
+        value: { type: int }
+        default: 1
+        rank: 30
+      - names: ["-b"]
+        description: mismatch penalty
+        value: { type: int }
+        default: 3
+        rank: 30
+      - names: ["-q"]
+        description: gap open penalty
+        value: { type: int }
+        default: 5
+        rank: 30
+      - names: ["-r"]
+        description: gap extension penalty
+        value: { type: int }
+        default: 2
+        rank: 30
+      - names: ["-w"]
+        description: band width
+        value: { type: int }
+        default: 50
+        rank: 30
+      - names: ["-m"]
+        description: mask level
+        value: { type: float }
+        default: 0.5
+        rank: 25
+      - names: ["-H"]
+        description: hard-clip instead of soft-clip in the SAM output
+        rank: 30
+      - names: ["-C"]
+        description: copy the FASTA/FASTQ comment of each read into the SAM output
+        rank: 30
+      - names: ["-M"]
+        description: flag the extra parts of split alignments as secondary
+        rank: 40
+      - names: ["-S"]
+        description: no Smith-Waterman pairing of reads
+        rank: 25
+      - names: ["-I"]
+        description: ignore pairs with an insert at least this large when estimating insert sizes
+        value: { type: int }
+        default: 20000
+        rank: 25
+      - names: ["-T"]
+        description: score threshold, divided by the match score
+        value: { type: int }
+        default: 30
+        rank: 35
+      - names: ["-c"]
+        description: coefficient adjusting the threshold to the read length
+        value: { type: float }
+        default: 5.5
+        rank: 25
+      - names: ["-z"]
+        description: Z-best heuristic; larger is more sensitive and slower
+        value: { type: int }
+        default: 1
+        rank: 35
+      - names: ["-s"]
+        description: largest seeding interval
+        value: { type: int }
+        default: 3
+        rank: 25
+      - names: ["-N"]
+        description: seeds needed to try the reverse alignment (twice this is the chaining threshold)
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: ["-G"]
+        description: largest gap when chaining
+        value: { type: int }
+        default: 10000
+        rank: 20
+    arguments:
+      - name: target.prefix
+        description: prefix of the bwa index of the reference
+        value: { type: file, format: bwa-index }
+      - name: query.fa
+        description: reads or sequences to align
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: query2.fa
+        description: second reads of pairs
+        value: { type: file, format: fastq, read_role: 2, optional: true }
+
+  - name: shm
+    help: ["shm"]
+    description: load a bwa index into shared memory, list or remove loaded indexes
+    options:
+      - names: ["-l"]
+        description: list the indexes loaded in shared memory
+        rank: 60
+      - names: ["-d"]
+        description: remove every index from shared memory
+        rank: 50
+      - names: ["-f"]
+        description: temporary file that lowers the memory peak while loading
+        value: { type: file }
+        rank: 30
+    arguments:
+      - name: idxbase
+        description: prefix of the bwa index to load
+        value: { type: file, format: bwa-index, optional: true }
+
+  - name: fa2pac
+    help: ["fa2pac"]
+    description: pack FASTA sequences into the .pac format (a low-level indexing step)
+    options:
+      - names: ["-f"]
+        description: write only the forward strand
+        rank: 30
+    arguments:
+      - name: in.fasta
+        description: sequences to pack
+        value: { type: file, format: fasta }
+      - name: out.prefix
+        description: prefix of the files written (the FASTA name by default)
+        value: { type: string, optional: true }
+
+  - name: pac2bwt
+    help: ["pac2bwt"]
+    description: build the BWT from a .pac file (a low-level indexing step)
+    options:
+      - names: ["-d"]
+        description: use the alternative construction algorithm
+        rank: 30
+    arguments:
+      - name: in.pac
+        description: packed sequences
+        value: { type: file }
+      - name: out.bwt
+        description: BWT file to write
+        value: { type: file }
+
+  - name: pac2bwtgen
+    help: ["pac2bwtgen"]
+    description: build the BWT from a .pac file with the bwtsw algorithm (a low-level indexing step)
+    arguments:
+      - name: in.pac
+        description: packed sequences
+        value: { type: file }
+      - name: out.bwt
+        description: BWT file to write
+        value: { type: file }
+
+  - name: bwtupdate
+    help: ["bwtupdate"]
+    description: convert a .bwt file to the current layout, in place
+    arguments:
+      - name: the.bwt
+        description: BWT file to update
+        value: { type: file }
+
+  - name: bwt2sa
+    help: ["bwt2sa"]
+    description: build the suffix array from a .bwt file (a low-level indexing step)
+    options:
+      - names: ["-i"]
+        description: sampling interval of the suffix array
+        value: { type: int }
+        default: 32
+        rank: 30
+    arguments:
+      - name: in.bwt
+        description: BWT file
+        value: { type: file }
+      - name: out.sa
+        description: suffix array file to write
+        value: { type: file }

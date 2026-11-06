@@ -5,9 +5,9 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { openCatalog, type Catalog } from "../../../biopilot/knowledge/catalog.js";
-import { catalogCandidates } from "../../../biopilot/knowledge/location.js";
+import { catalogCandidates, sqliteAddonPath } from "../../../biopilot/knowledge/location.js";
 import { CATALOG_SCHEMA_VERSION } from "../../../biopilot/knowledge/schema.js";
-import { FASTP, MULTIQC, compileValid, tempDir } from "../helpers.js";
+import { FASTP, MULTIQC, compileValid, prebuiltSqliteAddon, tempDir } from "../helpers.js";
 
 describe("Catalog reader", () => {
   let catalog: Catalog;
@@ -105,5 +105,36 @@ describe("Catalog availability", () => {
     const [first] = catalogCandidates({});
     expect(path.basename(first)).toBe("knowledge.db");
     expect(first).not.toContain(`${path.sep}build${path.sep}`);
+  });
+
+  test("from source, the engine loads from node_modules: no extracted addon is looked for", () => {
+    expect(sqliteAddonPath()).toBeUndefined();
+  });
+});
+
+describe("SQLite engine loaded from an addon path (standalone binary)", () => {
+  test("opens the Catalog with the addon at the given path", () => {
+    const opened = openCatalog(compileValid({ "fastp.yml": FASTP }), { nativeBinding: prebuiltSqliteAddon });
+    expect(opened.available).toBe(true);
+    if (opened.available) {
+      expect(opened.catalog.getTool("fastp")?.name).toBe("fastp");
+      opened.catalog.close();
+    }
+  });
+
+  test("the same addon serves several Catalogs", () => {
+    const file = compileValid({ "fastp.yml": FASTP });
+    const first = openCatalog(file, { nativeBinding: prebuiltSqliteAddon });
+    const second = openCatalog(file, { nativeBinding: prebuiltSqliteAddon });
+    expect([first.available, second.available]).toEqual([true, true]);
+    if (first.available) first.catalog.close();
+    if (second.available) second.catalog.close();
+  });
+
+  test("a missing addon makes the engine unavailable, naming the addon, never throwing", () => {
+    const addon = path.join(tempDir(), "native", "better_sqlite3.node");
+    const opened = openCatalog(compileValid({ "fastp.yml": FASTP }), { nativeBinding: addon });
+    expect(opened).toMatchObject({ available: false, reason: "engine-unavailable" });
+    if (!opened.available) expect(opened.detail).toContain(addon);
   });
 });

@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { CATALOG_DDL, CATALOG_SCHEMA_VERSION, canonicalName, type FormatKind, type Platform, type ValueType } from "./schema.js";
+import { CATALOG_DDL, CATALOG_SCHEMA_VERSION, canonicalName, type Assay, type FormatKind, type Platform, type ValueType } from "./schema.js";
 import { SCHEMAS_DIR, captureGroups, formatLocation, loadYaml, schemaValidator, type CompileError, type Segment } from "./yamlSource.js";
 
 export type { CompileError } from "./yamlSource.js";
@@ -56,8 +56,10 @@ type YamlOption = {
   repeatable?: boolean;
   hidden?: boolean;
   deprecated?: boolean;
-  rules?: unknown[];
+  rules?: YamlRule[];
 };
+
+type YamlRule = { when: { used?: string[]; paired?: boolean; platform?: Platform; assay?: Assay }; boost: number };
 
 type YamlArgument = {
   name: string;
@@ -113,6 +115,7 @@ type OptionSource = {
   mateOf?: string;
   /** Derived output: alias of the source option and suffix added to its value. */
   derive?: { from: string; suffix: string };
+  rules: YamlRule[];
 };
 
 type ArgumentSource = {
@@ -179,6 +182,7 @@ const toCommandSource = (command: YamlCommand): CommandSource => ({
     deprecated: option.deprecated ?? false,
     mateOf: option.value?.mate_of,
     derive: option.value?.derive,
+    rules: option.rules ?? [],
   })),
   arguments: (command.arguments ?? []).map((argument) => ({
     name: argument.name,
@@ -306,6 +310,14 @@ const readToolSource = (sourcesDir: string, file: string, formats: Map<string, F
           fail([...valueAt, "mate_of"], `"${value.mate_of}" is already the mate of ${formatLocation([...at, "options", mateClaimedBy.get(mate)!])}`);
         } else mateClaimedBy.set(mate, i);
       }
+      (Array.isArray(option?.rules) ? option.rules : []).forEach((rule, r) => {
+        const used = (rule as Partial<YamlRule> | null)?.when?.used;
+        if (!Array.isArray(used)) return;
+        used.forEach((alias, u) => {
+          if (typeof alias === "string" && !optionOf.has(alias))
+            fail([...at, "options", i, "rules", r, "when", "used", u], `"${alias}" is not an option of this command`);
+        });
+      });
       if (typeof value?.derive?.from === "string") {
         const source = optionOf.get(value.derive.from);
         if (source === undefined) fail([...valueAt, "derive", "from"], `"${value.derive.from}" is not an option of this command`);
@@ -364,12 +376,15 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
     );
     const linkOption = db.prepare("UPDATE options SET mate_of = ?, derive_from = ? WHERE id = ?");
     const insertName = db.prepare("INSERT INTO option_names (command_id, name, option_id, ord) VALUES (?, ?, ?, ?)");
+    const indexOption = db.prepare("INSERT INTO options_fts (rowid, names, description) VALUES (?, ?, ?)");
     const insertOptionValue = db.prepare("INSERT INTO option_values (option_id, ord, value, description) VALUES (?, ?, ?, ?)");
     const insertArgument = db.prepare(
       `INSERT INTO arguments (command_id, position, name, description, variadic, value_type, value_format, value_optional, value_multiple, read_role,
         default_value, since_version, until_version)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
+    const insertRule = db.prepare("INSERT INTO rules (option_id, ord, paired, platform, assay, boost) VALUES (?, ?, ?, ?, ?, ?)");
+    const insertRuleUsed = db.prepare("INSERT INTO rule_used (option_id, rule_ord, ord, used_option_id) VALUES (?, ?, ?, ?)");
     const insertArgumentValue = db.prepare("INSERT INTO argument_values (command_id, position, ord, value, description) VALUES (?, ?, ?, ?, ?)");
 
     const valueColumns = (value: ValueSource | null) => [
@@ -435,12 +450,19 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
               idByAlias.set(name, optionId);
             });
             option.value?.values.forEach((item, ord) => insertOptionValue.run(optionId, ord, item.value, item.description ?? null));
+            indexOption.run(optionId, option.names.join(" "), option.description ?? "");
             return optionId;
           });
+          // References to other options of the command, once they all have ids.
           command.options.forEach((option, i) => {
             if (option.mateOf || option.derive) {
               linkOption.run(option.mateOf ? idByAlias.get(option.mateOf) : null, option.derive ? idByAlias.get(option.derive.from) : null, optionIds[i]);
             }
+            option.rules.forEach((rule, ord) => {
+              const { paired, platform, assay, used = [] } = rule.when;
+              insertRule.run(optionIds[i], ord, paired === undefined ? null : bool(paired), platform ?? null, assay ?? null, rule.boost);
+              used.forEach((alias, u) => insertRuleUsed.run(optionIds[i], ord, u, idByAlias.get(alias)));
+            });
           });
           command.arguments.forEach((argument, position) => {
             insertArgument.run(

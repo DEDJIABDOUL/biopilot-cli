@@ -6,10 +6,14 @@
  * version equals this one exactly (spec decision 30): Catalog and reader always
  * ship together, so a mismatch means a broken install.
  */
-export const CATALOG_SCHEMA_VERSION = 3;
+export const CATALOG_SCHEMA_VERSION = 4;
 
 export const PLATFORMS = ["illumina", "nanopore"] as const;
 export type Platform = (typeof PLATFORMS)[number];
+
+/** What a project sets out to measure (spec decision 6). */
+export const ASSAYS = ["rna-seq", "variant-calling", "unknown"] as const;
+export type Assay = (typeof ASSAYS)[number];
 
 /** Value types. An option without a value is a flag. Only `enum` restricts the value to its listed values. */
 export const VALUE_TYPES = ["int", "float", "string", "file", "dir", "enum"] as const;
@@ -91,6 +95,27 @@ CREATE TABLE option_names (
   option_id  INTEGER NOT NULL REFERENCES options(id),
   ord        INTEGER NOT NULL,
   PRIMARY KEY (command_id, name)
+) WITHOUT ROWID;
+
+-- Full-text index over option names and descriptions; rowid = options.id.
+CREATE VIRTUAL TABLE options_fts USING fts5(names, description, tokenize = 'unicode61');
+
+CREATE TABLE rules (
+  option_id INTEGER NOT NULL REFERENCES options(id),
+  ord       INTEGER NOT NULL,
+  paired    INTEGER,
+  platform  TEXT,
+  assay     TEXT,
+  boost     INTEGER NOT NULL,
+  PRIMARY KEY (option_id, ord)
+) WITHOUT ROWID;
+
+CREATE TABLE rule_used (
+  option_id      INTEGER NOT NULL,
+  rule_ord       INTEGER NOT NULL,
+  ord            INTEGER NOT NULL,
+  used_option_id INTEGER NOT NULL REFERENCES options(id),
+  PRIMARY KEY (option_id, rule_ord, ord)
 ) WITHOUT ROWID;
 
 CREATE TABLE arguments (

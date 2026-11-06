@@ -176,3 +176,35 @@ arguments:
   - name: level
     value: { type: int, optional: true }
 `;
+
+/** Options boosted by context rules (annex B of the spec, plus negative and empty conditions). */
+export const RULED = `
+name: ruled
+version: { args: ["--version"], regex: 'v(\\S+)' }
+options:
+  - names: ["-i", "--in1"]
+    description: read 1 input file
+    value: { type: file, read_role: 1 }
+    rank: 95
+  - names: ["-I", "--in2"]
+    description: read 2 input file
+    value: { type: file, read_role: 2, mate_of: "-i" }
+    rank: 60
+    rules:
+      - when: { used: ["-i"], paired: true }
+        boost: 35
+  - names: ["--nanopore-mode"]
+    description: tuning for long reads
+    rules:
+      - when: { platform: nanopore }
+        boost: 40
+      - when: { platform: illumina }
+        boost: -30
+  - names: ["--quant"]
+    description: transcript quantification
+    rules:
+      - when: { assay: rna-seq }
+        boost: 20
+      - when: {}
+        boost: 5
+`;

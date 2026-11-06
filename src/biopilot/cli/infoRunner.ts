@@ -6,7 +6,7 @@
 // option name and is never parsed as a BioPilot flag (fastp itself has a `--json` option).
 
 import chalk from "chalk";
-import { openCatalog, type Argument, type Catalog, type Command, type Option, type Tool, type ValueSpec } from "../knowledge/catalog.js";
+import { openCatalog, type Argument, type Catalog, type Command, type Option, type Rule, type Tool, type ValueSpec } from "../knowledge/catalog.js";
 
 /** Version of the `--json` output contract (schemas/info-output.schema.json). */
 export const INFO_JSON_FORMAT = 1;
@@ -125,7 +125,21 @@ const optionJson = (option: Option) => ({
   deprecated: option.deprecated,
   mate: option.mate,
   derive: option.derive,
+  rules: option.rules,
 });
+
+/** `+35 when --in1 used and paired`, `-30 when illumina`, `+5 always`. */
+const ruleText = (rule: Rule) => {
+  const { used, paired, platform, assay } = rule.when;
+  const conditions = [
+    used.length > 0 ? `${used.join(" and ")} used` : undefined,
+    paired === null ? undefined : paired ? "paired" : "not paired",
+    platform ?? undefined,
+    assay ?? undefined,
+  ].filter((condition): condition is string => condition !== undefined);
+  const boost = `${rule.boost >= 0 ? "+" : ""}${rule.boost}`;
+  return conditions.length > 0 ? `${boost} when ${conditions.join(" and ")}` : `${boost} always`;
+};
 
 /** `<fastq>`, `<fast|slow>`, `[=<int>]`, `<string>...`: what follows the option name. */
 const valuePlaceholder = (value: ValueSpec) => {
@@ -154,6 +168,7 @@ const optionFacts = (option: Option): string[] =>
     option.since ? `since ${option.since}` : undefined,
     option.until ? `until ${option.until}` : undefined,
     `rank ${option.rank}`,
+    ...option.rules.map(ruleText),
   ].filter((fact): fact is string => fact !== undefined);
 
 /** What the text output says about a positional argument, after its description. */

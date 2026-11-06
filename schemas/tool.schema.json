@@ -145,13 +145,37 @@
       "properties": {
         "when": {
           "type": "object",
-          "description": "Context condition (stored from ticket #8 on)."
+          "additionalProperties": false,
+          "description": "Context condition; every field given must hold. An empty condition always holds.",
+          "properties": {
+            "used": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "description": "Aliases of options of the same command that are already on the command line."
+            },
+            "paired": {
+              "type": "boolean",
+              "description": "The project has complete read pairs (true) or none (false)."
+            },
+            "platform": {
+              "enum": ["illumina", "nanopore"],
+              "description": "Holds when the project's platforms contain this one."
+            },
+            "assay": {
+              "enum": ["rna-seq", "variant-calling", "unknown"],
+              "description": "The project's assay."
+            }
+          }
         },
         "boost": {
           "type": "integer",
           "minimum": -100,
           "maximum": 100,
-          "description": "Added to the rank when the condition holds."
+          "description": "Added to the rank when the condition holds; −100 to +100."
         }
       }
     },

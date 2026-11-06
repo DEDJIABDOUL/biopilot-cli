@@ -10,7 +10,7 @@ let __is_custom_PROMPT_COMMAND = {
     let promptCommandType = $__is_original_PROMPT_COMMAND | describe
     mut cmd = if $promptCommandType == "closure" { do $__is_original_PROMPT_COMMAND } else { $__is_original_PROMPT_COMMAND }
     let pwd = do $__is_update_cwd
-    if 'ISTERM_TESTING' in $env {
+    if 'BIOPILOT_TESTING' in $env {
         $cmd = ""
     }
     $"\e]6973;PS\a($cmd)($pwd)"
@@ -21,7 +21,7 @@ let __is_original_PROMPT_INDICATOR = if 'PROMPT_INDICATOR' in $env { $env.PROMPT
 let __is_custom_PROMPT_INDICATOR = {
     let indicatorCommandType = $__is_original_PROMPT_INDICATOR | describe
     mut ind = if $indicatorCommandType == "closure" { do $__is_original_PROMPT_INDICATOR } else { $__is_original_PROMPT_INDICATOR }
-    if 'ISTERM_TESTING' in $env {
+    if 'BIOPILOT_TESTING' in $env {
         $ind = "> "
     }
     $"($ind)\e]6973;PE\a"

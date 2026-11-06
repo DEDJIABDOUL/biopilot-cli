@@ -12,21 +12,17 @@ test("uses a process-specific ZDOTDIR", () => {
 
 describe("getShellSourceCommand", () => {
   test.each([
-    [Shell.Bash, "~/.inshellisense/init/bash/init.sh", "[ -f ~/.inshellisense/init/bash/init.sh ] && source ~/.inshellisense/init/bash/init.sh"],
+    [Shell.Bash, "~/.biopilot/init/bash/init.sh", "[ -f ~/.biopilot/init/bash/init.sh ] && source ~/.biopilot/init/bash/init.sh"],
     [
       Shell.Powershell,
-      "~/.inshellisense/init/powershell/init.ps1",
-      "if ( Test-Path '~/.inshellisense/init/powershell/init.ps1' -PathType Leaf ) { . ~/.inshellisense/init/powershell/init.ps1 }",
+      "~/.biopilot/init/powershell/init.ps1",
+      "if ( Test-Path '~/.biopilot/init/powershell/init.ps1' -PathType Leaf ) { . ~/.biopilot/init/powershell/init.ps1 }",
     ],
-    [
-      Shell.Pwsh,
-      "~/.inshellisense/init/pwsh/init.ps1",
-      "if ( Test-Path '~/.inshellisense/init/pwsh/init.ps1' -PathType Leaf ) { . ~/.inshellisense/init/pwsh/init.ps1 }",
-    ],
-    [Shell.Zsh, "~/.inshellisense/init/zsh/init.zsh", "[[ -f ~/.inshellisense/init/zsh/init.zsh ]] && source ~/.inshellisense/init/zsh/init.zsh"],
-    [Shell.Fish, "~/.inshellisense/init/fish/init.fish", "test -f ~/.inshellisense/init/fish/init.fish && source ~/.inshellisense/init/fish/init.fish"],
-    [Shell.Xonsh, "~/.inshellisense/init/xonsh/init.xsh", 'p"~/.inshellisense/init/xonsh/init.xsh".exists() && source "~/.inshellisense/init/xonsh/init.xsh"'],
-    [Shell.Nushell, "~/.inshellisense/init/nu/init.nu", "if ( '~/.inshellisense/init/nu/init.nu' | path exists ) { source ~/.inshellisense/init/nu/init.nu }"],
+    [Shell.Pwsh, "~/.biopilot/init/pwsh/init.ps1", "if ( Test-Path '~/.biopilot/init/pwsh/init.ps1' -PathType Leaf ) { . ~/.biopilot/init/pwsh/init.ps1 }"],
+    [Shell.Zsh, "~/.biopilot/init/zsh/init.zsh", "[[ -f ~/.biopilot/init/zsh/init.zsh ]] && source ~/.biopilot/init/zsh/init.zsh"],
+    [Shell.Fish, "~/.biopilot/init/fish/init.fish", "test -f ~/.biopilot/init/fish/init.fish && source ~/.biopilot/init/fish/init.fish"],
+    [Shell.Xonsh, "~/.biopilot/init/xonsh/init.xsh", 'p"~/.biopilot/init/xonsh/init.xsh".exists() && source "~/.biopilot/init/xonsh/init.xsh"'],
+    [Shell.Nushell, "~/.biopilot/init/nu/init.nu", "if ( '~/.biopilot/init/nu/init.nu' | path exists ) { source ~/.biopilot/init/nu/init.nu }"],
   ])("preserves the legacy %s command", (shell, initFilePath, expected) => {
     expect(getShellSourceCommand(shell, initFilePath)).toBe(expected);
   });
@@ -34,33 +30,33 @@ describe("getShellSourceCommand", () => {
   test.each([
     [
       Shell.Bash,
-      "/tmp/xdg home/inshellisense/init/bash/init.sh",
-      "[ -f '/tmp/xdg home/inshellisense/init/bash/init.sh' ] && source '/tmp/xdg home/inshellisense/init/bash/init.sh'",
+      "/tmp/xdg home/biopilot/init/bash/init.sh",
+      "[ -f '/tmp/xdg home/biopilot/init/bash/init.sh' ] && source '/tmp/xdg home/biopilot/init/bash/init.sh'",
     ],
     [
       Shell.Pwsh,
-      "/tmp/xdg home/inshellisense/init/pwsh/init.ps1",
-      "if ( Test-Path '/tmp/xdg home/inshellisense/init/pwsh/init.ps1' -PathType Leaf ) { . '/tmp/xdg home/inshellisense/init/pwsh/init.ps1' }",
+      "/tmp/xdg home/biopilot/init/pwsh/init.ps1",
+      "if ( Test-Path '/tmp/xdg home/biopilot/init/pwsh/init.ps1' -PathType Leaf ) { . '/tmp/xdg home/biopilot/init/pwsh/init.ps1' }",
     ],
     [
       Shell.Zsh,
-      "/tmp/xdg home/inshellisense/init/zsh/init.zsh",
-      "[[ -f '/tmp/xdg home/inshellisense/init/zsh/init.zsh' ]] && source '/tmp/xdg home/inshellisense/init/zsh/init.zsh'",
+      "/tmp/xdg home/biopilot/init/zsh/init.zsh",
+      "[[ -f '/tmp/xdg home/biopilot/init/zsh/init.zsh' ]] && source '/tmp/xdg home/biopilot/init/zsh/init.zsh'",
     ],
     [
       Shell.Fish,
-      "/tmp/xdg home/inshellisense/init/fish/init.fish",
-      "test -f '/tmp/xdg home/inshellisense/init/fish/init.fish' && source '/tmp/xdg home/inshellisense/init/fish/init.fish'",
+      "/tmp/xdg home/biopilot/init/fish/init.fish",
+      "test -f '/tmp/xdg home/biopilot/init/fish/init.fish' && source '/tmp/xdg home/biopilot/init/fish/init.fish'",
     ],
     [
       Shell.Xonsh,
-      "/tmp/xdg home/inshellisense/init/xonsh/init.xsh",
-      'p"/tmp/xdg home/inshellisense/init/xonsh/init.xsh".exists() && source "/tmp/xdg home/inshellisense/init/xonsh/init.xsh"',
+      "/tmp/xdg home/biopilot/init/xonsh/init.xsh",
+      'p"/tmp/xdg home/biopilot/init/xonsh/init.xsh".exists() && source "/tmp/xdg home/biopilot/init/xonsh/init.xsh"',
     ],
     [
       Shell.Nushell,
-      "/tmp/xdg home/inshellisense/init/nu/init.nu",
-      'if ( "/tmp/xdg home/inshellisense/init/nu/init.nu" | path exists ) { source "/tmp/xdg home/inshellisense/init/nu/init.nu" }',
+      "/tmp/xdg home/biopilot/init/nu/init.nu",
+      'if ( "/tmp/xdg home/biopilot/init/nu/init.nu" | path exists ) { source "/tmp/xdg home/biopilot/init/nu/init.nu" }',
     ],
   ])("quotes an XDG path for %s", (shell, initFilePath, expected) => {
     expect(getShellSourceCommand(shell, initFilePath)).toBe(expected);
@@ -74,19 +70,19 @@ describe("getShellSourceCommand", () => {
 
 describe("hasLegacyShellConfig", () => {
   test("detects the original shell plugin marker", () => {
-    expect(hasLegacyShellConfig("# inshellisense shell plugin", Shell.Zsh, false)).toBe(true);
+    expect(hasLegacyShellConfig("# biopilot shell plugin", Shell.Zsh, false)).toBe(true);
   });
 
   test("detects the original generated plugin path", () => {
-    expect(hasLegacyShellConfig("source ~/.inshellisense/zsh/init.zsh", Shell.Zsh, false)).toBe(true);
+    expect(hasLegacyShellConfig("source ~/.biopilot/zsh/init.zsh", Shell.Zsh, false)).toBe(true);
   });
 
   test("detects the current path when it should be treated as legacy", () => {
-    expect(hasLegacyShellConfig("source ~/.inshellisense/init/zsh/init.zsh", Shell.Zsh, true)).toBe(true);
+    expect(hasLegacyShellConfig("source ~/.biopilot/init/zsh/init.zsh", Shell.Zsh, true)).toBe(true);
   });
 
   test("allows the current path while legacy resources remain current", () => {
-    expect(hasLegacyShellConfig("source ~/.inshellisense/init/zsh/init.zsh", Shell.Zsh, false)).toBe(false);
+    expect(hasLegacyShellConfig("source ~/.biopilot/init/zsh/init.zsh", Shell.Zsh, false)).toBe(false);
   });
 });
 

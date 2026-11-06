@@ -9,8 +9,8 @@ const platform = process.platform;
 const arch = process.arch;
 
 const platformArch = `${platform}-${arch}`;
-const packageName = `@microsoft/inshellisense-${platformArch}`;
-const binaryName = platform === "win32" ? `inshellisense-${platformArch}.exe` : `inshellisense-${platformArch}`;
+const packageName = `biopilot-cli-${platformArch}`;
+const binaryName = platform === "win32" ? `biopilot-${platformArch}.exe` : `biopilot-${platformArch}`;
 
 try {
   const platformPkgPath = require.resolve(`${packageName}/package.json`);
@@ -24,7 +24,7 @@ try {
 
   process.exit(result.status ?? 1);
 } catch (err) {
-  console.error(`inshellisense: Platform ${platformArch} is not supported.`);
+  console.error(`biopilot: Platform ${platformArch} is not supported.`);
   console.error(err.message);
   process.exit(1);
 }

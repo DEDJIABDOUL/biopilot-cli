@@ -3,7 +3,7 @@ $Global:__IsOriginalPrompt = $function:Prompt
 function Global:__IsTestingPrompt() {
     return "PS > "
 }
-if ($env:ISTERM_TESTING -eq "1") {
+if ($env:BIOPILOT_TESTING -eq "1") {
     $Global:__IsOriginalPrompt = $function:__IsTestingPrompt
 }
 

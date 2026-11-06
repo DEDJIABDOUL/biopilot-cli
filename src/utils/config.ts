@@ -107,7 +107,8 @@ const configSchema = {
   additionalProperties: false,
 };
 
-const rcFile = ".inshellisenserc";
+// BIOPILOT: M1 rename (inshellisense -> biopilot) to coexist with an installed Inshellisense.
+const rcFile = ".biopilotrc";
 const rcPath = path.join(os.homedir(), rcFile);
 
 const configPaths = [rcPath, xdgConfigPath];

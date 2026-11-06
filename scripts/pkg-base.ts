@@ -25,32 +25,31 @@ const copyFiles = (): void => {
 
 const generatePackageJson = (): void => {
   const packageJson = {
-    name: `@microsoft/inshellisense`,
+    name: `biopilot-cli`,
     version: getVersion(),
-    description: "IDE style command line auto complete",
+    description: "Terminal autocompletion for bioinformatics tools",
     license: "MIT",
     repository: {
       type: "git",
-      url: "git+https://github.com/microsoft/inshellisense.git",
+      url: "git+https://github.com/DEDJIABDOUL/biopilot-cli.git",
     },
     author: {
-      name: "Microsoft Corporation",
+      name: "BioPilot CLI contributors",
     },
     bugs: {
-      url: "https://github.com/microsoft/inshellisense/issues",
+      url: "https://github.com/DEDJIABDOUL/biopilot-cli/issues",
     },
     bin: {
-      is: "bin.js",
-      inshellisense: "bin.js",
+      biopilot: "bin.js",
     },
     files: ["*.md", "LICENSE", "bin.js"],
     optionalDependencies: {
-      "@microsoft/inshellisense-darwin-x64": getVersion(),
-      "@microsoft/inshellisense-darwin-arm64": getVersion(),
-      "@microsoft/inshellisense-linux-x64": getVersion(),
-      "@microsoft/inshellisense-linux-arm64": getVersion(),
-      "@microsoft/inshellisense-win32-x64": getVersion(),
-      "@microsoft/inshellisense-win32-arm64": getVersion(),
+      "biopilot-cli-darwin-x64": getVersion(),
+      "biopilot-cli-darwin-arm64": getVersion(),
+      "biopilot-cli-linux-x64": getVersion(),
+      "biopilot-cli-linux-arm64": getVersion(),
+      "biopilot-cli-win32-x64": getVersion(),
+      "biopilot-cli-win32-arm64": getVersion(),
     },
   };
   fs.writeFileSync(path.join(PKG_DIR, "package.json"), JSON.stringify(packageJson, null, 2), "utf-8");

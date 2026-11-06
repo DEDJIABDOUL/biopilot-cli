@@ -18,7 +18,7 @@ type BenchmarkResult = {
   maxMilliseconds: number;
 };
 
-const iterations = Number.parseInt(process.env.ISTERM_PERF_ITERATIONS ?? "10", 10);
+const iterations = Number.parseInt(process.env.BIOPILOT_PERF_ITERATIONS ?? "10", 10);
 
 const percentile = (values: number[], value: number): number => {
   const sorted = [...values].sort((a, b) => a - b);
@@ -49,7 +49,7 @@ const runCli = (args: string[]) => {
   const result = spawnSync(process.execPath, ["build/index.js", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
-    env: { ...process.env, ISTERM_PERF: "0" },
+    env: { ...process.env, BIOPILOT_PERF: "0" },
   });
   if (result.status !== 0) {
     throw new Error(`CLI benchmark failed for '${args.join(" ")}': ${result.stderr || result.stdout}`);

@@ -49,7 +49,7 @@ __is_update_cwd() {
 
 __is_precmd() {
 	__is_update_cwd
-	if [[ $ISTERM_TESTING == "1" ]]; then
+	if [[ $BIOPILOT_TESTING == "1" ]]; then
 		PS1="%{$(__is_prompt_start)%}> %{$(__is_prompt_end)%}"
 	fi
 }

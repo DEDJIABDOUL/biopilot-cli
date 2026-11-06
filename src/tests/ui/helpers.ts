@@ -52,7 +52,7 @@ export const closeSession = async (terminal: TuiTest | undefined): Promise<void>
   }
 };
 
-const baseEnv = { ISTERM: "0", ISTERM_TESTING: "0" };
+const baseEnv = { BIOPILOT: "0", BIOPILOT_TESTING: "0" };
 
 export const startSession = async (config: ShellConfig, args: string[], cols = 80, rows = 30): Promise<TuiTest> => {
   const terminal = await createTerminal({

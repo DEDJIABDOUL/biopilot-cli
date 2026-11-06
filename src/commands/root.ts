@@ -21,7 +21,7 @@ type RootCommandOptions = {
 
 export const action = (program: Command) => async (options: RootCommandOptions) => {
   const startupTiming = startTiming();
-  const inISTerm = process.env.ISTERM === "1";
+  const inISTerm = process.env.BIOPILOT === "1";
   if (options.check || inISTerm) {
     const { renderConfirmation } = await import("../ui/ui-status.js");
     process.stdout.write(renderConfirmation(inISTerm));

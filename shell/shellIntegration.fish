@@ -15,7 +15,7 @@ function __is_escape_value
 end
 function __is_update_cwd --on-event fish_prompt; set __is_cwd (__is_escape_value "$PWD"); printf "\e]6973;CWD;%s\a" $__is_cwd; end
 
-if [ "$ISTERM_TESTING" = "1" ]
+if [ "$BIOPILOT_TESTING" = "1" ]
 	function is_user_prompt; printf '> '; end
 	set -Ua fish_features no-query-term
 end

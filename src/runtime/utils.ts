@@ -93,7 +93,7 @@ export const buildExecuteShellCommand =
     signal?.throwIfAborted();
     const executionShell = await getExecutionShell();
     const escapedArgs = escapeArgs(executionShell, args);
-    const child = spawn(command, escapedArgs, { cwd, env: { ...process.env, ...env, ISTERM: "1" }, shell: executionShell, signal });
+    const child = spawn(command, escapedArgs, { cwd, env: { ...process.env, ...env, BIOPILOT: "1" }, shell: executionShell, signal });
     const killTimeout = setTimeout(() => child.kill("SIGKILL"), timeout);
     let stdout = "";
     let stderr = "";

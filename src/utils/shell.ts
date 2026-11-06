@@ -16,7 +16,7 @@ import log from "./log.js";
 
 const exec = util.promisify(childProcess.exec);
 const safeExec = async (command: string, options?: childProcess.ExecOptions) => {
-  const defaultOptions: childProcess.ExecOptions = { timeout: 500, env: { ISTERM: "1" } };
+  const defaultOptions: childProcess.ExecOptions = { timeout: 500, env: { BIOPILOT: "1" } };
   try {
     const { stdout, stderr } = await exec(command, { ...defaultOptions, ...options });
     return { stdout, stderr };
@@ -84,9 +84,9 @@ export const shouldFlagLegacyResourcePlugin = (usesLegacyResources: boolean, has
 export const hasLegacyShellConfig = (profile: string, shell: Shell, flagLegacyResourcePlugin: boolean): boolean => {
   const configName = getShellConfigName(shell);
   return (
-    profile.includes("inshellisense shell plugin") ||
-    profile.includes(`~/.inshellisense/${shell}/init.`) ||
-    (flagLegacyResourcePlugin && configName != null && profile.includes(`~/.inshellisense/init/${shell}/${configName}`))
+    profile.includes("biopilot shell plugin") ||
+    profile.includes(`~/.biopilot/${shell}/init.`) ||
+    (flagLegacyResourcePlugin && configName != null && profile.includes(`~/.biopilot/init/${shell}/${configName}`))
   );
 };
 
@@ -294,7 +294,7 @@ const quotePowerShellPath = (filePath: string) => `'${filePath.replaceAll("'", "
 const getShellInitPath = (shell: Shell): string | undefined => {
   const configName = getShellConfigName(shell);
   if (configName == null) return;
-  return usesLegacyResources ? `~/.inshellisense/init/${shell}/${configName}` : path.join(initResourcesPath, shell, configName);
+  return usesLegacyResources ? `~/.biopilot/init/${shell}/${configName}` : path.join(initResourcesPath, shell, configName);
 };
 
 export const getShellSourceCommand = (shell: Shell, initFilePath?: string): string => {
@@ -327,7 +327,7 @@ export const getShellSourceCommand = (shell: Shell, initFilePath?: string): stri
 export const getShellConfig = (shell: Shell): string => {
   switch (shell) {
     case Shell.Zsh:
-      return `if [[ -z "\${ISTERM}" && $- = *i* && \${+ZSH_EXECUTION_STRING} -eq 0 && -z "\${VSCODE_RESOLVING_ENVIRONMENT}" ]]; then
+      return `if [[ -z "\${BIOPILOT}" && $- = *i* && \${+ZSH_EXECUTION_STRING} -eq 0 && -z "\${VSCODE_RESOLVING_ENVIRONMENT}" ]]; then
   if [[ -o login ]]; then
     is -s zsh --login ; exit
   else
@@ -335,7 +335,7 @@ export const getShellConfig = (shell: Shell): string => {
   fi
 fi`;
     case Shell.Bash:
-      return `if [[ -z "\${ISTERM}" && $- = *i* && $- != *c* && -z "\${VSCODE_RESOLVING_ENVIRONMENT}" ]]; then
+      return `if [[ -z "\${BIOPILOT}" && $- = *i* && $- != *c* && -z "\${VSCODE_RESOLVING_ENVIRONMENT}" ]]; then
   shopt -q login_shell
   login_shell=$?
   if [ $login_shell -eq 0 ]; then
@@ -349,12 +349,12 @@ fi`;
       return `$__IsCommandFlag = ([Environment]::GetCommandLineArgs() | Where-Object { $_ -imatch '^-c(ommand)?$' }).Count -gt 0
 $__IsNoExitFlag = ([Environment]::GetCommandLineArgs() | Where-Object { $_ -imatch '^-noe(xit)?$' }).Count -gt 0
 $__IsInteractive = -not $__IsCommandFlag -or ($__IsCommandFlag -and $__IsNoExitFlag)
-if ([string]::IsNullOrEmpty($env:ISTERM) -and [Environment]::UserInteractive -and $__IsInteractive -and [string]::IsNullOrEmpty($env:VSCODE_RESOLVING_ENVIRONMENT)) {
+if ([string]::IsNullOrEmpty($env:BIOPILOT) -and [Environment]::UserInteractive -and $__IsInteractive -and [string]::IsNullOrEmpty($env:VSCODE_RESOLVING_ENVIRONMENT)) {
   is -s ${shell}
   Stop-Process -Id $pid
 }`;
     case Shell.Fish:
-      return `if test -z "$ISTERM" && status --is-interactive && test -z "$VSCODE_RESOLVING_ENVIRONMENT"
+      return `if test -z "$BIOPILOT" && status --is-interactive && test -z "$VSCODE_RESOLVING_ENVIRONMENT"
   if status --is-login
     is -s fish --login ; kill %self
   else
@@ -362,13 +362,13 @@ if ([string]::IsNullOrEmpty($env:ISTERM) -and [Environment]::UserInteractive -an
   end 
 end`;
     case Shell.Xonsh:
-      return `if 'ISTERM' not in \${...} and $XONSH_INTERACTIVE and 'VSCODE_RESOLVING_ENVIRONMENT' not in \${...}:
+      return `if 'BIOPILOT' not in \${...} and $XONSH_INTERACTIVE and 'VSCODE_RESOLVING_ENVIRONMENT' not in \${...}:
     if $XONSH_LOGIN:
         is -s xonsh --login ; exit
     else:
         is -s xonsh ; exit`;
     case Shell.Nushell:
-      return `if "ISTERM" not-in $env and $nu.is-interactive and "VSCODE_RESOLVING_ENVIRONMENT" not-in $env {
+      return `if "BIOPILOT" not-in $env and $nu.is-interactive and "VSCODE_RESOLVING_ENVIRONMENT" not-in $env {
     if $nu.is-login { is -s nu --login ; exit } else { is -s nu ; exit }
 }`;
   }

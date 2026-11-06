@@ -19,7 +19,7 @@ const loadBashAliases = async () => {
     command: `'${shellTarget}'`,
     args: ["-i", "-c", "alias"],
     cwd: process.cwd(),
-    env: { ISTERM: "1" },
+    env: { BIOPILOT: "1" },
   });
   if (status !== 0) {
     log.debug({ msg: "failed to load bash aliases", stderr, status });
@@ -36,7 +36,7 @@ const loadBashAliases = async () => {
 };
 
 const loadZshAliases = async () => {
-  const { stdout, stderr, status } = await executeShellCommand({ command: Shell.Zsh, args: ["-i", "-c", "alias"], cwd: process.cwd(), env: { ISTERM: "1" } });
+  const { stdout, stderr, status } = await executeShellCommand({ command: Shell.Zsh, args: ["-i", "-c", "alias"], cwd: process.cwd(), env: { BIOPILOT: "1" } });
   if (status !== 0) {
     log.debug({ msg: "failed to load zsh aliases", stderr, status });
     return;

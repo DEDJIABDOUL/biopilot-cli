@@ -10,8 +10,8 @@ type Metric = {
   maxMilliseconds: number;
 };
 
-const enabled = process.env.ISTERM_PERF === "1";
-const outputPath = process.env.ISTERM_PERF_OUTPUT;
+const enabled = process.env.BIOPILOT_PERF === "1";
+const outputPath = process.env.BIOPILOT_PERF_OUTPUT;
 const startedAt = enabled ? process.hrtime.bigint() : undefined;
 const initialCpuUsage = enabled ? process.cpuUsage() : undefined;
 const metrics = new Map<string, Metric>();

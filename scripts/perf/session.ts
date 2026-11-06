@@ -11,8 +11,8 @@ import { unpackResources } from "../../src/utils/node.js";
 import { Shell } from "../../src/utils/shell.js";
 
 const shell =
-  (process.env.ISTERM_PERF_SHELL as Shell | undefined) ?? (process.platform === "win32" ? Shell.Cmd : process.platform === "darwin" ? Shell.Zsh : Shell.Bash);
-const metricsPath = path.join(os.tmpdir(), `inshellisense-perf-${process.pid}.json`);
+  (process.env.BIOPILOT_PERF_SHELL as Shell | undefined) ?? (process.platform === "win32" ? Shell.Cmd : process.platform === "darwin" ? Shell.Zsh : Shell.Bash);
+const metricsPath = path.join(os.tmpdir(), `biopilot-perf-${process.pid}.json`);
 const enter = "\r";
 
 await unpackResources();
@@ -26,8 +26,8 @@ const result = await new Promise<Record<string, unknown>>((resolve, reject) => {
     cwd: process.cwd(),
     env: {
       ...process.env,
-      ISTERM_PERF: "1",
-      ISTERM_PERF_OUTPUT: metricsPath,
+      BIOPILOT_PERF: "1",
+      BIOPILOT_PERF_OUTPUT: metricsPath,
     },
   });
   let stage: "prompt" | "suggestion" | "clear" | "command" | "exit" = "prompt";
@@ -58,8 +58,8 @@ const result = await new Promise<Record<string, unknown>>((resolve, reject) => {
         stage = "command";
         buffer = "";
         stageStartedAt = performance.now();
-        terminal.write(`echo ISTERM_PERF_MARKER${enter}`);
-    } else if (stage === "command" && buffer.includes("ISTERM_PERF_MARKER")) {
+        terminal.write(`echo BIOPILOT_PERF_MARKER${enter}`);
+    } else if (stage === "command" && buffer.includes("BIOPILOT_PERF_MARKER")) {
       inputEchoMilliseconds = performance.now() - stageStartedAt;
       stage = "exit";
       terminal.write(`exit${enter}`);

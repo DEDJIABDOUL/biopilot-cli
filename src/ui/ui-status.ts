@@ -5,9 +5,9 @@ import chalk from "chalk";
 
 export const renderConfirmation = (live: boolean): string => {
   const statusMessage = live ? chalk.green("live") : chalk.red("not found");
-  return `inshellisense session [${statusMessage}]\n`;
+  return `biopilot session [${statusMessage}]\n`;
 };
 
 export const renderMissingResources = (): string => {
-  return chalk.red(`inshellisense resources out of date, run "is reinit" to refresh\n`);
+  return chalk.red(`biopilot resources out of date, run "biopilot reinit" to refresh\n`);
 };

@@ -486,10 +486,11 @@ const convertToPtyTarget = async (shell: Shell, underTest: boolean, login: boole
 const convertToPtyEnv = (shell: Shell, underTest: boolean, login: boolean) => {
   const env: Record<string, string> = {
     ...process.env,
-    ISTERM: "1",
+    // BIOPILOT: M1 session variable (was ISTERM).
+    BIOPILOT: "1",
   };
-  if (underTest) env.ISTERM_TESTING = "1";
-  if (login) env.ISTERM_LOGIN = "1";
+  if (underTest) env.BIOPILOT_TESTING = "1";
+  if (login) env.BIOPILOT_LOGIN = "1";
 
   switch (shell) {
     case Shell.Cmd: {

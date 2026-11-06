@@ -13,14 +13,23 @@ Terminal autocompletion for bioinformatics. While you type, BioPilot suggests th
 
 Shells: bash, zsh, fish. Systems: Linux (x64, arm64), macOS (arm64, x64), Windows through WSL.
 
+## Getting started
+
+```shell
+biopilot init bash     # or zsh, fish
+```
+
+Add the printed `source` line to your shell startup file (`~/.bashrc`, `~/.zshrc` or `~/.config/fish/config.fish`). `biopilot doctor` checks the installation; `biopilot -c` tells you whether the current shell runs inside a BioPilot session.
+
 ## Development
 
 ```shell
-conda create -n biopilot-dev -c conda-forge nodejs=22
+conda create -n biopilot-dev -c conda-forge nodejs=22 zsh fish   # zsh, fish: for e2e tests
 conda activate biopilot-dev
 npm ci
 npm run build
 npm test
+npm link && npm run test:e2e   # end-to-end, in real bash/zsh/fish sessions
 node build/index.js        # start a BioPilot session
 ```
 

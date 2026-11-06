@@ -44,9 +44,24 @@ Process: CPU user 136.6 ms, system 117.6 ms; heap used 11.2 MB; RSS 97.2 MB.
 ```shell
 conda activate biopilot-dev
 git checkout 0.0.4 && npm ci
-ISTERM_PERF_ITERATIONS=20 npm run perf
+ISTERM_PERF_ITERATIONS=20 npm run perf   # BIOPILOT_PERF_ITERATIONS after M1
 npm run perf:session
 npm run package
 ```
 
 Single run on a laptop: treat differences under ~15% in timing figures as noise. Sizes are deterministic.
+
+## After M1 (rename), same machine and method
+
+| Measure | 0.0.4 | After M1 | Change |
+|---|---|---|---|
+| startup.version (median) | 243.1 ms | 166.3 ms | noise |
+| startup.check (median) | 172.6 ms | 168.5 ms | −2% |
+| suggestions.static (median) | 0.053 ms | 0.048 ms | noise |
+| Session startup | 818 ms | 754 ms | −8% |
+| First suggestion | 28.5 ms | 27.8 ms | −2% |
+| Peak RSS (session) | 86.2 MB | 87.7 MB | +2% |
+| Binary `biopilot-linux-x64` | 137,956,544 B | 137,956,544 B | 0% |
+| Release tarball | 43,994,166 B | 43,994,247 B | +0.0002% |
+
+The rename costs nothing measurable. Perf env variables are now `BIOPILOT_PERF*` (ex-`ISTERM_PERF*`).

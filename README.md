@@ -33,7 +33,7 @@ Version 1.0. Ten tools are covered today: bcftools, blastn, bwa, fastp, fastqc, 
 | macOS | 11 (Big Sur) or later, Apple silicon or Intel |
 | Windows | Windows 10 or 11 through WSL 2, with a Linux distribution such as Ubuntu |
 | Shell | bash, zsh or fish |
-| Tools | `curl` or `wget`, `gzip`, and `sha256sum` or `shasum`; they come with these systems |
+| Tools | `curl` or `wget`, `gzip`, `openssl`, and `sha256sum` or `shasum`; they come with these systems |
 | Disk space | about 250 MB |
 
 You do not need administrator rights, Node.js, a compiler or a network connection after installation. BioPilot is a standalone program installed in your home folder.
@@ -54,7 +54,7 @@ BioPilot helps with the bioinformatics tools you already have (in a conda enviro
    wget -qO- https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | sh
    ```
 
-   The script downloads the program for your system, checks its SHA-256 checksum, and installs it as `~/.local/bin/biopilot`, with its data in `~/.local/share/biopilot/`. It does not change any of your files.
+   The script downloads the program for your system, checks that the release is signed by the BioPilot release key and that the program matches its SHA-256 checksum, and installs it as `~/.local/bin/biopilot`, with its data in `~/.local/share/biopilot/`. It refuses to install anything that fails these checks, and it does not change any of your files.
 
 2. Make BioPilot start in every new terminal. With bash, the default shell on Ubuntu:
 
@@ -210,6 +210,7 @@ BioPilot lists everything it will remove and asks for confirmation: the program,
 - [User guide](./docs/guide.md): what the suggestions are based on, every command, the project file `.biopilot.toml`, settings, privacy, troubleshooting.
 - [Adding a tool to the Catalog](./docs/contributing-tools.md): how to describe a new tool so that BioPilot can suggest its options.
 - [Changelog](./CHANGELOG.md).
+- [Releasing](./docs/releasing.md): how a version is published and signed.
 - [Specification](./biopilot-cli-cahier-des-charges.md), in French.
 
 ## Development

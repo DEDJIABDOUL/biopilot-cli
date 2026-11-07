@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Signed releases:** each release's `SHA256SUMS` is signed (ECDSA P-256) by the BioPilot release key; `install.sh` checks the signature with `openssl` before trusting any checksum, and refuses an unsigned or tampered release. Releases 0.1.0 to 1.0.1 were signed after the fact.
+
 ## 1.0.1
 
 - **Fix:** the start line added to the shell's startup file called the original engine's command (`is`) instead of `biopilot`, so every new terminal closed at once. It now starts `biopilot`, does nothing when `biopilot` is not on the `PATH`, and keeps the terminal open when the session cannot start (for example when its resources are of another version), so that `biopilot reinit` can be run.

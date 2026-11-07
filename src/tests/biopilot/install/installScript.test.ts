@@ -15,7 +15,17 @@ import { tempDir } from "../helpers.js";
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 const script = path.join(repoRoot, "install.sh");
 
-/** A release folder holding a fake binary for this platform and its checksum. */
+/** The test's release key: install.sh checks the signature with it (BIOPILOT_TEST_PUBLIC_KEY_FILE). */
+const releaseKey = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+const otherKey = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+const publicKeyFile = path.join(tempDir(), "release.pub.pem");
+fs.writeFileSync(publicKeyFile, releaseKey.publicKey.export({ type: "spki", format: "pem" }));
+
+/** Signs a release folder's SHA256SUMS the way the release workflow does (ECDSA P-256, SHA-256, DER). */
+const sign = (dir: string, key = releaseKey.privateKey) =>
+  fs.writeFileSync(path.join(dir, "SHA256SUMS.sig"), crypto.sign("sha256", fs.readFileSync(path.join(dir, "SHA256SUMS")), key));
+
+/** A signed release folder holding a fake binary for this platform and its checksum. */
 const release = (asset: string, options: { badChecksum?: boolean } = {}) => {
   const dir = tempDir();
   const binary = `#!/bin/sh
@@ -33,6 +43,7 @@ esac
     .update(options.badChecksum ? "something else" : compressed)
     .digest("hex");
   fs.writeFileSync(path.join(dir, "SHA256SUMS"), `${sum}  ${asset}.gz\n${"0".repeat(64)}  biopilot-other-arch.gz\n`);
+  sign(dir);
   return dir;
 };
 
@@ -47,6 +58,7 @@ const install = (releaseDir: string, env: Record<string, string> = {}) => {
       BIOPILOT_DOWNLOAD_URL: `file://${releaseDir}`,
       BIOPILOT_TEST_UNAME_S: "Linux",
       BIOPILOT_TEST_UNAME_M: "x86_64",
+      BIOPILOT_TEST_PUBLIC_KEY_FILE: publicKeyFile,
       ...env,
     },
     encoding: "utf-8",
@@ -115,5 +127,36 @@ describe("install.sh", () => {
     const dir = path.join(tempDir(), "bin");
     const { stdout } = install(release("biopilot-linux-x64"), { BIOPILOT_INSTALL_DIR: dir, PATH: `${dir}:/usr/bin:/bin` });
     expect(stdout).not.toContain("is not on your PATH");
+  });
+
+  test("a release without signature installs nothing", () => {
+    const dir = release("biopilot-linux-x64");
+    fs.rmSync(path.join(dir, "SHA256SUMS.sig"));
+    const { home, code, stderr } = install(dir);
+    expect(code).toBe(1);
+    expect(stderr).toContain("could not download");
+    expect(fs.existsSync(path.join(home, ".local", "bin", "biopilot"))).toBe(false);
+  });
+
+  test("a release signed by another key installs nothing", () => {
+    const dir = release("biopilot-linux-x64");
+    sign(dir, otherKey.privateKey);
+    const { home, code, stderr } = install(dir);
+    expect(code).toBe(1);
+    expect(stderr).toContain("the release signature is not valid");
+    expect(fs.existsSync(path.join(home, ".local", "bin", "biopilot"))).toBe(false);
+  });
+
+  test("checksums changed after signing (a swapped binary) install nothing", () => {
+    const dir = release("biopilot-linux-x64");
+    fs.appendFileSync(path.join(dir, "SHA256SUMS"), `${"1".repeat(64)}  biopilot-linux-arm64.gz\n`);
+    const { code, stderr } = install(dir);
+    expect(code).toBe(1);
+    expect(stderr).toContain("the release signature is not valid");
+  });
+
+  test("the key built into install.sh is the repository's release key", () => {
+    const embedded = fs.readFileSync(script, "utf-8").match(/RELEASE_PUBLIC_KEY="(-----BEGIN PUBLIC KEY-----[\s\S]*?-----END PUBLIC KEY-----)"/)?.[1];
+    expect(embedded?.trim()).toBe(fs.readFileSync(path.join(repoRoot, "scripts", "release-signing-key.pub.pem"), "utf-8").trim());
   });
 });

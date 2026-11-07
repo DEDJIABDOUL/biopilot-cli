@@ -18,7 +18,7 @@ BioPilot completes bioinformatics command lines as you type, in your own termina
 curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | sh
 ```
 
-The script downloads the standalone binary for your system from the latest [GitHub Release](https://github.com/DEDJIABDOUL/biopilot-cli/releases) (Node embedded: nothing to compile, no prerequisite), checks its SHA-256, installs it as `~/.local/bin/biopilot` and its resources — the Catalog included — in `~/.local/share/biopilot/`. It never uses `sudo` and never edits your files: at the end it prints **one line to add** to `~/.bashrc`, `~/.zshrc` or `~/.config/fish/config.fish`. Add it, open a new terminal: BioPilot is on.
+The script downloads the standalone binary for your system from the latest [GitHub Release](https://github.com/DEDJIABDOUL/biopilot-cli/releases) (Node embedded: nothing to compile, no prerequisite), checks that the release's checksums are signed by the BioPilot release key (with `openssl`) and that the binary matches them, installs it as `~/.local/bin/biopilot` and its resources — the Catalog included — in `~/.local/share/biopilot/`. It never uses `sudo` and never edits your files: at the end it prints **one line to add** to `~/.bashrc`, `~/.zshrc` or `~/.config/fish/config.fish`. Add it, open a new terminal: BioPilot is on.
 
 | Variable (before `sh`) | Effect |
 |---|---|

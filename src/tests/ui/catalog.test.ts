@@ -110,10 +110,12 @@ describe("[bash] an unknown Profile is computed in the background (ADR-0002)", (
     await terminal.expectText("--dedup", { strict: false }); // the Catalog meanwhile: nothing waited for
 
     // The Profile lands in the background; typing again picks it up.
-    for (let attempt = 0; attempt < 20; attempt++) {
+    // The screen is read only once it is idle: right after a keystroke it may still show the old list.
+    for (let attempt = 0; attempt < 40; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       await terminal.press("Backspace");
       await terminal.type("e");
+      await terminal.waitIdle();
       await terminal.expectText("--detect_adapter_for_pe", { strict: false });
       if (!(await terminal.text()).includes("--dedup")) break;
     }

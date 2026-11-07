@@ -1,0 +1,56 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/seqkit.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: seqkit
+package: seqkit
+version: 2.14.0
+build: hb192632_0
+channel: linux-64
+licence: MIT
+copyright: Wei Shen, https://github.com/shenwei356/seqkit
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-2
+used_by_catalog: true
+files:
+  root.txt: seqkit --help
+  faidx.txt: seqkit faidx --help
+  scat.txt: seqkit scat --help
+  seq.txt: seqkit seq --help
+  sliding.txt: seqkit sliding --help
+  stats.txt: seqkit stats --help
+  subseq.txt: seqkit subseq --help
+  translate.txt: seqkit translate --help
+  watch.txt: seqkit watch --help
+  convert.txt: seqkit convert --help
+  fa2fq.txt: seqkit fa2fq --help
+  fq2fa.txt: seqkit fq2fa --help
+  fx2tab.txt: seqkit fx2tab --help
+  tab2fx.txt: seqkit tab2fx --help
+  amplicon.txt: seqkit amplicon --help
+  fish.txt: seqkit fish --help
+  grep.txt: seqkit grep --help
+  locate.txt: seqkit locate --help
+  common.txt: seqkit common --help
+  duplicate.txt: seqkit duplicate --help
+  head.txt: seqkit head --help
+  head-genome.txt: seqkit head-genome --help
+  pair.txt: seqkit pair --help
+  range.txt: seqkit range --help
+  rmdup.txt: seqkit rmdup --help
+  sample.txt: seqkit sample --help
+  sample2.txt: seqkit sample2 --help
+  split.txt: seqkit split --help
+  split2.txt: seqkit split2 --help
+  concat.txt: seqkit concat --help
+  mutate.txt: seqkit mutate --help
+  rename.txt: seqkit rename --help
+  replace.txt: seqkit replace --help
+  restart.txt: seqkit restart --help
+  sana.txt: seqkit sana --help
+  shuffle.txt: seqkit shuffle --help
+  sort.txt: seqkit sort --help
+  bam.txt: seqkit bam --help
+  merge-slides.txt: seqkit merge-slides --help
+  sum.txt: seqkit sum --help

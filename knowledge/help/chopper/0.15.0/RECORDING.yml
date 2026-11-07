@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/chopper.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: chopper
+package: chopper
+version: 0.15.0
+build: h7f49ad2_0
+channel: linux-64
+licence: MIT
+copyright: Wouter De Coster, https://github.com/wdecoster/chopper
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-2
+used_by_catalog: true
+files:
+  root.txt: chopper --help

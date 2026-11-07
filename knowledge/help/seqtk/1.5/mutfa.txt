@@ -1,0 +1,4 @@
+Usage: seqtk mutfa <in.fa> <in.snp>
+
+Note: <in.snp> contains at least four columns per line which are:
+      'chr  1-based-pos  any  base-changed-to'.

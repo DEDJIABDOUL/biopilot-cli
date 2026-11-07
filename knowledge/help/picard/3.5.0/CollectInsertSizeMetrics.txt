@@ -1,0 +1,113 @@
+/home/abdoul/miniconda3/envs/biopilot-tools-2/bin/picard: line 5: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+USAGE: CollectInsertSizeMetrics [arguments]
+
+Collect metrics about the insert size distribution of a paired-end library. This tool provides useful metrics for
+validating library construction including the insert size distribution and read orientation of paired-end
+libraries.</p>The expected proportions of these metrics vary depending on the type of library preparation used,
+resulting from technical differences between pair-end libraries and mate-pair libraries. For a brief primer on
+paired-end sequencing and mate-pair reads, see the <a
+href='https://www.broadinstitute.org/gatk/guide/article?id=6327'>GATK Dictionary</a>.<p>The CollectInsertSizeMetrics
+tool outputs the percentages of read pairs in each of the three orientations (FR, RF, and TANDEM) as a histogram. In
+addition, the insert size distribution is output as both a histogram (.insert_size_Histogram.pdf) and as a data table
+(.insert_size_metrics.txt).</p><p>Note: Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage
+example:</h4><pre>java -jar picard.jar CollectInsertSizeMetrics \<br />      I=input.bam \<br />     
+O=insert_size_metrics.txt \<br />      H=insert_size_histogram.pdf \<br />      M=0.5</pre>Note: If processing a small
+file, set the minimum percentage option (M) to 0.5, otherwise an error may occur. <br /><br />Please see <a
+href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#InsertSizeMetrics'>InsertSizeMetrics</a>
+for detailed explanations of each metric.<hr />
+Version:3.5.0
+
+
+Required Arguments:
+
+--INPUT,-I <File>             Input SAM/BAM/CRAM file.  Required. 
+
+--OUTPUT,-O <File>            The file to write the output to.  Required. 
+
+
+Optional Arguments:
+
+--arguments_file <File>       read one or more arguments files and add them to the command line  This argument may be
+                              specified 0 or more times. Default value: null. 
+
+--ASSUME_SORTED,-AS <Boolean> If true (default), then the sort order in the header file will be ignored.  Default value:
+                              true. Possible values: {true, false} 
+
+--COMPRESSION_LEVEL <Integer> Compression level for all compressed files created (e.g. BAM and VCF).  Default value: 5. 
+
+--CREATE_INDEX <Boolean>      Whether to create an index when writing VCF or coordinate sorted BAM output.  Default
+                              value: false. Possible values: {true, false} 
+
+--CREATE_MD5_FILE <Boolean>   Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value:
+                              false. Possible values: {true, false} 
+
+--DEVIATIONS <Double>         Generate mean, sd and plots by trimming the data down to MEDIAN +
+                              DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. This is done because insert size data typically
+                              includes enough anomalous values from chimeras and other artifacts to make the mean and sd
+                              grossly misleading regarding the real distribution.  Default value: 10.0. 
+
+--help,-h <Boolean>           display the help message  Default value: false. Possible values: {true, false} 
+
+--Histogram_FILE,-H <File>    File to write insert size Histogram chart to.  Default value: null. 
+
+--HISTOGRAM_WIDTH,-W <Integer>Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail.
+                              Also, when calculating mean and standard deviation, only bins <= Histogram_WIDTH will be
+                              included.  Default value: null. 
+
+--INCLUDE_DUPLICATES <Boolean>If true, also include reads marked as duplicates in the insert size histogram.  Default
+                              value: false. Possible values: {true, false} 
+
+--MAX_RECORDS_IN_RAM <Integer>When writing files that need to be sorted, this will specify the number of records stored
+                              in RAM before spilling to disk. Increasing this number reduces the number of file handles
+                              needed to sort the file, and increases the amount of RAM needed.  Default value: 500000. 
+
+--METRIC_ACCUMULATION_LEVEL,-LEVEL <MetricAccumulationLevel>
+                              The level(s) at which to accumulate metrics.    This argument may be specified 0 or more
+                              times. Default value: [ALL_READS]. Possible values: {ALL_READS, SAMPLE, LIBRARY,
+                              READ_GROUP} 
+
+--MIN_HISTOGRAM_WIDTH,-MW <Integer>
+                              Minimum width of histogram plots. In the case when the histogram would otherwise
+                              betruncated to a shorter range of sizes, the MIN_HISTOGRAM_WIDTH will enforce a minimum
+                              range.  Default value: null. 
+
+--MINIMUM_PCT,-M <Float>      When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that
+                              have fewer than this percentage of overall reads. (Range: 0 to 1).  Default value: 0.05. 
+
+--QUIET <Boolean>             Whether to suppress job-summary info on System.err.  Default value: false. Possible
+                              values: {true, false} 
+
+--REFERENCE_SEQUENCE,-R <PicardHtsPath>
+                              Reference sequence file.  Default value: null. 
+
+--STOP_AFTER <Long>           Stop after processing N reads, mainly for debugging.  Default value: 0. 
+
+--TMP_DIR <File>              One or more directories with space available to be used by this program for temporary
+                              storage of working files  This argument may be specified 0 or more times. Default value:
+                              null. 
+
+--USE_JDK_DEFLATER,-use_jdk_deflater <Boolean>
+                              Use the JDK Deflater instead of the Intel Deflater for writing compressed output  Default
+                              value: false. Possible values: {true, false} 
+
+--USE_JDK_INFLATER,-use_jdk_inflater <Boolean>
+                              Use the JDK Inflater instead of the Intel Inflater for reading compressed input  Default
+                              value: false. Possible values: {true, false} 
+
+--VALIDATION_STRINGENCY <ValidationStringency>
+                              Validation stringency for all SAM files read by this program.  Setting stringency to
+                              SILENT can improve performance when processing a BAM file in which variable-length data
+                              (read, qualities, tags) do not otherwise need to be decoded.  Default value: STRICT.
+                              Possible values: {STRICT, LENIENT, SILENT} 
+
+--VERBOSITY <LogLevel>        Control verbosity of logging.  Default value: INFO. Possible values: {ERROR, WARNING,
+                              INFO, DEBUG} 
+
+--version <Boolean>           display the version number for this tool  Default value: false. Possible values: {true,
+                              false} 
+
+
+Advanced Arguments:
+
+--showHidden <Boolean>        display hidden arguments  Default value: false. Possible values: {true, false} 
+

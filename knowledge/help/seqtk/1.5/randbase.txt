@@ -1,0 +1,1 @@
+Usage: seqtk randbase <in.fa>

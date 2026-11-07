@@ -1,0 +1,1 @@
+Usage: seqtk size <in.fq>

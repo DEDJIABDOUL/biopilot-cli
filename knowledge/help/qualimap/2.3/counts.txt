@@ -1,0 +1,35 @@
+Java memory size is set to 1200M
+Launching application...
+
+QualiMap v.2.3
+Built on 2023-05-19 16:57
+
+Selected tool: counts
+
+ERROR: Missing required option: d
+
+usage: qualimap counts [-c] -d <arg> [-i <arg>] [-k <arg>] [-outdir <arg>]
+       [-outfile <arg>] [-outformat <arg>] [-R <arg>] [-s <arg>]
+ -c,--compare             Perform comparison of conditions. Currently 2 maximum
+                          is possible.
+ -d,--data <arg>          File describing the input data. Format of the file is
+                          a 4-column tab-delimited table.
+                          Column 1: sample name
+                          Column 2: condition of the sample
+                          Column 3: path to the counts data for the sample
+                          Column 4: index of the column with counts
+ -i,--info <arg>          Path to info file containing genes GC-content, length
+                          and type.
+ -k,--threshold <arg>     Threshold for the number of counts
+ -outdir <arg>            Output folder for HTML report and raw data.
+ -outfile <arg>           Output file for PDF report (default value is
+                          report.pdf).
+ -outformat <arg>         Format of the output report (PDF, HTML or both
+                          PDF:HTML, default is HTML).
+ -R,--rscriptpath <arg>   Path to Rscript executable (by default it is assumed
+                          to be available from system $PATH)
+ -s,--species <arg>       Use built-in info file for the given species: HUMAN or
+                          MOUSE.
+
+
+

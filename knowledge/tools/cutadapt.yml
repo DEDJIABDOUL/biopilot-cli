@@ -1,0 +1,300 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# cutadapt 5.2, written from its recorded --help: knowledge/help/cutadapt/5.2/root.txt
+# (MIT; attribution in RECORDING.yml next to it) and its documentation
+# (https://cutadapt.readthedocs.io). Every option of that help is described here,
+# in our own words (spec decision 31). Ranks follow the shared scale of spec §6.4.
+name: cutadapt
+package: cutadapt
+description: Removes adapter sequences, primers and low-quality ends from sequencing reads
+version: { args: ["--version"], regex: '^(\d[\w.]*)' }
+help: ["--help"]
+arguments:
+  - name: in1.fastq
+    description: reads to trim (read 1 of the pairs for paired-end data); '-' reads standard input
+    value: { type: file, format: [fastq, fasta], read_role: 1 }
+  - name: in2.fastq
+    description: read 2 of the pairs, for paired-end data
+    value: { type: file, format: [fastq, fasta], read_role: 2, mate_of: in1.fastq, optional: true }
+options:
+  # --- Adapters -----------------------------------------------------------------
+  - names: ["-a", "--adapter"]
+    description: 3' adapter to remove (read 1 when paired) with everything after it; end it with $ to anchor it; file:FILE reads a FASTA of adapters
+    value: { type: string }
+    repeatable: true
+    rank: 95
+  - names: ["-g", "--front"]
+    description: 5' adapter to remove (read 1 when paired) with everything before it; start it with ^ to anchor it
+    value: { type: string }
+    repeatable: true
+    rank: 75
+  - names: ["-b", "--anywhere"]
+    description: adapter that may sit at either end (read 1 when paired); for rescuing failed libraries, prefer -a or -g when the end is known
+    value: { type: string }
+    repeatable: true
+    rank: 35
+  - names: ["-A"]
+    description: 3' adapter to remove from read 2
+    value: { type: string }
+    repeatable: true
+    rank: 70
+    rules:
+      - when: { used: ["-a"], paired: true }
+        boost: 25
+  - names: ["-G"]
+    description: 5' adapter to remove from read 2
+    value: { type: string }
+    repeatable: true
+    rank: 50
+    rules:
+      - when: { used: ["-g"], paired: true }
+        boost: 25
+  - names: ["-B"]
+    description: adapter at either end of read 2
+    value: { type: string }
+    repeatable: true
+    rank: 25
+  - names: ["-e", "--error-rate", "--errors"]
+    description: errors allowed in an adapter match, as a rate (0 to 1) or, from 1 up, as a number of errors
+    value: { type: float }
+    default: 0.1
+    rank: 55
+  - names: ["--no-indels"]
+    description: allow mismatches only in adapter matches, no insertions or deletions
+    rank: 30
+  - names: ["-n", "--times"]
+    description: remove up to this many adapters from each read
+    value: { type: int }
+    default: 1
+    rank: 40
+  - names: ["-O", "--overlap"]
+    description: shortest overlap between read and adapter that counts as a match
+    value: { type: int }
+    default: 3
+    rank: 50
+  - names: ["--match-read-wildcards"]
+    description: read IUPAC wildcard bases in the reads too
+    rank: 20
+  - names: ["-N", "--no-match-adapter-wildcards"]
+    description: take IUPAC letters in adapters literally
+    rank: 20
+  - names: ["--action"]
+    description: what to do with a found adapter
+    value:
+      type: enum
+      values:
+        - { value: trim, description: "remove the adapter and the sequence beyond it (default)" }
+        - { value: retain, description: "remove the sequence beyond, keep the adapter" }
+        - { value: mask, description: "replace them with N" }
+        - { value: lowercase, description: "write them in lower case" }
+        - { value: crop, description: "keep only the sequence between adapters" }
+        - { value: none, description: "change nothing" }
+    default: trim
+    rank: 35
+  - names: ["--rc", "--revcomp"]
+    description: also look for adapters in the reverse complement of each read, writing that strand when it matches
+    rank: 30
+  - names: ["--pair-adapters"]
+    description: treat the read 1 and read 2 adapters as pairs, removed together or not at all
+    rank: 30
+  # --- Other changes to the reads ---------------------------------------------------
+  - names: ["-u", "--cut"]
+    description: remove this many bases before adapter trimming, from the start (positive) or the end (negative); read 1 when paired
+    value: { type: int }
+    repeatable: true
+    rank: 55
+  - names: ["-U"]
+    description: like -u, for read 2
+    value: { type: int }
+    repeatable: true
+    rank: 40
+  - names: ["-q", "--quality-cutoff"]
+    description: trim low-quality ends before adapter removal; one value trims the 3' end, 5',3' both ends
+    value: { type: string }
+    rank: 80
+  - names: ["-Q"]
+    description: like -q, for read 2 (read 1's cutoff by default)
+    value: { type: string }
+    rank: 40
+  - names: ["--nextseq-trim"]
+    description: quality trimming for NextSeq and NovaSeq data, also removing dark-cycle G runs at the 3' end
+    value: { type: int }
+    rank: 50
+    rules:
+      - when: { platform: illumina }
+        boost: 10
+  - names: ["--quality-base"]
+    description: offset of the quality encoding; 64 for some very old Illumina files
+    value: { type: int }
+    default: 33
+    rank: 20
+  - names: ["--poly-a"]
+    description: trim poly-A tails (poly-T heads on read 2)
+    rank: 40
+  - names: ["-l", "--length"]
+    description: shorten reads to this length after adapter trimming, keeping the start (positive) or the end (negative)
+    value: { type: int }
+    rank: 35
+  - names: ["-L"]
+    description: like --length, for read 2
+    value: { type: int }
+    rank: 25
+  - names: ["--trim-n"]
+    description: trim N bases from both ends of reads
+    rank: 45
+  - names: ["--length-tag"]
+    description: tag in read headers followed by a length to update after trimming (e.g. 'length=')
+    value: { type: string }
+    rank: 15
+  - names: ["--strip-suffix"]
+    description: remove this suffix from read names when present
+    value: { type: string }
+    repeatable: true
+    rank: 15
+  - names: ["-x", "--prefix"]
+    description: add this prefix to read names; {name} inserts the matching adapter's name
+    value: { type: string }
+    rank: 20
+  - names: ["-y", "--suffix"]
+    description: add this suffix to read names; {name} works here too
+    value: { type: string }
+    rank: 20
+  - names: ["--rename"]
+    description: rename reads from a template of variables such as {id} and {adapter_name}
+    value: { type: string }
+    rank: 20
+  - names: ["-z", "--zero-cap"]
+    description: raise negative quality values to zero
+    rank: 15
+  # --- Filters ----------------------------------------------------------------------
+  - names: ["-m", "--minimum-length"]
+    description: drop reads shorter than this after trimming; LEN:LEN2 sets read 2 apart
+    value: { type: string }
+    rank: 85
+  - names: ["-M", "--maximum-length"]
+    description: drop reads longer than this after trimming; LEN:LEN2 sets read 2 apart
+    value: { type: string }
+    rank: 35
+  - names: ["--max-n"]
+    description: drop reads with more N bases than this count, or fraction of the length when below 1
+    value: { type: float }
+    rank: 45
+  - names: ["--max-ee", "--max-expected-errors"]
+    description: drop reads whose expected number of errors, from their qualities, is higher
+    value: { type: float }
+    rank: 35
+  - names: ["--max-aer", "--max-average-error-rate"]
+    description: like --max-ee, divided by the read length
+    value: { type: float }
+    rank: 25
+  - names: ["--discard-trimmed", "--discard"]
+    description: drop reads in which an adapter was found
+    rank: 40
+  - names: ["--discard-untrimmed", "--trimmed-only"]
+    description: drop reads in which no adapter was found
+    rank: 40
+  - names: ["--discard-casava"]
+    description: "drop reads that failed the Illumina (CASAVA) filter, marked :Y: in their header"
+    rank: 20
+  - names: ["--pair-filter"]
+    description: in pairs, which read must fail a filter for the pair to be dropped
+    value:
+      type: enum
+      values:
+        - { value: any, description: "either read (default)" }
+        - { value: both, description: "both reads" }
+        - { value: first, description: "read 1 decides" }
+    default: any
+    rank: 30
+  # --- Output -----------------------------------------------------------------------
+  - names: ["-o", "--output"]
+    description: file for the trimmed reads (read 1 when paired), compressed from its extension; standard output by default; {name} splits by adapter
+    value: { type: file, format: [fastq, fasta], read_role: 1 }
+    rank: 92
+  - names: ["-p", "--paired-output"]
+    description: file for the trimmed read 2
+    value: { type: file, format: [fastq, fasta], read_role: 2, mate_of: "-o" }
+    rank: 60
+    rules:
+      - when: { used: ["-o"], paired: true }
+        boost: 30
+  - names: ["-j", "--cores"]
+    description: CPU cores to use; 0 detects them
+    value: { type: int }
+    default: 1
+    rank: 75
+  - names: ["--interleaved"]
+    description: read and write both reads of each pair in one file
+    rank: 30
+  - names: ["--json"]
+    description: also write the report as JSON to this file
+    value: { type: file, format: json }
+    rank: 45
+  - names: ["--report"]
+    description: length of the report printed at the end
+    value: { type: enum, values: [full, minimal] }
+    default: full
+    rank: 25
+  - names: ["--quiet"]
+    description: print errors only
+    rank: 30
+  - names: ["--fasta"]
+    description: write FASTA to standard output even from FASTQ input
+    rank: 20
+  - names: ["--compression-level"]
+    description: compression level of compressed outputs
+    value: { type: int }
+    default: 1
+    rank: 25
+  - names: ["--untrimmed-output"]
+    description: file for reads in which no adapter was found (by default they go with the trimmed ones)
+    value: { type: file, format: [fastq, fasta] }
+    rank: 30
+  - names: ["--untrimmed-paired-output"]
+    description: file for read 2 of pairs in which no adapter was found, with --untrimmed-output
+    value: { type: file, format: [fastq, fasta] }
+    rank: 20
+    rules:
+      - when: { used: ["--untrimmed-output"] }
+        boost: 20
+  - names: ["--too-short-output"]
+    description: file for reads dropped by -m (instead of discarding them)
+    value: { type: file, format: [fastq, fasta] }
+    rank: 25
+  - names: ["--too-short-paired-output"]
+    description: file for read 2 of pairs dropped by -m
+    value: { type: file, format: [fastq, fasta] }
+    rank: 15
+    rules:
+      - when: { used: ["--too-short-output"] }
+        boost: 20
+  - names: ["--too-long-output"]
+    description: file for reads dropped by -M (instead of discarding them)
+    value: { type: file, format: [fastq, fasta] }
+    rank: 20
+  - names: ["--too-long-paired-output"]
+    description: file for read 2 of pairs dropped by -M
+    value: { type: file, format: [fastq, fasta] }
+    rank: 15
+    rules:
+      - when: { used: ["--too-long-output"] }
+        boost: 20
+  - names: ["--info-file"]
+    description: file describing each read and its adapter matches (format in the documentation)
+    value: { type: file }
+    rank: 20
+  - names: ["--info-file-paired"]
+    description: like --info-file, for read 2
+    value: { type: file }
+    rank: 15
+  - names: ["-r", "--rest-file"]
+    description: file for what follows an adapter found inside a read
+    value: { type: file }
+    rank: 15
+  - names: ["--wildcard-file"]
+    description: file for the read bases matching N positions of an adapter
+    value: { type: file }
+    rank: 10
+  - names: ["--debug"]
+    description: print a debug log; twice also prints the alignment matrices
+    repeatable: true
+    rank: 10

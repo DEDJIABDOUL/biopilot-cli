@@ -1,0 +1,1 @@
+Usage: seqtk gap [-l 50] <in.fa>

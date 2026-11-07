@@ -1,0 +1,45 @@
+monitoring and online histograms of sequence features
+
+Only one field can be selected. Sequences without G or C are omitted from
+GC-skew histograms, but are still written in pass-through mode.
+
+Usage:
+  seqkit watch [flags] 
+
+Flags:
+  -B, --bins int              number of histogram bins (default -1)
+  -W, --delay int             sleep this many seconds after online plotting (default 1)
+  -y, --dump                  print histogram data to stderr instead of plotting
+  -f, --fields string         target field, available values: ReadLen, MeanQual, GC, GCSkew (default
+                              "ReadLen")
+  -h, --help                  help for watch
+  -O, --img string            save histogram to this PDF/image file
+  -H, --list-fields           print out a list of available fields
+  -L, --log                   log10(x+1) transform numeric values
+  -x, --pass                  pass through mode (write input to stdout)
+  -p, --print-freq int        print/report after this many records (-1 for print after EOF) (default -1)
+  -b, --qual-ascii-base int   ASCII BASE, 33 for Phred+33 (default 33)
+  -Q, --quiet-mode            suppress all plotting to stderr
+  -R, --reset                 reset histogram after every report
+  -v, --validate-seq          validate bases according to the alphabet
+
+Global Flags:
+      --alphabet-guess-seq-length int   length of sequence prefix of the first FASTA record based on
+                                        which seqkit guesses the sequence type (0 for whole seq)
+                                        (default 10000)
+      --compress-level int              compression level for gzip, zstd, xz and bzip2. type "seqkit -h"
+                                        for the range and default value for each format (default -1)
+      --id-ncbi                         FASTA head is NCBI-style, e.g. >gi|110645304|ref|NC_002516.2|
+                                        Pseud...
+      --id-regexp string                regular expression for parsing ID (default "^(\\S+)\\s?")
+  -X, --infile-list string              file of input files list (one file per line), if given, they are
+                                        appended to files from cli arguments
+  -w, --line-width int                  line width when outputting FASTA format (0 for no wrap) (default 60)
+  -o, --out-file string                 out file ("-" for stdout, suffix .gz for gzipped out) (default "-")
+      --quiet                           be quiet and do not show extra information
+  -t, --seq-type string                 sequence type (dna|rna|protein|unlimit|auto) (for auto, it
+                                        automatically detect by the first sequence) (default "auto")
+      --skip-file-check                 skip input file checking when given a file list if you believe
+                                        these files do exist
+  -j, --threads int                     number of CPUs. can also set with environment variable
+                                        SEQKIT_THREADS) (default 4)

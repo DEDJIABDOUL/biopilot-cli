@@ -1,0 +1,2 @@
+Usage: seqtk fqchk [-q 20] <in.fq>
+Note: use -q0 to get the distribution of all quality values

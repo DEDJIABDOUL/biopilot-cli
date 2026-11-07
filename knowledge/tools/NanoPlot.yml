@@ -1,0 +1,192 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# NanoPlot 1.48.0, written from its recorded --help: knowledge/help/NanoPlot/1.48.0/root.txt
+# (GPL-3.0; attribution in RECORDING.yml next to it) and its documentation
+# (https://github.com/wdecoster/NanoPlot), in our own words (spec decision 31).
+# One input source is required: --fastq, --summary, --bam…
+name: NanoPlot
+package: nanoplot
+description: Plots and statistics of long-read sequencing runs (Nanopore, PacBio), with an HTML report
+platforms: [nanopore]
+version: { args: ["--version"], regex: 'NanoPlot (\d[\w.]*)' }
+help: ["--help"]
+options:
+  # --- Input (one is required) --------------------------------------------------------
+  - names: ["--fastq"]
+    description: one or more FASTQ files of reads
+    value: { type: file, format: fastq, multiple: true }
+    rank: 95
+  - names: ["--summary"]
+    description: one or more sequencing summary files written by the basecaller
+    value: { type: file, multiple: true }
+    rank: 85
+  - names: ["--bam"]
+    description: one or more sorted BAM files of aligned reads
+    value: { type: file, format: bam, multiple: true }
+    rank: 80
+  - names: ["--ubam"]
+    description: one or more unaligned BAM files
+    value: { type: file, format: bam, multiple: true }
+    rank: 60
+  - names: ["--cram"]
+    description: one or more sorted CRAM files
+    value: { type: file, format: cram, multiple: true }
+    rank: 45
+  - names: ["--fasta"]
+    description: one or more FASTA files (no qualities, so length plots only)
+    value: { type: file, format: fasta, multiple: true }
+    rank: 50
+  - names: ["--fastq_rich"]
+    description: FASTQ files from the basecaller with channel and time in their headers
+    value: { type: file, format: fastq, multiple: true }
+    rank: 40
+  - names: ["--fastq_minimal"]
+    description: like --fastq_rich, read faster with fewer checks
+    value: { type: file, format: fastq, multiple: true }
+    rank: 30
+  - names: ["--pickle"]
+    description: data stored by an earlier run with --store
+    value: { type: file }
+    rank: 20
+  - names: ["--feather", "--arrow"]
+    description: one or more feather (Arrow) files
+    value: { type: file, multiple: true }
+    rank: 20
+  # --- General ------------------------------------------------------------------------
+  - names: ["-o", "--outdir"]
+    description: folder for the plots and the report
+    value: { type: dir }
+    rank: 90
+  - names: ["-t", "--threads"]
+    description: threads allowed
+    value: { type: int }
+    rank: 75
+  - names: ["-p", "--prefix"]
+    description: prefix of the output file names
+    value: { type: string }
+    rank: 55
+  - names: ["--title"]
+    description: title of every plot (quote it if it has spaces)
+    value: { type: string }
+    rank: 40
+  - names: ["--verbose"]
+    description: write the log to the terminal too
+    rank: 25
+  - names: ["--store"]
+    description: save the extracted data as a pickle file, for later plots
+    rank: 25
+  - names: ["--raw"]
+    description: save the extracted data as a tab-separated file
+    rank: 30
+  - names: ["--huge"]
+    description: the input is a single very large file
+    rank: 30
+  - names: ["--no_static"]
+    description: make no static (PNG) plots, only the HTML ones
+    rank: 30
+  - names: ["--tsv_stats"]
+    description: write the statistics file as proper TSV
+    rank: 40
+  - names: ["--only-report"]
+    description: write only the report
+    rank: 25
+  - names: ["--info_in_report"]
+    description: add the run parameters to the report
+    rank: 20
+  - names: ["--include-js"]
+    description: how the report gets its plotting JavaScript
+    value:
+      type: enum
+      values:
+        - { value: cdn, description: "from the web (default)" }
+        - { value: embedded, description: "inside the HTML: larger, works offline" }
+    rank: 25
+  # --- Filtering ----------------------------------------------------------------------
+  - names: ["--minlength"]
+    description: leave out reads shorter than this
+    value: { type: int }
+    rank: 55
+  - names: ["--maxlength"]
+    description: leave out reads longer than this
+    value: { type: int }
+    rank: 50
+  - names: ["--minqual"]
+    description: leave out reads whose mean quality is below this
+    value: { type: int }
+    rank: 50
+  - names: ["--drop_outliers"]
+    description: leave out reads of extreme length
+    rank: 35
+  - names: ["--downsample"]
+    description: plot a random sample of this many reads
+    value: { type: int }
+    rank: 40
+  - names: ["--loglength"]
+    description: also plot lengths on a log scale
+    rank: 55
+  - names: ["--percentqual"]
+    description: show qualities as theoretical percent identities
+    rank: 20
+  - names: ["--alength"]
+    description: with BAM input, use aligned lengths instead of read lengths
+    rank: 25
+  - names: ["--runtime_until"]
+    description: use only the first hours of the run
+    value: { type: int }
+    rank: 20
+  - names: ["--readtype"]
+    description: with a summary file, which read type to report
+    value: { type: enum, values: [1D, 2D, 1D2] }
+    rank: 15
+  - names: ["--barcoded"]
+    description: split the summary file by barcode
+    rank: 40
+    rules:
+      - when: { used: ["--summary"] }
+        boost: 15
+  - names: ["--no_supplementary"]
+    description: leave out supplementary alignments
+    rank: 25
+  # --- Plots --------------------------------------------------------------------------
+  - names: ["-f", "--format"]
+    description: formats of the static plots, besides the HTML ones
+    value: { type: enum, multiple: true, values: [png, jpg, jpeg, webp, svg, pdf, eps, json] }
+    rank: 40
+  - names: ["--plots"]
+    description: bivariate plots to make
+    value: { type: enum, multiple: true, values: [kde, hex, dot] }
+    rank: 45
+  - names: ["--legacy"]
+    description: bivariate plots to make in the legacy style
+    value: { type: enum, multiple: true, values: [kde, dot, hex] }
+    rank: 15
+  - names: ["-c", "--color"]
+    description: matplotlib colour of the plots
+    value: { type: string }
+    rank: 20
+  - names: ["-cm", "--colormap"]
+    description: matplotlib colour map of the heat maps
+    value: { type: string }
+    rank: 15
+  - names: ["--listcolors"]
+    description: list the available colours and stop
+    rank: 10
+  - names: ["--listcolormaps"]
+    description: list the available colour maps and stop
+    rank: 10
+  - names: ["--N50"]
+    description: mark the N50 on the read length histogram
+    rank: 30
+  - names: ["--no-N50"]
+    description: hide the N50 mark on the read length histogram
+    rank: 20
+  - names: ["--font_scale"]
+    description: scale the plot fonts by this factor
+    value: { type: float }
+    rank: 15
+  - names: ["--dpi"]
+    description: resolution of the saved images
+    value: { type: int }
+    rank: 20
+  - names: ["--hide_stats"]
+    description: leave the Pearson R statistics out of bivariate plots
+    rank: 15

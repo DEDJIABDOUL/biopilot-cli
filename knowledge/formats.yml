@@ -84,6 +84,12 @@ formats:
   - name: dict
     description: sequence dictionary of a reference
     pattern: '\.dict$'
+  - name: interval-list
+    description: genomic intervals with a sequence dictionary header (Picard, GATK)
+    pattern: '\.interval_list$'
+  - name: chain
+    description: alignment between two genome assemblies, for liftover
+    pattern: '\.(over\.)?chain(\.gz)?$'
   - name: blast-nucl-db
     description: BLAST nucleotide database, named by its prefix
     kind: prefix

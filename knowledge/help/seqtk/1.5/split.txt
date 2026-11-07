@@ -1,0 +1,4 @@
+Usage: seqtk split [options] <prefix> <in.fa>
+Options:
+  -n INT    number of files [10]
+  -l INT    line length [0]

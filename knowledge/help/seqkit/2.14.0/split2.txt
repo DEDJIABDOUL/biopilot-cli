@@ -1,0 +1,77 @@
+split sequences into files by part size or number of parts
+
+This command supports FASTA and paired- or single-end FASTQ with low memory
+occupation and fast speed.
+
+The prefix of output files:
+  1. For stdin: stdin
+  2. Others: same to the input file
+  3. Set via the options: -P/--out-prefix,
+     or --by-length-prefix, --by-part-prefix, or --by-size-prefix (for keeping backwards compatibility)
+  4. Use the ID of the first sequence in each subset.
+     E.g, 'seqkit split2 --by-size 1 --seqid-as-filename' is equal to
+     'seqkit split --by-id', but it's much faster and uses less memory.
+
+The extension of output files:
+  1. For stdin: .fast[aq]
+  2. Others: same to the input file
+  3. Additional extension via the option -e/--extension, e.g.， outputting
+     gzipped files for plain text input:
+         seqkit split2 -p 2 -O test tests/hairpin.fa -e .gz
+
+
+If you want to cut a sequence into multiple segments.
+  1. For cutting into even chunks, please use 'kmcp utils split-genomes'
+     (https://bioinf.shenwei.me/kmcp/usage/#split-genomes).
+     E.g., cutting into 4 segments of equal size, with no overlap between adjacent segments:
+        kmcp utils split-genomes -m 1 -k 1 --split-number 4 --split-overlap 0 input.fasta -O out
+  2. For cutting into multiple chunks of fixed size, please using 'seqkit sliding'.
+     E.g., cutting into segments of 40 bp and keeping the last segment which can be shorter than 40 bp.
+        seqkit sliding -g -s 40 -W 40 input.fasta -o out.fasta
+
+Usage:
+  seqkit split2 [flags] 
+
+Flags:
+  -l, --by-length string          split sequences into chunks of >=N bases, supports K/M/G suffix
+      --by-length-prefix string   file prefix for --by-length. The placeholder "{read}" is needed for
+                                  paired-end files.
+  -p, --by-part int               split sequences into N parts with the round robin distribution
+      --by-part-prefix string     file prefix for --by-part. The placeholder "{read}" is needed for
+                                  paired-end files.
+  -s, --by-size int               split sequences into multi parts with N sequences
+      --by-size-prefix string     file prefix for --by-size. The placeholder "{read}" is needed for
+                                  paired-end files.
+  -e, --extension string          set output file extension, e.g., ".gz", ".xz", or ".zst"
+  -f, --force                     overwrite output directory
+  -h, --help                      help for split2
+  -O, --out-dir string            output directory (default value is $infile.split)
+  -P, --out-prefix string         file prefix (it overrides --by-*-prefix). The placeholder "{read}" is
+                                  needed for paired-end files.
+  -W, --part-width int            number of digits used for output file part numbering (zero-padded),
+                                  e.g., 001, 002 (default 3)
+  -1, --read1 string              (gzipped) read1 file
+  -2, --read2 string              (gzipped) read2 file
+  -N, --seqid-as-filename         use the first sequence ID as the file name. E.g., using '-N -s 1' is
+                                  equal to 'seqkit split --by-id' but much faster and uses less memory.
+
+Global Flags:
+      --alphabet-guess-seq-length int   length of sequence prefix of the first FASTA record based on
+                                        which seqkit guesses the sequence type (0 for whole seq)
+                                        (default 10000)
+      --compress-level int              compression level for gzip, zstd, xz and bzip2. type "seqkit -h"
+                                        for the range and default value for each format (default -1)
+      --id-ncbi                         FASTA head is NCBI-style, e.g. >gi|110645304|ref|NC_002516.2|
+                                        Pseud...
+      --id-regexp string                regular expression for parsing ID (default "^(\\S+)\\s?")
+  -X, --infile-list string              file of input files list (one file per line), if given, they are
+                                        appended to files from cli arguments
+  -w, --line-width int                  line width when outputting FASTA format (0 for no wrap) (default 60)
+  -o, --out-file string                 out file ("-" for stdout, suffix .gz for gzipped out) (default "-")
+      --quiet                           be quiet and do not show extra information
+  -t, --seq-type string                 sequence type (dna|rna|protein|unlimit|auto) (for auto, it
+                                        automatically detect by the first sequence) (default "auto")
+      --skip-file-check                 skip input file checking when given a file list if you believe
+                                        these files do exist
+  -j, --threads int                     number of CPUs. can also set with environment variable
+                                        SEQKIT_THREADS) (default 4)

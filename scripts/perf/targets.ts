@@ -10,7 +10,7 @@
 //   BIOPILOT_UPSTREAM_DIR   an upstream 0.0.4 checkout already installed and built (skips the worktree)
 //   BIOPILOT_TARGETS_RUNS   sessions per side (default 3, median kept)
 
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -52,7 +52,11 @@ const upstream = (): { dir: string; temporary: boolean } => {
   if (process.env.BIOPILOT_UPSTREAM_DIR) return { dir: process.env.BIOPILOT_UPSTREAM_DIR, temporary: false };
   const dir = path.join(work, "upstream");
   log(`building upstream ${UPSTREAM_TAG} in ${dir}`);
-  execFileSync("git", ["worktree", "add", "--detach", dir, UPSTREAM_TAG], { cwd: repo, stdio: "ignore" });
+  // A shallow or tag-less clone (CI) may lack the tag: fetch it first.
+  if (spawnSync("git", ["rev-parse", "--verify", "--quiet", `refs/tags/${UPSTREAM_TAG}`], { cwd: repo }).status !== 0) {
+    run("git", ["fetch", "--no-tags", "origin", `refs/tags/${UPSTREAM_TAG}:refs/tags/${UPSTREAM_TAG}`]);
+  }
+  run("git", ["worktree", "add", "--detach", dir, UPSTREAM_TAG]);
   run("npm", ["ci", "--no-audit", "--no-fund"], { cwd: dir });
   run("npm", ["run", "build"], { cwd: dir });
   return { dir, temporary: true };

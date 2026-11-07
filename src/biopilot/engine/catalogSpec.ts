@@ -4,7 +4,10 @@
 // The engine's view of the Catalog: a Fig spec built from the Catalog for a Tool (spec M3).
 // The engine keeps parsing the line and rendering; BioPilot only says what a Tool accepts.
 
-import { openCatalog, type Catalog, type Option } from "../knowledge/catalog.js";
+import { openCatalog, type Argument, type Catalog, type Command, type Option, type ValueSpec } from "../knowledge/catalog.js";
+
+/** Below every Rank (0–100): deprecated options come last, whatever their Rank. */
+const DEPRECATED_PRIORITY = -1;
 
 /** The Catalog, opened once per session; `null` when unavailable (the engine then falls back to Fig). */
 let catalog: Catalog | null | undefined;
@@ -18,17 +21,48 @@ const getCatalog = (): Catalog | null => {
   return catalog;
 };
 
+/** What a value takes, as a Fig argument: files or folders, suggested values, optional, several. */
+const valueArg = (value: ValueSpec, name: string, description?: string): Fig.Arg => ({
+  name,
+  ...(description ? { description } : {}),
+  isOptional: value.optional,
+  isVariadic: value.multiple,
+  ...(value.type === "file" ? { template: "filepaths" as const } : value.type === "dir" ? { template: "folders" as const } : {}),
+  ...(value.values.length > 0 ? { suggestions: value.values.map((v) => ({ name: v.value, description: v.description ?? undefined })) } : {}),
+});
+
+const valueName = (value: ValueSpec) => (value.formats.length > 0 ? value.formats.join("|") : value.type);
+
 /** Canonical name first, so that the engine shows it and matches it first. */
 const optionNames = (option: Option): string[] => [option.canonicalName, ...option.aliases.filter((alias) => alias !== option.canonicalName)];
 
 const toFigOption = (option: Option): Fig.Option => ({
   name: optionNames(option),
   description: option.description ?? undefined,
-  priority: option.rank,
-  ...(option.value
-    ? { args: { name: option.value.formats.length > 0 ? option.value.formats.join("|") : option.value.type, isOptional: option.value.optional } }
-    : {}),
+  priority: option.deprecated ? DEPRECATED_PRIORITY : option.rank,
+  ...(option.value ? { args: valueArg(option.value, valueName(option.value)) } : {}),
+  ...(option.repeatable ? { isRepeatable: true } : {}),
+  ...(option.hidden ? { hidden: true } : {}),
 });
+
+const toFigArg = (argument: Argument): Fig.Arg => {
+  const base = argument.value
+    ? valueArg(argument.value, argument.name, argument.description ?? undefined)
+    : { name: argument.name, description: argument.description ?? undefined };
+  return { ...base, isVariadic: argument.variadic || (argument.value?.multiple ?? false) };
+};
+
+const toFigCommand = (current: Catalog, command: Command, name: string, description: string | undefined): Fig.Subcommand => {
+  const args = current.listArguments(command).map(toFigArg);
+  const subcommands = current.listSubcommands(command).map((sub) => toFigCommand(current, sub, sub.path[sub.path.length - 1], sub.description ?? undefined));
+  return {
+    name,
+    ...(description ? { description } : {}),
+    options: current.listOptions(command).map(toFigOption),
+    ...(args.length > 0 ? { args } : {}),
+    ...(subcommands.length > 0 ? { subcommands } : {}),
+  };
+};
 
 /**
  * The spec of a Catalog Tool, or nothing when the Tool isn't in the Catalog or the Catalog is unavailable.
@@ -41,9 +75,7 @@ export const catalogSpec = (toolName: string): Fig.Subcommand | undefined => {
     const current = getCatalog();
     const tool = current?.getTool(toolName);
     const root = tool ? current?.getCommand(tool.name) : undefined;
-    if (current && tool && root) {
-      spec = { name: tool.name, description: tool.description ?? undefined, options: current.listOptions(root).map(toFigOption) };
-    }
+    if (current && tool && root) spec = toFigCommand(current, root, tool.name, tool.description ?? undefined);
   } catch {
     spec = null; // fail silently: the engine falls back to Fig
   }

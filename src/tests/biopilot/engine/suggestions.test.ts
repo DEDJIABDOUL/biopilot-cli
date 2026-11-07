@@ -43,4 +43,13 @@ describe("Catalog tools in the engine", () => {
     const [in1] = await suggest("fastp --in1");
     expect(in1.description).toBe("FASTQ file of read 1 (or of single-end reads) to clean");
   });
+
+  test("`samtools ` suggests its subcommands; `samtools sort -` its own options", async () => {
+    expect(await names("samtools ")).toEqual(expect.arrayContaining(["sort", "view", "index", "faidx"]));
+    expect(await names("samtools sort -")).toEqual(expect.arrayContaining(["-o", "-n", "--threads"]));
+  });
+
+  test("`minimap2 -x ` suggests the presets", async () => {
+    expect(await names("minimap2 -x ")).toEqual(expect.arrayContaining(["map-ont", "sr", "asm5"]));
+  });
 });

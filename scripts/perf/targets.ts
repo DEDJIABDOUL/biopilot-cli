@@ -17,6 +17,8 @@ import path from "node:path";
 import { evaluateTargets, type Measures } from "./targetsCheck.js";
 
 const UPSTREAM_TAG = "0.0.4";
+/** Where the tag comes from when the clone lacks it: the original project (the fork does not carry it). */
+const UPSTREAM_REPOSITORY = "https://github.com/microsoft/inshellisense.git";
 const runs = Number(process.env.BIOPILOT_TARGETS_RUNS ?? 3);
 const repo = process.cwd();
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-targets-"));
@@ -54,7 +56,7 @@ const upstream = (): { dir: string; temporary: boolean } => {
   log(`building upstream ${UPSTREAM_TAG} in ${dir}`);
   // A shallow or tag-less clone (CI) may lack the tag: fetch it first.
   if (spawnSync("git", ["rev-parse", "--verify", "--quiet", `refs/tags/${UPSTREAM_TAG}`], { cwd: repo }).status !== 0) {
-    run("git", ["fetch", "--no-tags", "origin", `refs/tags/${UPSTREAM_TAG}:refs/tags/${UPSTREAM_TAG}`]);
+    run("git", ["fetch", "--no-tags", UPSTREAM_REPOSITORY, `refs/tags/${UPSTREAM_TAG}:refs/tags/${UPSTREAM_TAG}`]);
   }
   run("git", ["worktree", "add", "--detach", dir, UPSTREAM_TAG]);
   run("npm", ["ci", "--no-audit", "--no-fund"], { cwd: dir });

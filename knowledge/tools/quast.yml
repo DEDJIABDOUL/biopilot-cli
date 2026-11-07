@@ -1,0 +1,282 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# QUAST 5.3.0, written from its recorded --help: knowledge/help/quast/5.3.0/root.txt
+# (GPL-2.0, listed as Custom by conda; attribution in RECORDING.yml next to it) and its
+# manual (https://quast.sourceforge.net/docs/manual.html), in our own words (spec decision 31).
+# The quast command (quast.py is the same program). With Python 3.12 and later, its conda
+# package needs setuptools to start (distutils was removed).
+# Ranks follow the shared scale of spec §6.4.
+name: quast
+package: quast
+description: Quality assessment of genome assemblies (N50, misassemblies, genome fraction), with or without a reference
+version: { args: [ --version ], regex: "v(\\d[\\w.]*)" }
+help: [ --help ]
+arguments:
+  - name: contigs
+    description: assemblies to assess (FASTA)
+    variadic: true
+    value: { type: file, format: fasta }
+options:
+  - names: [ -o, --output-dir ]
+    description: output folder (quast_results/results_<date> by default)
+    value: { type: dir }
+    rank: 92
+  - names: [ -r ]
+    description: reference genome
+    value: { type: file, format: fasta }
+    rank: 85
+  - names: [ -g, --features ]
+    description: genomic features of the reference (GFF, BED, NCBI, TXT); type:file keeps one feature type
+    value: { type: file, format: [ gff, gtf, bed ] }
+    rank: 50
+  - names: [ -m, --min-contig ]
+    description: shortest contig assessed
+    value: { type: int }
+    default: 500
+    rank: 55
+  - names: [ -t, --threads ]
+    description: threads (a quarter of the CPUs by default)
+    value: { type: int }
+    rank: 85
+  - names: [ -s, --split-scaffolds ]
+    description: also assess the scaffolds split at runs of N
+    rank: 30
+  - names: [ -l, --labels ]
+    description: names of the assemblies in the reports, comma-separated
+    value: { type: string }
+    rank: 50
+  - names: [ -L ]
+    description: name the assemblies after their parent folders
+    rank: 30
+  - names: [ -e, --eukaryote ]
+    description: eukaryotic genome (gene prediction)
+    rank: 40
+  - names: [ --fungus ]
+    description: fungal genome (gene prediction)
+    rank: 25
+  - names: [ --large ]
+    description: settings for large genomes (-e -m 3000 -i 500 -x 7000)
+    rank: 40
+  - names: [ -k, --k-mer-stats ]
+    description: k-mer based quality metrics (advised for large genomes; slower)
+    rank: 30
+  - names: [ --k-mer-size ]
+    description: k of --k-mer-stats
+    value: { type: int }
+    default: 101
+    rank: 10
+  - names: [ --circos ]
+    description: draw a Circos plot
+    rank: 20
+  - names: [ -f, --gene-finding ]
+    description: predict genes (GeneMarkS, or GeneMark-ES with -e)
+    rank: 35
+  - names: [ --mgm ]
+    description: predict genes with MetaGeneMark
+    rank: 15
+  - names: [ --glimmer ]
+    description: predict genes with GlimmerHMM
+    rank: 15
+  - names: [ --gene-thresholds ]
+    description: gene length thresholds, comma-separated
+    value: { type: string }
+    rank: 10
+  - names: [ --rna-finding ]
+    description: predict ribosomal RNA genes with Barrnap
+    rank: 20
+  - names: [ -b, --conserved-genes-finding ]
+    description: count conserved orthologs with BUSCO (Linux only)
+    rank: 35
+  - names: [ --operons ]
+    description: operons of the reference (GFF, BED, NCBI, TXT)
+    value: { type: file, format: [ gff, bed ] }
+    rank: 10
+  - names: [ --est-ref-size ]
+    description: estimated reference size, for NGx metrics without a reference
+    value: { type: int }
+    rank: 35
+  - names: [ --contig-thresholds ]
+    description: contig length thresholds of the reports, comma-separated
+    value: { type: string }
+    rank: 20
+  - names: [ --x-for-Nx ]
+    description: x of the Nx and Lx metrics reported beside N50 and L50
+    value: { type: int }
+    default: 90
+    rank: 15
+  - names: [ -u, --use-all-alignments ]
+    description: use every alignment for genome fraction, genes and operons (QUAST 1 style)
+    rank: 10
+  - names: [ -i, --min-alignment ]
+    description: shortest alignment
+    value: { type: int }
+    default: 65
+    rank: 20
+  - names: [ --min-identity ]
+    description: least alignment identity, 80 to 100
+    value: { type: float }
+    default: 95
+    rank: 20
+  - names: [ -a, --ambiguity-usage ]
+    description: alignments used for a contig with several equally good ones
+    value: { type: enum, values: [ none, one, all ] }
+    default: one
+    rank: 15
+  - names: [ --ambiguity-score ]
+    description: share of the best score for alignments to count as equally good (0.8 to 1)
+    value: { type: float }
+    default: 0.99
+    rank: 10
+  - names: [ --strict-NA ]
+    description: break contigs at every misassembly for NAx and NGAx
+    rank: 10
+  - names: [ -x, --extensive-mis-size ]
+    description: least inconsistency of an extensive misassembly
+    value: { type: int }
+    default: 1000
+    rank: 15
+  - names: [ --local-mis-size ]
+    description: least inconsistency of a local misassembly
+    value: { type: int }
+    default: 200
+    rank: 10
+  - names: [ --scaffold-gap-max-size ]
+    description: largest scaffold gap difference counted as a scaffold gap misassembly
+    value: { type: int }
+    default: 10000
+    rank: 10
+  - names: [ --unaligned-part-size ]
+    description: least unaligned fragment for a contig to count as partially unaligned
+    value: { type: int }
+    default: 500
+    rank: 10
+  - names: [ --skip-unaligned-mis-contigs ]
+    description: do not set apart contigs with half their bases unaligned
+    rank: 5
+  - names: [ --fragmented ]
+    description: the reference may be fragmented (e.g. scaffolded)
+    rank: 15
+  - names: [ --fragmented-max-indent ]
+    description: with --fragmented, ignore translocations within this distance of fragment ends
+    value: { type: int }
+    default: 200
+    rank: 5
+  - names: [ --upper-bound-assembly ]
+    description: simulate an upper-bound assembly from the reference and the reads
+    rank: 10
+  - names: [ --upper-bound-min-con ]
+    description: least connecting reads to join upper-bound contigs
+    value: { type: int }
+    rank: 5
+  - names: [ --est-insert-size ]
+    description: insert size for the upper-bound assembly
+    value: { type: int }
+    rank: 5
+  - names: [ --report-all-metrics ]
+    description: keep every metric in the main report, even when not applicable
+    rank: 10
+  - names: [ --plots-format ]
+    description: format of the plots
+    value: { type: enum, values: [ pdf, png, svg, svgz, eps, ps, emf, raw, rgba ] }
+    default: pdf
+    rank: 20
+  - names: [ --memory-efficient ]
+    description: "one thread, one assembly at a time: less memory"
+    rank: 20
+  - names: [ --space-efficient ]
+    description: write only reports and plots
+    rank: 15
+  - names: [ "-1", --pe1 ]
+    description: forward paired-end reads (FASTQ)
+    value: { type: file, format: fastq, read_role: 1 }
+    rank: 45
+  - names: [ "-2", --pe2 ]
+    description: reverse paired-end reads (FASTQ)
+    value: { type: file, format: fastq, read_role: 2, mate_of: "-1" }
+    rank: 40
+    rules:
+      - when: { used: [ "-1" ] }
+        boost: 30
+  - names: [ --pe12 ]
+    description: interleaved paired-end reads (FASTQ)
+    value: { type: file, format: fastq }
+    rank: 20
+  - names: [ --mp1 ]
+    description: forward mate-pair reads (FASTQ)
+    value: { type: file, format: fastq }
+    rank: 10
+  - names: [ --mp2 ]
+    description: reverse mate-pair reads (FASTQ)
+    value: { type: file, format: fastq }
+    rank: 10
+  - names: [ --mp12 ]
+    description: interleaved mate-pair reads (FASTQ)
+    value: { type: file, format: fastq }
+    rank: 5
+  - names: [ --single ]
+    description: unpaired short reads (FASTQ)
+    value: { type: file, format: fastq }
+    rank: 20
+  - names: [ --pacbio ]
+    description: PacBio reads (FASTQ)
+    value: { type: file, format: fastq }
+    rank: 25
+  - names: [ --nanopore ]
+    description: Nanopore reads (FASTQ)
+    value: { type: file, format: fastq }
+    rank: 25
+  - names: [ --ref-sam ]
+    description: reads aligned to the reference, SAM
+    value: { type: file, format: sam }
+    rank: 10
+  - names: [ --ref-bam ]
+    description: reads aligned to the reference, BAM
+    value: { type: file, format: bam }
+    rank: 15
+  - names: [ --sam ]
+    description: reads aligned to each assembly, SAM, comma-separated in the order of the assemblies
+    value: { type: string }
+    rank: 10
+  - names: [ --bam ]
+    description: reads aligned to each assembly, BAM, comma-separated in the order of the assemblies
+    value: { type: string }
+    rank: 15
+  - names: [ --sv-bedpe ]
+    description: structural variations (BEDPE)
+    value: { type: file }
+    rank: 10
+  - names: [ --no-check ]
+    description: do not check and fix the input FASTA files
+    rank: 10
+  - names: [ --no-plots ]
+    description: no static plots
+    rank: 20
+  - names: [ --no-html ]
+    description: no HTML reports or Icarus viewers
+    rank: 20
+  - names: [ --no-icarus ]
+    description: no Icarus viewers
+    rank: 15
+  - names: [ --no-snps ]
+    description: do not report SNPs (less memory)
+    rank: 15
+  - names: [ --no-gc ]
+    description: no GC content
+    rank: 10
+  - names: [ --no-sv ]
+    description: no structural variation detection
+    rank: 10
+  - names: [ --no-read-stats ]
+    description: do not align the reads to the assemblies
+    rank: 10
+  - names: [ --fast ]
+    description: every speed-up option except --no-check
+    rank: 40
+  - names: [ --silent ]
+    description: print no step details (the log is kept)
+    rank: 20
+  - names: [ --test ]
+    description: run on the bundled test data
+    rank: 10
+  - names: [ --test-sv ]
+    description: run on the bundled test data, with structural variants
+    rank: 5

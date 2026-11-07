@@ -1,0 +1,398 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Bowtie 2 2.5.5, written from its recorded --help: knowledge/help/bowtie2/2.5.5/root.txt
+# (GPL-3.0-or-later; attribution in RECORDING.yml next to it) and its manual
+# (https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml), in our own words (spec decision 31).
+# The -gz and -bz2 forms of --un, --al, --un-conc and --al-conc come from the note of the help.
+# Ranks follow the shared scale of spec §6.4.
+name: bowtie2
+package: bowtie2
+description: Aligns short reads to a reference genome (end-to-end or local), writing SAM
+version: { args: ["--version"], regex: 'version (\d[\w.]*)' }
+help: ["--help"]
+options:
+  # --- Index, reads and output ------------------------------------------------------
+  - names: ["-x"]
+    description: prefix of the bowtie2 index (from bowtie2-build)
+    value: { type: file, format: bowtie2-index }
+    rank: 98
+  - names: ["-1"]
+    description: read 1 files of the pairs (comma-separated)
+    value: { type: file, format: [fastq, fasta], read_role: 1 }
+    rank: 95
+  - names: ["-2"]
+    description: read 2 files of the pairs, in the order of -1
+    value: { type: file, format: [fastq, fasta], read_role: 2, mate_of: "-1" }
+    rank: 70
+    rules:
+      - when: { used: ["-1"] }
+        boost: 30
+  - names: ["-U"]
+    description: unpaired read files (comma-separated)
+    value: { type: file, format: [fastq, fasta] }
+    repeatable: true
+    rank: 85
+  - names: ["--interleaved"]
+    description: files with both reads of each pair, interleaved
+    value: { type: file, format: [fastq, fasta] }
+    rank: 30
+  - names: ["-b"]
+    description: unaligned BAM files sorted by read name
+    value: { type: file, format: bam }
+    rank: 25
+  - names: ["-S"]
+    description: SAM output file (standard output by default)
+    value: { type: file, format: sam }
+    rank: 92
+  # --- Input --------------------------------------------------------------------------
+  - names: ["-q"]
+    description: reads are FASTQ (default)
+    rank: 20
+  - names: ["-f"]
+    description: reads are FASTA
+    rank: 40
+  - names: ["--tab5"]
+    description: reads are in TAB5 format
+    rank: 10
+  - names: ["--tab6"]
+    description: reads are in TAB6 format
+    rank: 10
+  - names: ["--qseq"]
+    description: reads are in Illumina QSEQ format
+    rank: 10
+  - names: ["-r"]
+    description: reads are raw sequences, one per line
+    rank: 10
+  - names: ["-F"]
+    description: reads are k-mers cut from a FASTA file, k:<length>,i:<step>
+    value: { type: string }
+    rank: 10
+  - names: ["-c"]
+    description: -1, -2 and -U give sequences, not files
+    rank: 15
+  - names: ["-s", "--skip"]
+    description: skip the first reads or pairs
+    value: { type: int }
+    rank: 20
+  - names: ["-u", "--upto"]
+    description: stop after this many reads or pairs
+    value: { type: int }
+    rank: 35
+  - names: ["-5", "--trim5"]
+    description: trim this many bases from the 5' end of reads
+    value: { type: int }
+    default: 0
+    rank: 35
+  - names: ["-3", "--trim3"]
+    description: trim this many bases from the 3' end of reads
+    value: { type: int }
+    default: 0
+    rank: 35
+  - names: ["--trim-to"]
+    description: trim reads longer than this, from the 3' end (or 5' with 5:<length>)
+    value: { type: string }
+    rank: 20
+  - names: ["--phred33"]
+    description: qualities are Phred+33 (default)
+    rank: 25
+  - names: ["--phred64"]
+    description: qualities are Phred+64
+    rank: 15
+  - names: ["--int-quals"]
+    description: qualities are space-separated integers
+    rank: 5
+  # --- Presets ------------------------------------------------------------------------
+  - names: ["--very-fast"]
+    description: end-to-end preset, fastest and least sensitive
+    rank: 45
+  - names: ["--fast"]
+    description: end-to-end preset, fast
+    rank: 45
+  - names: ["--sensitive"]
+    description: end-to-end preset, the default
+    rank: 45
+  - names: ["--very-sensitive"]
+    description: end-to-end preset, slowest and most sensitive
+    rank: 55
+  - names: ["--very-fast-local"]
+    description: local preset, fastest
+    rank: 30
+  - names: ["--fast-local"]
+    description: local preset, fast
+    rank: 30
+  - names: ["--sensitive-local"]
+    description: local preset, the default with --local
+    rank: 35
+  - names: ["--very-sensitive-local"]
+    description: local preset, most sensitive
+    rank: 40
+  # --- Alignment ----------------------------------------------------------------------
+  - names: ["--end-to-end"]
+    description: align whole reads, no clipping (default)
+    rank: 35
+  - names: ["--local"]
+    description: local alignment, read ends may be soft-clipped
+    rank: 55
+  - names: ["-N"]
+    description: mismatches allowed in a seed (0 or 1)
+    value: { type: int }
+    default: 0
+    rank: 30
+  - names: ["-L"]
+    description: seed length (4 to 31)
+    value: { type: int }
+    default: 22
+    rank: 30
+  - names: ["-i"]
+    description: interval between seeds, a function of the read length (e.g. S,1,1.15)
+    value: { type: string }
+    rank: 20
+  - names: ["--n-ceil"]
+    description: most ambiguous bases allowed in an alignment, a function of the read length
+    value: { type: string }
+    rank: 15
+  - names: ["--dpad"]
+    description: extra reference bases on each side of the dynamic programming
+    value: { type: int }
+    default: 15
+    rank: 10
+  - names: ["--gbar"]
+    description: no gaps within this many bases of the read ends
+    value: { type: int }
+    default: 4
+    rank: 10
+  - names: ["--ignore-quals"]
+    description: treat every base quality as 30
+    rank: 15
+  - names: ["--nofw"]
+    description: do not align the forward strand of reads
+    rank: 15
+  - names: ["--norc"]
+    description: do not align the reverse complement of reads
+    rank: 15
+  - names: ["--no-1mm-upfront"]
+    description: do not look for one-mismatch end-to-end alignments before seeding
+    rank: 10
+  # --- Scoring ------------------------------------------------------------------------
+  - names: ["--ma"]
+    description: match bonus (0 end-to-end, 2 local)
+    value: { type: int }
+    rank: 20
+  - names: ["--mp"]
+    description: largest mismatch penalty, lower for low qualities
+    value: { type: int }
+    default: 6
+    rank: 20
+  - names: ["--np"]
+    description: penalty for an ambiguous base
+    value: { type: int }
+    default: 1
+    rank: 10
+  - names: ["--rdg"]
+    description: gap open and extension penalties in reads, e.g. 5,3
+    value: { type: string }
+    rank: 15
+  - names: ["--rfg"]
+    description: gap open and extension penalties in the reference, e.g. 5,3
+    value: { type: string }
+    rank: 15
+  - names: ["--score-min"]
+    description: least alignment score, a function of the read length (e.g. L,-0.6,-0.6)
+    value: { type: string }
+    rank: 25
+  # --- Reporting and effort -----------------------------------------------------------
+  - names: ["-k"]
+    description: report up to this many alignments per read (MAPQ then meaningless)
+    value: { type: int }
+    rank: 40
+  - names: ["-a", "--all"]
+    description: report every alignment (slow; MAPQ meaningless)
+    rank: 25
+  - names: ["-l", "--lowseeds"]
+    description: ignore low-quality seeds with more hits than this
+    value: { type: string }
+    rank: 10
+  - names: ["-D"]
+    description: give up after this many failed seed extensions in a row
+    value: { type: int }
+    default: 15
+    rank: 20
+  - names: ["-R"]
+    description: seed sets tried for reads with repetitive seeds
+    value: { type: int }
+    default: 2
+    rank: 20
+  - names: ["-d", "--deterministic-seeds"]
+    description: try every seed in order, without subsampling (best with -a)
+    rank: 10
+  # --- Paired-end ---------------------------------------------------------------------
+  - names: ["-I", "--minins"]
+    description: shortest fragment for a concordant pair
+    value: { type: int }
+    default: 0
+    rank: 40
+  - names: ["-X", "--maxins"]
+    description: longest fragment for a concordant pair
+    value: { type: int }
+    default: 500
+    rank: 50
+  - names: ["--fr"]
+    description: mates face each other, read 1 forward (default, Illumina paired-end)
+    rank: 25
+  - names: ["--rf"]
+    description: mates face away, read 1 reverse (mate-pair libraries)
+    rank: 20
+  - names: ["--ff"]
+    description: both mates forward
+    rank: 10
+  - names: ["--no-mixed"]
+    description: no unpaired alignments for the reads of pairs
+    rank: 35
+  - names: ["--no-discordant"]
+    description: no discordant alignments for pairs
+    rank: 35
+  - names: ["--dovetail"]
+    description: mates extending past each other count as concordant
+    rank: 20
+  - names: ["--no-contain"]
+    description: a mate containing the other is not concordant
+    rank: 10
+  - names: ["--no-overlap"]
+    description: overlapping mates are not concordant
+    rank: 10
+  # --- BAM input ----------------------------------------------------------------------
+  - names: ["--align-paired-reads"]
+    description: with -b, align the paired reads of the BAM (unpaired only by default)
+    rank: 15
+  - names: ["--preserve-tags"]
+    description: with -b, keep the tags of the BAM records
+    rank: 10
+  # --- Output -------------------------------------------------------------------------
+  - names: ["-t", "--time"]
+    description: print the time each phase takes
+    rank: 20
+  - names: ["--un"]
+    description: file for unpaired reads that did not align
+    value: { type: file, format: [fastq, fasta] }
+    rank: 40
+  - names: ["--un-gz"]
+    description: like --un, gzipped
+    value: { type: file, format: [fastq, fasta] }
+    rank: 35
+  - names: ["--un-bz2"]
+    description: like --un, bzip2-compressed
+    value: { type: file, format: [fastq, fasta] }
+    rank: 10
+  - names: ["--al"]
+    description: file for unpaired reads that aligned at least once
+    value: { type: file, format: [fastq, fasta] }
+    rank: 30
+  - names: ["--al-gz"]
+    description: like --al, gzipped
+    value: { type: file, format: [fastq, fasta] }
+    rank: 25
+  - names: ["--al-bz2"]
+    description: like --al, bzip2-compressed
+    value: { type: file, format: [fastq, fasta] }
+    rank: 10
+  - names: ["--un-conc"]
+    description: files for pairs that did not align concordantly; % in the name becomes 1 and 2
+    value: { type: file, format: [fastq, fasta] }
+    rank: 40
+  - names: ["--un-conc-gz"]
+    description: like --un-conc, gzipped (e.g. unmapped_R%.fq.gz)
+    value: { type: file, format: [fastq, fasta] }
+    rank: 40
+  - names: ["--un-conc-bz2"]
+    description: like --un-conc, bzip2-compressed
+    value: { type: file, format: [fastq, fasta] }
+    rank: 10
+  - names: ["--al-conc"]
+    description: files for pairs that aligned concordantly; % in the name becomes 1 and 2
+    value: { type: file, format: [fastq, fasta] }
+    rank: 30
+  - names: ["--al-conc-gz"]
+    description: like --al-conc, gzipped
+    value: { type: file, format: [fastq, fasta] }
+    rank: 30
+  - names: ["--al-conc-bz2"]
+    description: like --al-conc, bzip2-compressed
+    value: { type: file, format: [fastq, fasta] }
+    rank: 10
+  - names: ["--quiet"]
+    description: print serious errors only
+    rank: 25
+  - names: ["--met-file"]
+    description: file for the internal metrics
+    value: { type: file }
+    rank: 10
+  - names: ["--met-stderr"]
+    description: print the internal metrics on standard error
+    rank: 5
+  - names: ["--met"]
+    description: seconds between metrics reports
+    value: { type: int }
+    default: 1
+    rank: 5
+  - names: ["--no-unal"]
+    description: no SAM records for unaligned reads
+    rank: 45
+  - names: ["--no-head"]
+    description: no SAM header lines
+    rank: 20
+  - names: ["--no-sq"]
+    description: no @SQ header lines
+    rank: 15
+  - names: ["--rg-id"]
+    description: read group ID, written in the @RG line and the RG tag of each read
+    value: { type: string }
+    rank: 55
+  - names: ["--rg"]
+    description: field of the @RG line, as TAG:value (e.g. SM:sample1); needs --rg-id
+    value: { type: string }
+    repeatable: true
+    rank: 50
+    rules:
+      - when: { used: ["--rg-id"] }
+        boost: 25
+  - names: ["--omit-sec-seq"]
+    description: '* for the sequence and qualities of secondary alignments'
+    rank: 15
+  - names: ["--sam-no-qname-trunc"]
+    description: keep read names whole, past the first space (non-standard SAM)
+    rank: 10
+  - names: ["--xeq"]
+    description: =/X instead of M in CIGAR strings
+    rank: 10
+  - names: ["--soft-clipped-unmapped-tlen"]
+    description: leave soft-clipped bases out of TLEN
+    rank: 5
+  - names: ["--sam-append-comment"]
+    description: add the FASTA/FASTQ comment to each SAM record
+    rank: 15
+  - names: ["--sam-opt-config"]
+    description: optional SAM fields to turn on or off, e.g. -MD,YP,-AS
+    value: { type: string }
+    rank: 10
+  # --- Performance and other ------------------------------------------------------------
+  - names: ["-p", "--threads"]
+    description: alignment threads
+    value: { type: int }
+    default: 1
+    rank: 90
+  - names: ["--reorder"]
+    description: write SAM records in the order of the input reads
+    rank: 25
+  - names: ["--mm"]
+    description: memory-mapped index, shared by several bowtie2 processes
+    rank: 10
+  - names: ["--qc-filter"]
+    description: drop reads failing the QSEQ filter
+    rank: 5
+  - names: ["--seed"]
+    description: random seed
+    value: { type: int }
+    default: 0
+    rank: 15
+  - names: ["--non-deterministic"]
+    description: seed the random generator from the clock, not from each read
+    rank: 10

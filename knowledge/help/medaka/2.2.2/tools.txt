@@ -1,0 +1,36 @@
+usage: medaka tools [-h] [--debug | --quiet]
+                    {haploid2diploid,diploid2haploid,classify_variants,annotate,consensus2vcf,vcf2tsv,homozygous_regions,resolve_model,is_rle_model,get_alignment_params,rlebam,list_models,hdf_to_bed,download_models,prepare_tagged_bam,get_model_dtypes,is_compatible,export}
+                    ...
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+
+tools:
+  valid tool commands
+
+  {haploid2diploid,diploid2haploid,classify_variants,annotate,consensus2vcf,vcf2tsv,homozygous_regions,resolve_model,is_rle_model,get_alignment_params,rlebam,list_models,hdf_to_bed,download_models,prepare_tagged_bam,get_model_dtypes,is_compatible,export}
+                        additional help
+    haploid2diploid     Merge two haploid VCFs into a diploid VCF.
+    diploid2haploid     Split a diploid VCF into two haploid VCFs.
+    classify_variants   Classify variants and write vcf for each type and
+                        subtype.
+    annotate            Annotate vcf with read depth and supporting reads info
+                        fields.
+    consensus2vcf       Call variants by alignment of a consensus sequence to
+                        a reference.
+    vcf2tsv             convert vcf to tsv, unpacking info and sample columns.
+    homozygous_regions  Find homozygous regions from a diploid vcf.
+    resolve_model       Resolve model and print full file path.
+    is_rle_model        Check if a model is an RLE model.
+    get_alignment_params
+                        Get alignment parameters appropriate for a model
+    list_models         List all models.
+    hdf_to_bed          Write a bed file of regions spanned by a hdf file.
+    download_models     Download model files for any models not already
+                        installed.
+    prepare_tagged_bam  Add tags to bam files and merge
+    get_model_dtypes    Get the expected dtype tags for a model.
+    is_compatible       Check if a model is compatible with the current data.
+    export              Export a model to run in dorado polish

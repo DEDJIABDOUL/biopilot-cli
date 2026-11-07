@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/bowtie2-build.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: bowtie2-build
+package: bowtie2
+version: 2.5.5
+build: h63e9258_2
+channel: linux-64
+licence: GPL-3.0-or-later
+copyright: Ben Langmead et al., https://github.com/BenLangmead/bowtie2
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-3
+used_by_catalog: true
+files:
+  root.txt: bowtie2-build --help

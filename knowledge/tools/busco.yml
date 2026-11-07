@@ -1,0 +1,153 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# BUSCO 6.1.0, written from its recorded --help: knowledge/help/busco/6.1.0/root.txt
+# (MIT; attribution in RECORDING.yml next to it) and its user guide
+# (https://busco.ezlab.org/busco_userguide.html), in our own words (spec decision 31).
+# Ranks follow the shared scale of spec §6.4.
+name: busco
+package: busco
+description: Completeness of genome assemblies, transcriptomes and gene sets, from conserved single-copy orthologs
+version: { args: [ --version ], regex: "BUSCO (\\d[\\w.]*)" }
+help: [ --help ]
+options:
+  - names: [ -i, --in ]
+    description: "sequences to assess: assembly or transcriptome (DNA) or proteins, FASTA; or a folder of such files"
+    value: { type: file, format: [ fasta ] }
+    rank: 97
+  - names: [ -m, --mode ]
+    description: what the input is
+    value:
+      type: enum
+      values:
+        - { value: genome, description: genome assembly (DNA); also geno }
+        - { value: transcriptome, description: transcriptome assembly (DNA); also tran }
+        - { value: proteins, description: annotated gene set (protein); also prot }
+    rank: 95
+  - names: [ -l, --lineage_dataset ]
+    description: lineage dataset, e.g. bacteria_odb12, or the path of a downloaded one
+    value: { type: string }
+    rank: 92
+  - names: [ -o, --out ]
+    description: name of the run, given to the output folder and files
+    value: { type: string }
+    rank: 90
+  - names: [ --out_path ]
+    description: folder where the run folder is written (the current folder by default)
+    value: { type: dir }
+    rank: 45
+  - names: [ -c, --cpu ]
+    description: threads
+    value: { type: int }
+    rank: 85
+  - names: [ --auto-lineage ]
+    description: find the best lineage automatically
+    rank: 55
+  - names: [ --auto-lineage-prok ]
+    description: find the best lineage among prokaryotes only
+    rank: 45
+  - names: [ --auto-lineage-euk ]
+    description: find the best lineage among eukaryotes only
+    rank: 45
+  - names: [ -f, --force ]
+    description: overwrite the files of an earlier run of the same name
+    rank: 50
+  - names: [ -r, --restart ]
+    description: continue a run that stopped part way
+    rank: 40
+  - names: [ --offline ]
+    description: do not download anything (datasets must be local)
+    rank: 40
+  - names: [ --download_path ]
+    description: folder for downloaded datasets
+    value: { type: dir }
+    rank: 35
+  - names: [ --download ]
+    description: "download datasets: a name, all, prokaryota, eukaryota or virus (put it last)"
+    value: { type: string }
+    rank: 30
+    repeatable: true
+  - names: [ --download_base_url ]
+    description: URL of the remote datasets
+    value: { type: string }
+    rank: 5
+  - names: [ --datasets_version ]
+    description: "version of the datasets: odb10, odb12 or odb12.2"
+    value: { type: string }
+    rank: 20
+  - names: [ --list-datasets ]
+    description: list the available datasets (optionally of one version)
+    rank: 30
+  - names: [ --config ]
+    description: configuration file
+    value: { type: file }
+    rank: 20
+  - names: [ -e, --evalue ]
+    description: E-value cutoff of the BLAST searches
+    value: { type: float }
+    default: 0.001
+    rank: 15
+  - names: [ --limit ]
+    description: candidate regions considered per BUSCO
+    value: { type: int }
+    default: 3
+    rank: 15
+  - names: [ --contig_break ]
+    description: run of N that separates contigs
+    value: { type: int }
+    default: 10
+    rank: 10
+  - names: [ --miniprot ]
+    description: predict genes with Miniprot (eukaryotes)
+    rank: 25
+  - names: [ --metaeuk ]
+    description: predict genes with MetaEuk (eukaryotes)
+    rank: 25
+  - names: [ --metaeuk_parameters ]
+    description: extra MetaEuk arguments for the first run, one comma-separated string
+    value: { type: string }
+    rank: 5
+  - names: [ --metaeuk_rerun_parameters ]
+    description: extra MetaEuk arguments for the second run, one comma-separated string
+    value: { type: string }
+    rank: 5
+  - names: [ --augustus ]
+    description: predict genes with Augustus (eukaryotes)
+    rank: 25
+  - names: [ --augustus_species ]
+    description: species for Augustus training
+    value: { type: string }
+    rank: 15
+    rules:
+      - when: { used: [ --augustus ] }
+        boost: 25
+  - names: [ --augustus_parameters ]
+    description: extra Augustus arguments, one comma-separated string
+    value: { type: string }
+    rank: 5
+  - names: [ --long ]
+    description: Augustus self-training (much slower, can help non-model organisms)
+    rank: 10
+  - names: [ --skip_bbtools ]
+    description: skip the assembly statistics of BBTools
+    rank: 15
+  - names: [ --scaffold_composition ]
+    description: write the ACGTN content of each scaffold
+    rank: 10
+  - names: [ --tar ]
+    description: compress folders holding many files
+    rank: 20
+  - names: [ --plot ]
+    description: draw a summary plot of the short summaries in this folder
+    value: { type: dir }
+    rank: 30
+  - names: [ --plot_percentages ]
+    description: with --plot, plot percentages instead of counts
+    rank: 10
+    rules:
+      - when: { used: [ --plot ] }
+        boost: 25
+  - names: [ -q, --quiet ]
+    description: print errors only
+    rank: 20
+  - names: [ --opt-out-run-stats ]
+    description: send no run statistics to the BUSCO developers
+    rank: 25

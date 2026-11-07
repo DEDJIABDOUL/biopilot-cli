@@ -1,0 +1,7 @@
+Looking to launch executable "/home/abdoul/miniconda3/envs/biopilot-tools-3/bin/bwa-mem2.avx2", simd = .avx2
+Launching executable "/home/abdoul/miniconda3/envs/biopilot-tools-3/bin/bwa-mem2.avx2"
+Usage: bwa-mem2 <command> <arguments>
+Commands:
+  index         create index
+  mem           alignment
+  version       print version number

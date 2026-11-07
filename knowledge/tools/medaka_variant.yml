@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# medaka_variant 2.2.2 (package medaka), written from its recorded help: knowledge/help/medaka_variant/2.2.2/
+# (Oxford Nanopore Technologies Public License 1.0; attribution in RECORDING.yml next to it)
+# and its documentation (https://github.com/nanoporetech/medaka), in our own words
+# (spec decision 31). Model names are taken from the helps. The model list printed by medaka_variant -h is cut
+# short; its models are those of 'medaka inference' whose name contains 'variant'.
+# Its help takes about 7 s (it lists the models through Python), beyond the 2.5 s allowed:
+# no help is read, the version comes from conda-meta and the options from here.
+# Ranks follow the shared scale of spec §6.4.
+name: medaka_variant
+package: medaka
+description: Calls haploid variants from Nanopore reads against a reference
+version: { args: [ -h ], regex: "^medaka (\\d[\\w.]*)" }
+platforms: [ nanopore ]
+options:
+  - names: [ -i ]
+    description: basecalled reads, FASTA or FASTQ (required)
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 97
+  - names: [ -r ]
+    description: reference sequence, FASTA (required)
+    value: { type: file, format: fasta }
+    rank: 95
+  - names: [ -o ]
+    description: output folder
+    value: { type: dir }
+    default: medaka
+    rank: 90
+  - names: [ -m ]
+    description: model, named after the basecaller model of the reads; or a model file from medaka train
+    value: { type: string, values: [ r103_fast_variant_g507, r103_hac_variant_g507, r103_sup_variant_g507, r1041_e82_260bps_fast_variant_g632, r1041_e82_260bps_hac_variant_g632, r1041_e82_260bps_hac_variant_v4.1.0, r1041_e82_260bps_sup_variant_g632, r1041_e82_260bps_sup_variant_v4.1.0, r1041_e82_400bps_fast_variant_g615, r1041_e82_400bps_fast_variant_g632, r1041_e82_400bps_hac_variant_g615, r1041_e82_400bps_hac_variant_g632, r1041_e82_400bps_hac_variant_v4.1.0, r1041_e82_400bps_hac_variant_v4.2.0, r1041_e82_400bps_hac_variant_v4.3.0, r1041_e82_400bps_hac_variant_v5.0.0, r1041_e82_400bps_sup_variant_g615, r1041_e82_400bps_sup_variant_v4.1.0, r1041_e82_400bps_sup_variant_v4.2.0, r1041_e82_400bps_sup_variant_v4.3.0, r1041_e82_400bps_sup_variant_v5.0.0, r104_e81_fast_variant_g5015, r104_e81_hac_variant_g5015, r104_e81_sup_variant_g610, r941_e81_fast_variant_g514, r941_e81_hac_variant_g514, r941_e81_sup_variant_g514, r941_min_fast_variant_g507, r941_min_hac_variant_g507, r941_min_sup_variant_g507, r941_prom_fast_variant_g507, r941_prom_hac_variant_g507, r941_prom_sup_variant_g507, r941_sup_plant_variant_g610 ] }
+    default: r1041_e82_400bps_sup_variant_v5.0.0
+    rank: 80
+  - names: [ -t ]
+    description: threads for the feature step
+    value: { type: int }
+    default: 1
+    rank: 85
+  - names: [ -b ]
+    description: "batch size: lower it if memory runs out"
+    value: { type: int }
+    default: 100
+    rank: 40
+  - names: [ -f ]
+    description: overwrite the outputs (they are reused by default)
+    rank: 35
+  - names: [ -x ]
+    description: rebuild the alignment index
+    rank: 20
+  - names: [ -s ]
+    description: realign reads when annotating variants
+    rank: 25

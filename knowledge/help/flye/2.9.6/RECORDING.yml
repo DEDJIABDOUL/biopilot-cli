@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/flye.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: flye
+package: flye
+version: 2.9.6
+build: py313h7fbb527_1
+channel: linux-64
+licence: BSD-3-Clause
+copyright: Mikhail Kolmogorov et al., https://github.com/mikolmogorov/Flye
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-3
+used_by_catalog: true
+files:
+  root.txt: flye --help

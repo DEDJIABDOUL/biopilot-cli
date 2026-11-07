@@ -1,0 +1,28 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/medaka.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: medaka
+package: medaka
+version: 2.2.2
+build: py312h3050eb1_0
+channel: linux-64
+licence: Oxford Nanopore Technologies PLC. Public License Version 1.0
+copyright: Oxford Nanopore Technologies PLC, https://github.com/nanoporetech/medaka
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-medaka
+used_by_catalog: true
+files:
+  root.txt: medaka --help
+  compress_bam.txt: medaka compress_bam --help
+  features.txt: medaka features --help
+  train.txt: medaka train --help
+  inference.txt: medaka inference --help
+  smolecule.txt: medaka smolecule --help
+  tandem.txt: medaka tandem --help
+  consensus_from_features.txt: medaka consensus_from_features --help
+  fastrle.txt: medaka fastrle --help
+  sequence.txt: medaka sequence --help
+  vcf.txt: medaka vcf --help
+  tools.txt: medaka tools --help

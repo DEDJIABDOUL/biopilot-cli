@@ -1,0 +1,631 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# medaka 2.2.2 (package medaka), written from its recorded help: knowledge/help/medaka/2.2.2/
+# (Oxford Nanopore Technologies Public License 1.0; attribution in RECORDING.yml next to it)
+# and its documentation (https://github.com/nanoporetech/medaka), in our own words
+# (spec decision 31). Model names are taken from the helps. The subcommands of 'medaka tools'
+# are listed by name only: their helps are not recorded.
+# Ranks follow the shared scale of spec §6.4.
+name: medaka
+package: medaka
+description: Consensus polishing and variant calling for Nanopore data with neural networks (individual steps)
+version: { args: [ --version ], regex: "medaka (\\d[\\w.]*)" }
+help: [ --help ]
+platforms: [ nanopore ]
+commands:
+  - name: inference
+    help: [ inference, --help ]
+    description: run a model on alignments, writing consensus probabilities (HDF)
+    options:
+      - names: [ --model ]
+        description: "model: a medaka model name, a basecaller model name with :consensus or :variant, or a model file"
+        value: { type: string, values: [ r103_fast_g507, r103_fast_snp_g507, r103_fast_variant_g507, r103_hac_g507, r103_hac_snp_g507, r103_hac_variant_g507, r103_sup_g507, r103_sup_snp_g507, r103_sup_variant_g507, r1041_e82_260bps_fast_g632, r1041_e82_260bps_fast_variant_g632, r1041_e82_260bps_hac_g632, r1041_e82_260bps_hac_v4.0.0, r1041_e82_260bps_hac_v4.1.0, r1041_e82_260bps_hac_variant_g632, r1041_e82_260bps_hac_variant_v4.1.0, r1041_e82_260bps_joint_apk_ulk_v5.0.0, r1041_e82_260bps_sup_g632, r1041_e82_260bps_sup_v4.0.0, r1041_e82_260bps_sup_v4.1.0, r1041_e82_260bps_sup_variant_g632, r1041_e82_260bps_sup_variant_v4.1.0, r1041_e82_400bps_bacterial_methylation, r1041_e82_400bps_fast_g615, r1041_e82_400bps_fast_g632, r1041_e82_400bps_fast_variant_g615, r1041_e82_400bps_fast_variant_g632, r1041_e82_400bps_hac_g615, r1041_e82_400bps_hac_g632, r1041_e82_400bps_hac_v4.0.0, r1041_e82_400bps_hac_v4.1.0, r1041_e82_400bps_hac_v4.2.0, r1041_e82_400bps_hac_v4.3.0, r1041_e82_400bps_hac_v5.0.0, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v5.2.0, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v6.0.0, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_variant_g615, r1041_e82_400bps_hac_variant_g632, r1041_e82_400bps_hac_variant_v4.1.0, r1041_e82_400bps_hac_variant_v4.2.0, r1041_e82_400bps_hac_variant_v4.3.0, r1041_e82_400bps_hac_variant_v5.0.0, r1041_e82_400bps_sup_g615, r1041_e82_400bps_sup_v4.0.0, r1041_e82_400bps_sup_v4.1.0, r1041_e82_400bps_sup_v4.2.0, r1041_e82_400bps_sup_v4.3.0, r1041_e82_400bps_sup_v5.0.0, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_v5.2.0, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_variant_g615, r1041_e82_400bps_sup_variant_v4.1.0, r1041_e82_400bps_sup_variant_v4.2.0, r1041_e82_400bps_sup_variant_v4.3.0, r1041_e82_400bps_sup_variant_v5.0.0, r104_e81_fast_g5015, r104_e81_fast_variant_g5015, r104_e81_hac_g5015, r104_e81_hac_variant_g5015, r104_e81_sup_g5015, r104_e81_sup_g610, r104_e81_sup_variant_g610, r941_e81_fast_g514, r941_e81_fast_variant_g514, r941_e81_hac_g514, r941_e81_hac_variant_g514, r941_e81_sup_g514, r941_e81_sup_variant_g514, r941_min_fast_g507, r941_min_fast_snp_g507, r941_min_fast_variant_g507, r941_min_hac_g507, r941_min_hac_snp_g507, r941_min_hac_variant_g507, r941_min_sup_g507, r941_min_sup_snp_g507, r941_min_sup_variant_g507, r941_prom_fast_g507, r941_prom_fast_snp_g507, r941_prom_fast_variant_g507, r941_prom_hac_g507, r941_prom_hac_snp_g507, r941_prom_hac_variant_g507, r941_prom_sup_g507, r941_prom_sup_snp_g507, r941_prom_sup_variant_g507, r941_sup_plant_g610, r941_sup_plant_variant_g610 ] }
+        rank: 75
+      - names: [ --auto_model ]
+        description: "choose the model from the input: consensus or variant, then the input file"
+        value: { type: string }
+        rank: 30
+      - names: [ --regions ]
+        description: regions to process (chr:start-end) or a BED file
+        value: { type: string, multiple: true }
+        rank: 45
+      - names: [ --batch_size ]
+        description: inference batch size (memory use)
+        value: { type: int }
+        default: 100
+        rank: 30
+      - names: [ --chunk_len ]
+        description: length of the chunks the data is cut into
+        value: { type: int }
+        rank: 15
+      - names: [ --chunk_ovlp ]
+        description: overlap of the chunks
+        value: { type: int }
+        rank: 10
+      - names: [ --bam_workers ]
+        description: workers preparing data from the BAM
+        value: { type: int }
+        default: 2
+        rank: 25
+      - names: [ --bam_chunk ]
+        description: reference length each worker reads at once (memory use)
+        value: { type: int }
+        default: 1000000
+        rank: 15
+      - names: [ --min_mapq ]
+        description: least mapping quality (the model's by default)
+        value: { type: int }
+        rank: 25
+      - names: [ --cpu ]
+        description: run the model on the CPU
+        rank: 35
+      - names: [ --full_precision ]
+        description: full precision on the GPU (half by default)
+        rank: 10
+      - names: [ --check_output ]
+        description: check the output file at the end
+        rank: 10
+      - names: [ --save_features ]
+        description: also save the features
+        rank: 10
+      - names: [ --RG ]
+        description: use only the alignments of this read group
+        value: { type: string }
+        rank: 15
+      - names: [ --ignore_read_groups ]
+        description: ignore the read groups of the BAM
+        rank: 10
+      - names: [ --tag_name ]
+        description: use only alignments whose tag of this name has the --tag_value value
+        value: { type: string }
+        rank: 10
+      - names: [ --tag_value ]
+        description: value of --tag_name
+        value: { type: int }
+        rank: 10
+      - names: [ --tag_keep_missing ]
+        description: keep alignments without the tag
+        rank: 5
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: bam
+        description: reads aligned to the draft or reference, BAM
+        value: { type: file, format: bam }
+      - name: output
+        description: consensus probabilities to write (.hdf)
+        value: { type: file }
+  - name: sequence
+    help: [ sequence, --help ]
+    description: stitch inference outputs into the polished consensus
+    options:
+      - names: [ --regions ]
+        description: regions to process (chr:start-end) or a BED file
+        value: { type: string, multiple: true }
+        rank: 30
+      - names: [ --min_depth ]
+        description: do not polish sites covered by fewer reads
+        value: { type: int }
+        default: 0
+        rank: 25
+      - names: [ --threads ]
+        description: worker processes
+        value: { type: int }
+        default: 1
+        rank: 50
+      - names: [ --no-fillgaps ]
+        description: do not fill gaps with the draft sequence
+        rank: 25
+      - names: [ --fill_char ]
+        description: character filling the gaps instead of the draft
+        value: { type: string }
+        rank: 15
+      - names: [ --qualities ]
+        description: write FASTQ with per-base qualities
+        rank: 30
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: inputs
+        description: inference outputs (.hdf)
+        variadic: false
+        value: { type: file, multiple: true }
+      - name: draft
+        description: draft assembly that was polished
+        value: { type: file, format: fasta }
+      - name: output
+        description: polished consensus to write
+        value: { type: file, format: [ fasta, fastq ] }
+  - name: vcf
+    help: [ vcf, --help ]
+    description: stitch inference outputs into a VCF
+    options:
+      - names: [ --regions ]
+        description: regions to process (chr:start-end) or a BED file
+        value: { type: string, multiple: true }
+        rank: 30
+      - names: [ --verbose ]
+        description: fill the VCF INFO fields
+        rank: 20
+      - names: [ --ambig_ref ]
+        description: call variants at ambiguous reference positions
+        rank: 15
+      - names: [ --gvcf ]
+        description: also write records for non-variant reference positions
+        rank: 25
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: inputs
+        description: inference outputs (.hdf)
+        value: { type: file, multiple: true }
+      - name: ref_fasta
+        description: reference the reads were aligned to
+        value: { type: file, format: fasta }
+      - name: output
+        description: VCF to write
+        value: { type: file, format: vcf }
+  - name: smolecule
+    help: [ smolecule, --help ]
+    description: consensus of each molecule from its subreads (e.g. concatemers)
+    options:
+      - names: [ --model ]
+        description: "model: a medaka model name, a basecaller model name with :consensus or :variant, or a model file"
+        value: { type: string, values: [ r103_fast_g507, r103_fast_snp_g507, r103_fast_variant_g507, r103_hac_g507, r103_hac_snp_g507, r103_hac_variant_g507, r103_sup_g507, r103_sup_snp_g507, r103_sup_variant_g507, r1041_e82_260bps_fast_g632, r1041_e82_260bps_fast_variant_g632, r1041_e82_260bps_hac_g632, r1041_e82_260bps_hac_v4.0.0, r1041_e82_260bps_hac_v4.1.0, r1041_e82_260bps_hac_variant_g632, r1041_e82_260bps_hac_variant_v4.1.0, r1041_e82_260bps_joint_apk_ulk_v5.0.0, r1041_e82_260bps_sup_g632, r1041_e82_260bps_sup_v4.0.0, r1041_e82_260bps_sup_v4.1.0, r1041_e82_260bps_sup_variant_g632, r1041_e82_260bps_sup_variant_v4.1.0, r1041_e82_400bps_bacterial_methylation, r1041_e82_400bps_fast_g615, r1041_e82_400bps_fast_g632, r1041_e82_400bps_fast_variant_g615, r1041_e82_400bps_fast_variant_g632, r1041_e82_400bps_hac_g615, r1041_e82_400bps_hac_g632, r1041_e82_400bps_hac_v4.0.0, r1041_e82_400bps_hac_v4.1.0, r1041_e82_400bps_hac_v4.2.0, r1041_e82_400bps_hac_v4.3.0, r1041_e82_400bps_hac_v5.0.0, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v5.2.0, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v6.0.0, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_variant_g615, r1041_e82_400bps_hac_variant_g632, r1041_e82_400bps_hac_variant_v4.1.0, r1041_e82_400bps_hac_variant_v4.2.0, r1041_e82_400bps_hac_variant_v4.3.0, r1041_e82_400bps_hac_variant_v5.0.0, r1041_e82_400bps_sup_g615, r1041_e82_400bps_sup_v4.0.0, r1041_e82_400bps_sup_v4.1.0, r1041_e82_400bps_sup_v4.2.0, r1041_e82_400bps_sup_v4.3.0, r1041_e82_400bps_sup_v5.0.0, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_v5.2.0, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_variant_g615, r1041_e82_400bps_sup_variant_v4.1.0, r1041_e82_400bps_sup_variant_v4.2.0, r1041_e82_400bps_sup_variant_v4.3.0, r1041_e82_400bps_sup_variant_v5.0.0, r104_e81_fast_g5015, r104_e81_fast_variant_g5015, r104_e81_hac_g5015, r104_e81_hac_variant_g5015, r104_e81_sup_g5015, r104_e81_sup_g610, r104_e81_sup_variant_g610, r941_e81_fast_g514, r941_e81_fast_variant_g514, r941_e81_hac_g514, r941_e81_hac_variant_g514, r941_e81_sup_g514, r941_e81_sup_variant_g514, r941_min_fast_g507, r941_min_fast_snp_g507, r941_min_fast_variant_g507, r941_min_hac_g507, r941_min_hac_snp_g507, r941_min_hac_variant_g507, r941_min_sup_g507, r941_min_sup_snp_g507, r941_min_sup_variant_g507, r941_prom_fast_g507, r941_prom_fast_snp_g507, r941_prom_fast_variant_g507, r941_prom_hac_g507, r941_prom_hac_snp_g507, r941_prom_hac_variant_g507, r941_prom_sup_g507, r941_prom_sup_snp_g507, r941_prom_sup_variant_g507, r941_sup_plant_g610, r941_sup_plant_variant_g610 ] }
+        rank: 50
+      - names: [ --auto_model ]
+        description: "choose the model from the input: consensus or variant, then the input file"
+        value: { type: string }
+        rank: 30
+      - names: [ --batch_size ]
+        description: inference batch size (memory use)
+        value: { type: int }
+        default: 100
+        rank: 30
+      - names: [ --chunk_len ]
+        description: length of the chunks the data is cut into
+        value: { type: int }
+        rank: 15
+      - names: [ --chunk_ovlp ]
+        description: overlap of the chunks
+        value: { type: int }
+        rank: 10
+      - names: [ --min_depth ]
+        description: do not polish sites covered by fewer subreads
+        value: { type: int }
+        default: 0
+        rank: 20
+      - names: [ --method ]
+        description: draft consensus method
+        value: { type: enum, values: [ spoa ] }
+        default: spoa
+        rank: 10
+      - names: [ --spoa_min_coverage ]
+        description: least coverage of the SPOA consensus
+        value: { type: int }
+        rank: 10
+      - names: [ --depth ]
+        description: least subreads per molecule
+        value: { type: int }
+        default: 3
+        rank: 35
+      - names: [ --length ]
+        description: least median subread length
+        value: { type: int }
+        default: 400
+        rank: 30
+      - names: [ --threads ]
+        description: inference threads
+        value: { type: int }
+        default: 1
+        rank: 50
+      - names: [ --check_output ]
+        description: check the output file at the end
+        rank: 10
+      - names: [ --save_features ]
+        description: also save the features
+        rank: 10
+      - names: [ --qualities ]
+        description: write FASTQ with per-base qualities
+        rank: 25
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: output
+        description: output folder
+        value: { type: dir }
+      - name: fasta
+        description: subreads, one file or more
+        value: { type: file, format: [ fasta, fastq ], multiple: true }
+  - name: tandem
+    help: [ tandem, --help ]
+    description: genotype tandem repeats (STRs) from aligned reads
+    options:
+      - names: [ --model ]
+        description: "model: a medaka model name, a basecaller model name with :consensus or :variant, or a model file"
+        value: { type: string, values: [ r103_fast_g507, r103_fast_snp_g507, r103_fast_variant_g507, r103_hac_g507, r103_hac_snp_g507, r103_hac_variant_g507, r103_sup_g507, r103_sup_snp_g507, r103_sup_variant_g507, r1041_e82_260bps_fast_g632, r1041_e82_260bps_fast_variant_g632, r1041_e82_260bps_hac_g632, r1041_e82_260bps_hac_v4.0.0, r1041_e82_260bps_hac_v4.1.0, r1041_e82_260bps_hac_variant_g632, r1041_e82_260bps_hac_variant_v4.1.0, r1041_e82_260bps_joint_apk_ulk_v5.0.0, r1041_e82_260bps_sup_g632, r1041_e82_260bps_sup_v4.0.0, r1041_e82_260bps_sup_v4.1.0, r1041_e82_260bps_sup_variant_g632, r1041_e82_260bps_sup_variant_v4.1.0, r1041_e82_400bps_bacterial_methylation, r1041_e82_400bps_fast_g615, r1041_e82_400bps_fast_g632, r1041_e82_400bps_fast_variant_g615, r1041_e82_400bps_fast_variant_g632, r1041_e82_400bps_hac_g615, r1041_e82_400bps_hac_g632, r1041_e82_400bps_hac_v4.0.0, r1041_e82_400bps_hac_v4.1.0, r1041_e82_400bps_hac_v4.2.0, r1041_e82_400bps_hac_v4.3.0, r1041_e82_400bps_hac_v5.0.0, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v5.2.0, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v6.0.0, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_variant_g615, r1041_e82_400bps_hac_variant_g632, r1041_e82_400bps_hac_variant_v4.1.0, r1041_e82_400bps_hac_variant_v4.2.0, r1041_e82_400bps_hac_variant_v4.3.0, r1041_e82_400bps_hac_variant_v5.0.0, r1041_e82_400bps_sup_g615, r1041_e82_400bps_sup_v4.0.0, r1041_e82_400bps_sup_v4.1.0, r1041_e82_400bps_sup_v4.2.0, r1041_e82_400bps_sup_v4.3.0, r1041_e82_400bps_sup_v5.0.0, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_v5.2.0, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_variant_g615, r1041_e82_400bps_sup_variant_v4.1.0, r1041_e82_400bps_sup_variant_v4.2.0, r1041_e82_400bps_sup_variant_v4.3.0, r1041_e82_400bps_sup_variant_v5.0.0, r104_e81_fast_g5015, r104_e81_fast_variant_g5015, r104_e81_hac_g5015, r104_e81_hac_variant_g5015, r104_e81_sup_g5015, r104_e81_sup_g610, r104_e81_sup_variant_g610, r941_e81_fast_g514, r941_e81_fast_variant_g514, r941_e81_hac_g514, r941_e81_hac_variant_g514, r941_e81_sup_g514, r941_e81_sup_variant_g514, r941_min_fast_g507, r941_min_fast_snp_g507, r941_min_fast_variant_g507, r941_min_hac_g507, r941_min_hac_snp_g507, r941_min_hac_variant_g507, r941_min_sup_g507, r941_min_sup_snp_g507, r941_min_sup_variant_g507, r941_prom_fast_g507, r941_prom_fast_snp_g507, r941_prom_fast_variant_g507, r941_prom_hac_g507, r941_prom_hac_snp_g507, r941_prom_hac_variant_g507, r941_prom_sup_g507, r941_prom_sup_snp_g507, r941_prom_sup_variant_g507, r941_sup_plant_g610, r941_sup_plant_variant_g610 ] }
+        rank: 40
+      - names: [ --auto_model ]
+        description: "choose the model from the input: consensus or variant, then the input file"
+        value: { type: string }
+        rank: 30
+      - names: [ --workers ]
+        description: parallel worker processes
+        value: { type: int }
+        default: 1
+        rank: 55
+      - names: [ --process_large_regions ]
+        description: also process repeats longer than 10 kb (much more memory)
+        rank: 20
+      - names: [ --phasing ]
+        description: how reads are split into haplotypes
+        value:
+          type: enum
+          values:
+            - { value: hybrid, description: "HP tags when both haplotypes have enough reads, else abPOA clustering (default)" }
+            - { value: prephased, description: the HP tags of the BAM }
+            - { value: abpoa, description: abPOA clustering of the repeat sequences }
+            - { value: unphased, description: haploid sample }
+        default: hybrid
+        rank: 40
+      - names: [ --min_depth ]
+        description: least spanning reads to build an allele
+        value: { type: int }
+        default: 3
+        rank: 30
+      - names: [ --min_mapq ]
+        description: least mapping quality
+        value: { type: int }
+        default: 5
+        rank: 25
+      - names: [ --disable_outlier_filter ]
+        description: keep reads whose spanning length is far from the others
+        rank: 10
+      - names: [ --padding ]
+        description: bases added around the spanning regions
+        value: { type: int }
+        default: 10
+        rank: 10
+      - names: [ --sex_chrs ]
+        description: names of the X and Y chromosomes, two values
+        value: { type: string, multiple: true }
+        rank: 15
+      - names: [ --par_regions ]
+        description: pseudoautosomal regions of X (diploid in males); GRCh38's by default
+        value: { type: string, multiple: true }
+        rank: 10
+      - names: [ --decompose ]
+        description: also report the variants within each repeat allele
+        rank: 20
+      - names: [ --add_read_names ]
+        description: add the names of spanning reads to the VCF
+        rank: 10
+      - names: [ --sample_name ]
+        description: sample name in the VCF
+        value: { type: string }
+        default: SAMPLE
+        rank: 30
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: bam
+        description: aligned reads, BAM or CRAM, preferably haplotagged
+        value: { type: file, format: [ bam, cram ] }
+      - name: ref_fasta
+        description: reference genome
+        value: { type: file, format: fasta }
+      - name: regions
+        description: repeat regions to genotype, BED
+        value: { type: file, format: bed }
+      - name: sex
+        description: sex of the sample, for X and Y
+        value: { type: enum, values: [ male, female ] }
+      - name: output
+        description: output folder
+        value: { type: dir }
+  - name: features
+    help: [ features, --help ]
+    description: compute features from alignments, for training
+    options:
+      - names: [ --batch_size ]
+        description: inference batch size (memory use)
+        value: { type: int }
+        default: 100
+        rank: 30
+      - names: [ --chunk_len ]
+        description: length of the chunks the data is cut into
+        value: { type: int }
+        rank: 15
+      - names: [ --chunk_ovlp ]
+        description: overlap of the chunks
+        value: { type: int }
+        rank: 10
+      - names: [ --regions ]
+        description: regions to process (chr:start-end) or a BED file
+        value: { type: string, multiple: true }
+        rank: 30
+      - names: [ --truth ]
+        description: BAM of the truth aligned to the reference, for training labels
+        value: { type: file, format: bam }
+        rank: 35
+      - names: [ --truth_haplotag ]
+        description: two-letter tag of the truth haplotypes, for polyploid labels
+        value: { type: string }
+        rank: 10
+      - names: [ --min_region_size ]
+        description: skip draft regions shorter than this
+        value: { type: int }
+        default: 0
+        rank: 10
+      - names: [ --threads ]
+        description: threads
+        value: { type: int }
+        default: 1
+        rank: 60
+      - names: [ --label_scheme ]
+        description: labelling scheme
+        value: { type: enum, values: [ HaploidLabelScheme, DiploidLabelScheme, RLELabelScheme ] }
+        default: HaploidLabelScheme
+        rank: 15
+      - names: [ --label_scheme_args ]
+        description: keyword arguments of the labelling scheme, KEY=VALUE
+        value: { type: string, multiple: true }
+        rank: 5
+      - names: [ --feature_encoder ]
+        description: feature encoder
+        value: { type: enum, values: [ CountsFeatureEncoder, HardRLEFeatureEncoder, ReadAlignmentFeatureEncoder, SoftRLEFeatureEncoder, SymHardRLEFeatureEncoder ] }
+        default: CountsFeatureEncoder
+        rank: 15
+      - names: [ --feature_encoder_args ]
+        description: keyword arguments of the feature encoder, KEY=VALUE
+        value: { type: string, multiple: true }
+        rank: 5
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: bam
+        description: reads aligned to the draft or reference, BAM
+        value: { type: file, format: bam }
+      - name: output
+        description: features file to write
+        value: { type: file }
+  - name: train
+    help: [ train, --help ]
+    description: train a model from features
+    options:
+      - names: [ --train_name ]
+        description: name of the training run
+        value: { type: string }
+        default: medaka_train
+        rank: 40
+      - names: [ --model ]
+        description: model definition and starting weights (.tar.gz), or a .toml describing it
+        value: { type: string, values: [ r103_fast_g507, r103_fast_snp_g507, r103_fast_variant_g507, r103_hac_g507, r103_hac_snp_g507, r103_hac_variant_g507, r103_sup_g507, r103_sup_snp_g507, r103_sup_variant_g507, r1041_e82_260bps_fast_g632, r1041_e82_260bps_fast_variant_g632, r1041_e82_260bps_hac_g632, r1041_e82_260bps_hac_v4.0.0, r1041_e82_260bps_hac_v4.1.0, r1041_e82_260bps_hac_variant_g632, r1041_e82_260bps_hac_variant_v4.1.0, r1041_e82_260bps_joint_apk_ulk_v5.0.0, r1041_e82_260bps_sup_g632, r1041_e82_260bps_sup_v4.0.0, r1041_e82_260bps_sup_v4.1.0, r1041_e82_260bps_sup_variant_g632, r1041_e82_260bps_sup_variant_v4.1.0, r1041_e82_400bps_bacterial_methylation, r1041_e82_400bps_fast_g615, r1041_e82_400bps_fast_g632, r1041_e82_400bps_fast_variant_g615, r1041_e82_400bps_fast_variant_g632, r1041_e82_400bps_hac_g615, r1041_e82_400bps_hac_g632, r1041_e82_400bps_hac_v4.0.0, r1041_e82_400bps_hac_v4.1.0, r1041_e82_400bps_hac_v4.2.0, r1041_e82_400bps_hac_v4.3.0, r1041_e82_400bps_hac_v5.0.0, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v5.2.0, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v6.0.0, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_variant_g615, r1041_e82_400bps_hac_variant_g632, r1041_e82_400bps_hac_variant_v4.1.0, r1041_e82_400bps_hac_variant_v4.2.0, r1041_e82_400bps_hac_variant_v4.3.0, r1041_e82_400bps_hac_variant_v5.0.0, r1041_e82_400bps_sup_g615, r1041_e82_400bps_sup_v4.0.0, r1041_e82_400bps_sup_v4.1.0, r1041_e82_400bps_sup_v4.2.0, r1041_e82_400bps_sup_v4.3.0, r1041_e82_400bps_sup_v5.0.0, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_v5.2.0, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_variant_g615, r1041_e82_400bps_sup_variant_v4.1.0, r1041_e82_400bps_sup_variant_v4.2.0, r1041_e82_400bps_sup_variant_v4.3.0, r1041_e82_400bps_sup_variant_v5.0.0, r104_e81_fast_g5015, r104_e81_fast_variant_g5015, r104_e81_hac_g5015, r104_e81_hac_variant_g5015, r104_e81_sup_g5015, r104_e81_sup_g610, r104_e81_sup_variant_g610, r941_e81_fast_g514, r941_e81_fast_variant_g514, r941_e81_hac_g514, r941_e81_hac_variant_g514, r941_e81_sup_g514, r941_e81_sup_variant_g514, r941_min_fast_g507, r941_min_fast_snp_g507, r941_min_fast_variant_g507, r941_min_hac_g507, r941_min_hac_snp_g507, r941_min_hac_variant_g507, r941_min_sup_g507, r941_min_sup_snp_g507, r941_min_sup_variant_g507, r941_prom_fast_g507, r941_prom_fast_snp_g507, r941_prom_fast_variant_g507, r941_prom_hac_g507, r941_prom_hac_snp_g507, r941_prom_hac_variant_g507, r941_prom_sup_g507, r941_prom_sup_snp_g507, r941_prom_sup_variant_g507, r941_sup_plant_g610, r941_sup_plant_variant_g610 ] }
+        rank: 40
+      - names: [ --epochs ]
+        description: most training epochs
+        value: { type: int }
+        default: 5000
+        rank: 30
+      - names: [ --batch_size ]
+        description: training batch size
+        value: { type: int }
+        default: 100
+        rank: 25
+      - names: [ --max_samples ]
+        description: train on at most this many samples
+        value: { type: int }
+        rank: 15
+      - names: [ --max_valid_samples ]
+        description: validate on at most this many samples
+        value: { type: int }
+        rank: 10
+      - names: [ --samples_per_training_epoch ]
+        description: samples per epoch
+        value: { type: int }
+        rank: 10
+      - names: [ --seed ]
+        description: seed of the batch shuffling
+        value: { type: int }
+        default: 0
+        rank: 10
+      - names: [ --threads_io ]
+        description: input and output threads
+        value: { type: int }
+        default: 1
+        rank: 15
+      - names: [ --device ]
+        description: GPU to use
+        value: { type: int }
+        default: 0
+        rank: 20
+      - names: [ --optimizer ]
+        description: optimizer
+        value: { type: enum, values: [ rmsprop, adam, nadam, sgd ] }
+        default: rmsprop
+        rank: 15
+      - names: [ --optim_args ]
+        description: keyword arguments of the optimizer, KEY=VALUE
+        value: { type: string, multiple: true }
+        rank: 5
+      - names: [ --loss_args ]
+        description: keyword arguments of the loss, KEY=VALUE
+        value: { type: string, multiple: true }
+        rank: 5
+      - names: [ --use_lr_schedule ]
+        description: cosine learning rate schedule
+        rank: 10
+      - names: [ --amp ]
+        description: train in half precision
+        rank: 10
+      - names: [ --no_early_stopping ]
+        description: no early stopping
+        rank: 10
+      - names: [ --validate_only ]
+        description: run one validation epoch, write the metrics and stop
+        rank: 10
+      - names: [ --validation_split ]
+        description: share of the data used for validation
+        value: { type: float }
+        default: 0.2
+        rank: 15
+      - names: [ --validation_features ]
+        description: separate validation data
+        value: { type: file, multiple: true }
+        rank: 10
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: features
+        description: training data
+        variadic: true
+        value: { type: file }
+  - name: consensus_from_features
+    help: [ consensus_from_features, --help ]
+    description: run a model on features computed beforehand
+    options:
+      - names: [ --model ]
+        description: "model: a medaka model name, a basecaller model name with :consensus or :variant, or a model file"
+        value: { type: string, values: [ r103_fast_g507, r103_fast_snp_g507, r103_fast_variant_g507, r103_hac_g507, r103_hac_snp_g507, r103_hac_variant_g507, r103_sup_g507, r103_sup_snp_g507, r103_sup_variant_g507, r1041_e82_260bps_fast_g632, r1041_e82_260bps_fast_variant_g632, r1041_e82_260bps_hac_g632, r1041_e82_260bps_hac_v4.0.0, r1041_e82_260bps_hac_v4.1.0, r1041_e82_260bps_hac_variant_g632, r1041_e82_260bps_hac_variant_v4.1.0, r1041_e82_260bps_joint_apk_ulk_v5.0.0, r1041_e82_260bps_sup_g632, r1041_e82_260bps_sup_v4.0.0, r1041_e82_260bps_sup_v4.1.0, r1041_e82_260bps_sup_variant_g632, r1041_e82_260bps_sup_variant_v4.1.0, r1041_e82_400bps_bacterial_methylation, r1041_e82_400bps_fast_g615, r1041_e82_400bps_fast_g632, r1041_e82_400bps_fast_variant_g615, r1041_e82_400bps_fast_variant_g632, r1041_e82_400bps_hac_g615, r1041_e82_400bps_hac_g632, r1041_e82_400bps_hac_v4.0.0, r1041_e82_400bps_hac_v4.1.0, r1041_e82_400bps_hac_v4.2.0, r1041_e82_400bps_hac_v4.3.0, r1041_e82_400bps_hac_v5.0.0, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v5.2.0, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_v6.0.0, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_dwells, r1041_e82_400bps_hac_v6.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_hac_variant_g615, r1041_e82_400bps_hac_variant_g632, r1041_e82_400bps_hac_variant_v4.1.0, r1041_e82_400bps_hac_variant_v4.2.0, r1041_e82_400bps_hac_variant_v4.3.0, r1041_e82_400bps_hac_variant_v5.0.0, r1041_e82_400bps_sup_g615, r1041_e82_400bps_sup_v4.0.0, r1041_e82_400bps_sup_v4.1.0, r1041_e82_400bps_sup_v4.2.0, r1041_e82_400bps_sup_v4.3.0, r1041_e82_400bps_sup_v5.0.0, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.0.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_v5.2.0, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_dwells, r1041_e82_400bps_sup_v5.2.0_rl_lstm384_no_dwells, r1041_e82_400bps_sup_variant_g615, r1041_e82_400bps_sup_variant_v4.1.0, r1041_e82_400bps_sup_variant_v4.2.0, r1041_e82_400bps_sup_variant_v4.3.0, r1041_e82_400bps_sup_variant_v5.0.0, r104_e81_fast_g5015, r104_e81_fast_variant_g5015, r104_e81_hac_g5015, r104_e81_hac_variant_g5015, r104_e81_sup_g5015, r104_e81_sup_g610, r104_e81_sup_variant_g610, r941_e81_fast_g514, r941_e81_fast_variant_g514, r941_e81_hac_g514, r941_e81_hac_variant_g514, r941_e81_sup_g514, r941_e81_sup_variant_g514, r941_min_fast_g507, r941_min_fast_snp_g507, r941_min_fast_variant_g507, r941_min_hac_g507, r941_min_hac_snp_g507, r941_min_hac_variant_g507, r941_min_sup_g507, r941_min_sup_snp_g507, r941_min_sup_variant_g507, r941_prom_fast_g507, r941_prom_fast_snp_g507, r941_prom_fast_variant_g507, r941_prom_hac_g507, r941_prom_hac_snp_g507, r941_prom_hac_variant_g507, r941_prom_sup_g507, r941_prom_sup_snp_g507, r941_prom_sup_variant_g507, r941_sup_plant_g610, r941_sup_plant_variant_g610 ] }
+        rank: 50
+      - names: [ --auto_model ]
+        description: "choose the model from the input: consensus or variant, then the input file"
+        value: { type: string }
+        rank: 30
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: features
+        description: features from medaka features
+        variadic: true
+        value: { type: file }
+  - name: compress_bam
+    help: [ compress_bam, --help ]
+    description: compress an alignment into run-length encoded form
+    options:
+      - names: [ --regions ]
+        description: regions to process (chr:start-end) or a BED file
+        value: { type: string, multiple: true }
+        rank: 30
+      - names: [ --threads ]
+        description: threads
+        value: { type: int }
+        default: 1
+        rank: 60
+      - names: [ --use_fast5_info ]
+        description: fast5 folder and its index (filename, read_id), for run lengths
+        value: { type: string, multiple: true }
+        rank: 10
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: bam_input
+        description: alignments to compress
+        value: { type: file, format: bam }
+      - name: bam_output
+        description: compressed alignments to write
+        value: { type: file, format: bam }
+      - name: ref_fname
+        description: reference the input was aligned to
+        value: { type: file, format: fasta }
+  - name: fastrle
+    help: [ fastrle, --help ]
+    description: "run-length encoded FASTQ: run lengths in the quality line"
+    options:
+      - names: [ --block_size ]
+        description: longest homopolymer block (AAAA with 3 gives A3 A1)
+        value: { type: int }
+        default: 94
+        rank: 30
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    arguments:
+      - name: input
+        description: sequences, plain or gzipped
+        value: { type: file, format: [ fasta, fastq ] }
+  - name: tools
+    help: [ tools, --help ]
+    description: "utilities: VCF conversion and annotation, models"
+    options:
+      - names: [ --debug ]
+        description: debug logging
+        rank: 5
+      - names: [ --quiet ]
+        description: warnings only
+        rank: 10
+    commands:
+      - name: haploid2diploid
+        description: merge two haploid VCFs into a diploid one
+      - name: diploid2haploid
+        description: split a diploid VCF into two haploid ones
+      - name: classify_variants
+        description: write one VCF per variant type and subtype
+      - name: annotate
+        description: add read depth and supporting reads to a VCF
+      - name: consensus2vcf
+        description: call variants by aligning a consensus to a reference
+      - name: vcf2tsv
+        description: VCF to a table, INFO and sample columns unpacked
+      - name: homozygous_regions
+        description: homozygous regions of a diploid VCF
+      - name: resolve_model
+        description: print the full path of a model
+      - name: is_rle_model
+        description: whether a model is run-length encoded
+      - name: get_alignment_params
+        description: alignment parameters suited to a model
+      - name: rlebam
+        description: run-length encode a BAM
+      - name: list_models
+        description: list the models
+      - name: hdf_to_bed
+        description: BED of the regions an HDF file spans
+      - name: download_models
+        description: download the models not yet installed
+      - name: prepare_tagged_bam
+        description: tag BAM files and merge them
+      - name: get_model_dtypes
+        description: data type tags a model expects
+      - name: is_compatible
+        description: whether a model suits the data
+      - name: export
+        description: export a model for dorado polish

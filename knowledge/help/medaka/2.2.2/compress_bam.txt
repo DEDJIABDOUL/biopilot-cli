@@ -1,0 +1,23 @@
+usage: medaka compress_bam [-h] [--debug | --quiet]
+                           [--regions REGIONS [REGIONS ...]]
+                           [--threads THREADS]
+                           [--use_fast5_info <fast5_dir> <index> <fast5_dir> <index>]
+                           bam_input bam_output ref_fname
+
+positional arguments:
+  bam_input             Bam file to compress.
+  bam_output            Output bam file.
+  ref_fname             Reference fasta file used for `bam_input`.
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+  --regions REGIONS [REGIONS ...]
+                        Genomic regions to analyse, or a bed file. (default:
+                        None)
+  --threads THREADS     Number of threads for parallel execution. (default: 1)
+  --use_fast5_info <fast5_dir> <index> <fast5_dir> <index>
+                        Root directory containing the fast5 files and .tsv
+                        file with columns filename and read_id. (default:
+                        None)

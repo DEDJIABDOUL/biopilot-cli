@@ -1,0 +1,126 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Flye 2.9.6, written from its recorded --help: knowledge/help/flye/2.9.6/root.txt
+# (BSD-3-Clause; attribution in RECORDING.yml next to it) and its manual
+# (https://github.com/mikolmogorov/Flye/blob/flye/docs/USAGE.md), in our own words
+# (spec decision 31). One read type per run; its files follow the option.
+# Ranks follow the shared scale of spec §6.4.
+name: flye
+package: flye
+description: De novo assembler for long reads (Nanopore, PacBio), isolates and metagenomes
+version: { args: [ --version ], regex: "^(\\d[\\w.]*)" }
+help: [ --help ]
+options:
+  - names: [ --nano-hq ]
+    description: Nanopore R10 or Guppy5+ reads (Q20, under 3% error; nudge --read-error up for R9)
+    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    rank: 85
+    rules:
+      - when: { platform: nanopore }
+        boost: 25
+  - names: [ --nano-raw ]
+    description: Nanopore reads of older chemistries, before Guppy5 (10 to 20% error)
+    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    rank: 60
+    rules:
+      - when: { platform: nanopore }
+        boost: 25
+  - names: [ --nano-corr ]
+    description: Nanopore reads corrected by another tool (under 3% error)
+    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    rank: 30
+    rules:
+      - when: { platform: nanopore }
+        boost: 25
+  - names: [ --pacbio-hifi ]
+    description: PacBio HiFi reads (under 1% error)
+    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    rank: 75
+  - names: [ --pacbio-raw ]
+    description: PacBio CLR reads (under 20% error)
+    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    rank: 40
+  - names: [ --pacbio-corr ]
+    description: PacBio reads corrected by another tool (under 3% error)
+    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    rank: 25
+  - names: [ --subassemblies ]
+    description: high-quality contigs as input (deprecated)
+    value: { type: file, format: fasta, multiple: true }
+    rank: 5
+  - names: [ -o, --out-dir ]
+    description: output folder
+    value: { type: dir }
+    rank: 95
+  - names: [ -g, --genome-size ]
+    description: estimated genome size, e.g. 5m or 2.6g (needed with --asm-coverage)
+    value: { type: string }
+    rank: 55
+  - names: [ -t, --threads ]
+    description: threads
+    value: { type: int }
+    default: 1
+    rank: 90
+  - names: [ -i, --iterations ]
+    description: polishing rounds
+    value: { type: int }
+    default: 1
+    rank: 45
+  - names: [ -m, --min-overlap ]
+    description: least overlap between reads (chosen automatically by default)
+    value: { type: int }
+    rank: 25
+  - names: [ --asm-coverage ]
+    description: use only the longest reads up to this coverage for the first assembly step (with -g; 40 is usually enough)
+    value: { type: int }
+    rank: 35
+  - names: [ --read-error ]
+    description: expected error rate of the reads, as a fraction, e.g. 0.03
+    value: { type: float }
+    rank: 30
+  - names: [ --hifi-error ]
+    description: same as --read-error (deprecated)
+    value: { type: float }
+    rank: 5
+  - names: [ --extra-params ]
+    description: extra configuration parameters, comma-separated
+    value: { type: string }
+    rank: 10
+  - names: [ --meta ]
+    description: metagenome or uneven coverage
+    rank: 65
+  - names: [ --keep-haplotypes ]
+    description: do not collapse alternative haplotypes
+    rank: 30
+  - names: [ --no-alt-contigs ]
+    description: do not write contigs of alternative haplotypes
+    rank: 25
+  - names: [ --scaffold ]
+    description: scaffold with the assembly graph
+    rank: 30
+  - names: [ --plasmids ]
+    description: unused, kept for old command lines
+    rank: 5
+  - names: [ --trestle ]
+    description: Trestle repeat resolution (deprecated)
+    rank: 5
+  - names: [ --polish-target ]
+    description: polish this sequence only (Flye's polisher on its own)
+    value: { type: file, format: fasta }
+    rank: 30
+  - names: [ --resume ]
+    description: resume from the last completed stage
+    rank: 45
+  - names: [ --resume-from ]
+    description: resume from this stage
+    value: { type: string }
+    rank: 20
+  - names: [ --stop-after ]
+    description: stop once this stage is done
+    value: { type: string }
+    rank: 15
+  - names: [ --deterministic ]
+    description: single-threaded first assembly step, for reproducible results
+    rank: 15
+  - names: [ --debug ]
+    description: debug output
+    rank: 10

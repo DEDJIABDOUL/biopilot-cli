@@ -1,0 +1,91 @@
+replace name/sequence by regular expression.
+
+Note that the replacement supports capture variables.
+e.g. $1 represents the text of the first submatch.
+ATTENTION: use SINGLE quote NOT double quotes in *nix OS.
+
+Examples: Adding space to all bases.
+
+    seqkit replace -p "(.)" -r '$1 ' -s
+
+Or use the \ escape character.
+
+    seqkit replace -p "(.)" -r "\$1 " -s
+
+more on: http://bioinf.shenwei.me/seqkit/usage/#replace
+
+Special replacement symbols (only for replacing name not sequence):
+
+    {nr}    Record number, starting from 1
+    {uuid}  Random 16-character Universally unique identifier (UUID)
+    {fn}    File name
+    {fbn}   File base name
+    {fbne}  File base name without any extension
+    {kv}    Corresponding value of the key (captured variable $n) by key-value file,
+            n can be specified by flag -I (--key-capt-idx) (default: 1)
+            
+Special cases:
+  1. If replacements contain '$', 
+    a). If using '{kv}', you need use '$$$$' instead of a single '$':
+            -r '{kv}' -k <(sed 's/\$/$$$$/' kv.txt)
+    b). If not, use '$$':
+            -r 'xxx$$xx'
+
+Filtering records to edit:
+  You can use flags similar to those in "seqkit grep" to choose partly records to edit.
+
+Usage:
+  seqkit replace [flags] 
+
+Flags:
+  -s, --by-seq                   replace seq (FASTQ: length-increasing replacements not allowed)
+      --f-by-name                [target filter] match by full name instead of just ID
+      --f-by-seq                 [target filter] search subseq on seq, both positive and negative strand
+                                 are searched
+      --f-ignore-case            [target filter] ignore case
+      --f-invert-match           [target filter] invert the sense of matching, to select non-matching records
+      --f-only-positive-strand   [target filter] only search on positive strand
+      --f-pattern strings        [target filter] search pattern (multiple values supported. Attention:
+                                 use double quotation marks for patterns containing comma, e.g., -p
+                                 '"A{2,}"')
+      --f-pattern-file string    [target filter] pattern file (one record per line)
+      --f-use-regexp             [target filter] patterns are regular expression
+  -h, --help                     help for replace
+  -i, --ignore-case              ignore case
+  -K, --keep-key                 keep the key as value when no value found for the key (only for
+                                 sequence name)
+  -U, --keep-untouch             do not change anything when no value found for the key (only for
+                                 sequence name)
+  -I, --key-capt-idx int         capture variable index of key (1-based) (default 1)
+  -m, --key-miss-repl string     replacement for key with no corresponding value
+  -k, --kv-file string           tab-delimited key-value file for replacing key with value when using
+                                 "{kv}" in -r (--replacement) (only for sequence name)
+      --nr-width int             minimum width for {nr} in flag -r/--replacement. e.g., formatting "1"
+                                 to "001" by --nr-width 3 (default 1)
+  -p, --pattern string           search regular expression
+  -r, --replacement string       replacement. supporting capture variables.  e.g. $1 represents the text
+                                 of the first submatch (use ${1} instead of $1 when {kv} given!).
+                                 ATTENTION: for *nix OS, use SINGLE quote NOT double quotes or use the \
+                                 escape character. Record number and file name is also supported by
+                                 "{nr}" and "{fn}". Type "csvtk replace -h" for more replacement symbols.
+
+Global Flags:
+      --alphabet-guess-seq-length int   length of sequence prefix of the first FASTA record based on
+                                        which seqkit guesses the sequence type (0 for whole seq)
+                                        (default 10000)
+      --compress-level int              compression level for gzip, zstd, xz and bzip2. type "seqkit -h"
+                                        for the range and default value for each format (default -1)
+      --id-ncbi                         FASTA head is NCBI-style, e.g. >gi|110645304|ref|NC_002516.2|
+                                        Pseud...
+      --id-regexp string                regular expression for parsing ID (default "^(\\S+)\\s?")
+  -X, --infile-list string              file of input files list (one file per line), if given, they are
+                                        appended to files from cli arguments
+  -w, --line-width int                  line width when outputting FASTA format (0 for no wrap) (default 60)
+  -o, --out-file string                 out file ("-" for stdout, suffix .gz for gzipped out) (default "-")
+      --quiet                           be quiet and do not show extra information
+  -t, --seq-type string                 sequence type (dna|rna|protein|unlimit|auto) (for auto, it
+                                        automatically detect by the first sequence) (default "auto")
+      --skip-file-check                 skip input file checking when given a file list if you believe
+                                        these files do exist
+  -j, --threads int                     number of CPUs. can also set with environment variable
+                                        SEQKIT_THREADS) (default 4)

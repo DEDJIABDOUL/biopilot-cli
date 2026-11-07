@@ -1,0 +1,128 @@
+usage: medaka train [-h] [--debug | --quiet] [--train_name TRAIN_NAME]
+                    [--model MODEL] [--epochs EPOCHS]
+                    [--batch_size BATCH_SIZE] [--max_samples MAX_SAMPLES]
+                    [--max_valid_samples MAX_VALID_SAMPLES]
+                    [--samples_per_training_epoch SAMPLES_PER_TRAINING_EPOCH]
+                    [--seed SEED] [--threads_io THREADS_IO] [--device DEVICE]
+                    [--optimizer {nadam,adam,rmsprop,sgd}]
+                    [--optim_args KEY1=VAL1,KEY2=VAL2... [KEY1=VAL1,KEY2=VAL2... ...]]
+                    [--loss_args KEY1=VAL1,KEY2=VAL2... [KEY1=VAL1,KEY2=VAL2... ...]]
+                    [--use_lr_schedule] [--amp] [--no_early_stopping]
+                    [--validate_only]
+                    [--validation_split VALIDATION_SPLIT | --validation_features VALIDATION_FEATURES [VALIDATION_FEATURES ...]]
+                    features [features ...]
+
+positional arguments:
+  features              Paths to training data.
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+  --train_name TRAIN_NAME
+                        Name for training run. (default: medaka_train)
+  --model MODEL         Model definition and initial weights .tar.gz, or .toml
+                        with kwargs to build model. {r103_fast_g507,
+                        r103_fast_snp_g507, r103_fast_variant_g507,
+                        r103_hac_g507, r103_hac_snp_g507,
+                        r103_hac_variant_g507, r103_sup_g507,
+                        r103_sup_snp_g507, r103_sup_variant_g507,
+                        r1041_e82_260bps_fast_g632,
+                        r1041_e82_260bps_fast_variant_g632,
+                        r1041_e82_260bps_hac_g632,
+                        r1041_e82_260bps_hac_v4.0.0,
+                        r1041_e82_260bps_hac_v4.1.0,
+                        r1041_e82_260bps_hac_variant_g632,
+                        r1041_e82_260bps_hac_variant_v4.1.0,
+                        r1041_e82_260bps_joint_apk_ulk_v5.0.0,
+                        r1041_e82_260bps_sup_g632,
+                        r1041_e82_260bps_sup_v4.0.0,
+                        r1041_e82_260bps_sup_v4.1.0,
+                        r1041_e82_260bps_sup_variant_g632,
+                        r1041_e82_260bps_sup_variant_v4.1.0,
+                        r1041_e82_400bps_bacterial_methylation,
+                        r1041_e82_400bps_fast_g615,
+                        r1041_e82_400bps_fast_g632,
+                        r1041_e82_400bps_fast_variant_g615,
+                        r1041_e82_400bps_fast_variant_g632,
+                        r1041_e82_400bps_hac_g615, r1041_e82_400bps_hac_g632,
+                        r1041_e82_400bps_hac_v4.0.0,
+                        r1041_e82_400bps_hac_v4.1.0,
+                        r1041_e82_400bps_hac_v4.2.0,
+                        r1041_e82_400bps_hac_v4.3.0,
+                        r1041_e82_400bps_hac_v5.0.0,
+                        r1041_e82_400bps_hac_v5.0.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_hac_v5.0.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_hac_v5.2.0,
+                        r1041_e82_400bps_hac_v5.2.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_hac_v5.2.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_hac_v6.0.0,
+                        r1041_e82_400bps_hac_v6.0.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_hac_v6.0.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_hac_variant_g615,
+                        r1041_e82_400bps_hac_variant_g632,
+                        r1041_e82_400bps_hac_variant_v4.1.0,
+                        r1041_e82_400bps_hac_variant_v4.2.0,
+                        r1041_e82_400bps_hac_variant_v4.3.0,
+                        r1041_e82_400bps_hac_variant_v5.0.0,
+                        r1041_e82_400bps_sup_g615,
+                        r1041_e82_400bps_sup_v4.0.0,
+                        r1041_e82_400bps_sup_v4.1.0,
+                        r1041_e82_400bps_sup_v4.2.0,
+                        r1041_e82_400bps_sup_v4.3.0,
+                        r1041_e82_400bps_sup_v5.0.0,
+                        r1041_e82_400bps_sup_v5.0.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_sup_v5.0.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_sup_v5.2.0,
+                        r1041_e82_400bps_sup_v5.2.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_sup_v5.2.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_sup_variant_g615,
+                        r1041_e82_400bps_sup_variant_v4.1.0,
+                        r1041_e82_400bps_sup_variant_v4.2.0,
+                        r1041_e82_400bps_sup_variant_v4.3.0,
+                        r1041_e82_400bps_sup_variant_v5.0.0,
+                        r104_e81_fast_g5015, r104_e81_fast_variant_g5015,
+                        r104_e81_hac_g5015, r104_e81_hac_variant_g5015,
+                        r104_e81_sup_g5015, r104_e81_sup_g610,
+                        r104_e81_sup_variant_g610, r941_e81_fast_g514,
+                        r941_e81_fast_variant_g514, r941_e81_hac_g514,
+                        r941_e81_hac_variant_g514, r941_e81_sup_g514,
+                        r941_e81_sup_variant_g514, r941_min_fast_g507,
+                        r941_min_fast_snp_g507, r941_min_fast_variant_g507,
+                        r941_min_hac_g507, r941_min_hac_snp_g507,
+                        r941_min_hac_variant_g507, r941_min_sup_g507,
+                        r941_min_sup_snp_g507, r941_min_sup_variant_g507,
+                        r941_prom_fast_g507, r941_prom_fast_snp_g507,
+                        r941_prom_fast_variant_g507, r941_prom_hac_g507,
+                        r941_prom_hac_snp_g507, r941_prom_hac_variant_g507,
+                        r941_prom_sup_g507, r941_prom_sup_snp_g507,
+                        r941_prom_sup_variant_g507, r941_sup_plant_g610,
+                        r941_sup_plant_variant_g610} (default: None)
+  --epochs EPOCHS       Maximum number of training epochs. (default: 5000)
+  --batch_size BATCH_SIZE
+                        Training batch size. (default: 100)
+  --max_samples MAX_SAMPLES
+                        Only train on max_samples. (default: None)
+  --max_valid_samples MAX_VALID_SAMPLES
+                        Only validate on max_valid_samples. (default: None)
+  --samples_per_training_epoch SAMPLES_PER_TRAINING_EPOCH
+                        Number of samples per epoch. (default: None)
+  --seed SEED           Seed for random batch shuffling. (default: 0)
+  --threads_io THREADS_IO
+                        Number of threads for parallel IO. (default: 1)
+  --device DEVICE       GPU device to use. (default: 0)
+  --optimizer {nadam,adam,rmsprop,sgd}
+                        Optimizer to use. (default: rmsprop)
+  --optim_args KEY1=VAL1,KEY2=VAL2... [KEY1=VAL1,KEY2=VAL2... ...]
+                        Optimizer key-word arguments. (default: None)
+  --loss_args KEY1=VAL1,KEY2=VAL2... [KEY1=VAL1,KEY2=VAL2... ...]
+                        Training loss key-word arguments. (default: None)
+  --use_lr_schedule     Use cosine learning rate scheduler. (default: False)
+  --amp                 Train with half precision. (default: False)
+  --no_early_stopping   Turn off early stopping of training. (default: False)
+  --validate_only       Run a single validation epoch, write metrics and then
+                        exit. (default: False)
+  --validation_split VALIDATION_SPLIT
+                        Fraction of data to validate on. (default: 0.2)
+  --validation_features VALIDATION_FEATURES [VALIDATION_FEATURES ...]
+                        Paths to validation data (default: None)

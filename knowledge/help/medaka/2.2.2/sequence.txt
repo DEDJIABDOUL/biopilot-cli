@@ -1,0 +1,31 @@
+usage: medaka sequence [-h] [--debug | --quiet]
+                       [--regions REGIONS [REGIONS ...]]
+                       [--min_depth MIN_DEPTH] [--threads THREADS]
+                       [--no-fillgaps] [--fill_char FILL_CHAR] [--qualities]
+                       inputs [inputs ...] draft output
+
+positional arguments:
+  inputs                Consensus .hdf files.
+  draft                 Draft .fasta. Consensus gaps will be filled with
+                        unpolished draft sequence to avoid contig
+                        fragmentation.
+  output                Output .fasta.
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+  --regions REGIONS [REGIONS ...]
+                        Genomic ref_names to process, or a bed file. (default:
+                        None)
+  --min_depth MIN_DEPTH
+                        Sites with depth lower than min_depth will not be
+                        polished. (default: 0)
+  --threads THREADS     Number of worker processes to use. (default: 1)
+  --no-fillgaps         Don't fill gaps in consensus sequence with draft
+                        sequence. (default: True)
+  --fill_char FILL_CHAR
+                        Use a designated character to fill gaps. (default:
+                        None)
+  --qualities           Output with per-base quality scores (fastq). (default:
+                        False)

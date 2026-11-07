@@ -367,9 +367,9 @@ threads = 8
 | `biopilot reinit` | Remplace les ressources installées, dont le catalogue, après une mise à jour ; ne touche jamais aux données de l'utilisateur |
 | `biopilot doctor` | Vérifie l'installation, la base, le shell et l'environnement |
 | `biopilot status` | Affiche l'environnement, le projet et les versions détectés |
-| `biopilot learn <outil>` | Importe un outil depuis son `--help` |
+| `biopilot learn <outil>` | Importe un outil depuis son `--help` *(version 1.1 ; `--list`, `--forget`)* ; seule cette commande lance un outil inconnu |
 | `biopilot sync` | Calcule à l'avance les profils des outils de l'environnement actif |
-| `biopilot search "<texte>"` | Recherche une option par sa description (FTS5) |
+| `biopilot search "<texte>"` | Recherche une option par sa description (FTS5) *(version 1.1 : Catalog et outils appris)* |
 | `biopilot info [--json] [outil] [sous-commande…] [option]` | Affiche la fiche d'un outil, d'une sous-commande ou d'une option. Les options de BioPilot se placent avant le nom de l'outil ; tout ce qui suit est lu comme chemin de sous-commande et nom d'option (fastp a lui-même une option `--json`). |
 | `biopilot reset-usage` | Efface les statistiques d'usage |
 | `biopilot uninstall` | Supprime la configuration, les données et la ligne de démarrage |
@@ -400,8 +400,8 @@ Le script :
 Variantes pour les utilisateurs qui préfèrent un gestionnaire de paquets :
 
 ```shell
-npm install -g biopilot-cli
-conda install -c conda-forge biopilot-cli   # cible à moyen terme, très utilisée par le public visé
+npm install -g biopilot-cli                 # depuis la version 1.1
+conda install -c conda-forge biopilot-cli   # abandonné (décision de la version 1.1)
 ```
 
 ### 10.2 Exigences

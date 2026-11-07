@@ -1,0 +1,147 @@
+/home/abdoul/miniconda3/envs/biopilot-tools-2/bin/picard: line 5: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+USAGE: LiftoverVcf [arguments]
+
+Lifts over a VCF file from one reference build to another.  <h3>Summary</h3>
+Tool for "lifting over" a VCF from one genome build to another, producing a properly headered, sorted and indexed VCF in
+one go.
+
+<h3>Details</h3>
+This tool adjusts the coordinates of variants within a VCF file to match a new reference. The output file will be sorted
+and indexed using the target reference build. To be clear, REFERENCE_SEQUENCE should be the <em>target</em> reference
+build (that is, the "new" one). The tool is based on the UCSC LiftOver tool (see
+http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation.
+
+For each variant, the tool will look for the target coordinate, reverse-complement and left-align the variant if needed,
+and, in the case that the reference and alternate alleles of a SNP have been swapped in the new genome build, it will
+adjust the SNP, and correct AF-like INFO fields and the relevant genotypes.
+
+<h3>Example</h3>
+java -jar picard.jar LiftoverVcf \
+I=input.vcf \
+O=lifted_over.vcf \
+CHAIN=b37tohg38.chain \
+REJECT=rejected_variants.vcf \
+R=reference_sequence.fasta
+
+<h3>Caveats</h3>
+<h4>Rejected Records</h4>
+Records may be rejected because they cannot be lifted over or because of sequence incompatibilities between the source
+and target reference genomes.  Rejected records will be emitted to the REJECT file using the source genome build
+coordinates. The reason for the rejection will be stated in the FILTER field, and more detail may be placed in the INFO
+field.
+<h4>Memory Use</h4>
+LiftOverVcf sorts the output using a "SortingCollection" which relies on MAX_RECORDS_IN_RAM to specify how many (vcf)
+records to hold in memory before "spilling" to disk. The default value is reasonable when sorting SAM files, but not for
+VCFs as there is no good default due to the dependence on the number of samples and amount of information in the INFO
+and FORMAT fields. Consider lowering to 100,000 or even less if you have many genotypes.
+
+Version:3.5.0
+
+
+Required Arguments:
+
+--CHAIN,-C <File>             The liftover chain file. See https://genome.ucsc.edu/goldenPath/help/chain.html for a
+                              description of chain files.  See http://hgdownload.soe.ucsc.edu/downloads.html#terms for
+                              where to download chain files.  Required. 
+
+--INPUT,-I <File>             The input VCF/BCF file to be lifted over.  Required. 
+
+--OUTPUT,-O <File>            The output location for the lifted over VCF/BCF.  Required. 
+
+--REFERENCE_SEQUENCE,-R <File>The reference sequence (fasta) for the TARGET genome build (i.e., the new one.  The fasta
+                              file must have an accompanying sequence dictionary (.dict file).  Required. 
+
+--REJECT <File>               File to which to write rejected records.  Required. 
+
+
+Optional Arguments:
+
+--ALLOW_MISSING_FIELDS_IN_HEADER <Boolean>
+                              Allow INFO and FORMAT in the records that are not found in the header  Default value:
+                              false. Possible values: {true, false} 
+
+--arguments_file <File>       read one or more arguments files and add them to the command line  This argument may be
+                              specified 0 or more times. Default value: null. 
+
+--COMPRESSION_LEVEL <Integer> Compression level for all compressed files created (e.g. BAM and VCF).  Default value: 5. 
+
+--CREATE_INDEX <Boolean>      Whether to create an index when writing VCF or coordinate sorted BAM output.  Default
+                              value: false. Possible values: {true, false} 
+
+--CREATE_MD5_FILE <Boolean>   Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value:
+                              false. Possible values: {true, false} 
+
+--DISABLE_SORT <Boolean>      Output VCF file will be written on the fly but it won't be sorted and indexed.  Default
+                              value: false. Possible values: {true, false} 
+
+--help,-h <Boolean>           display the help message  Default value: false. Possible values: {true, false} 
+
+--LIFTOVER_MIN_MATCH <Double> The minimum percent match required for a variant to be lifted.  Default value: 1.0. 
+
+--LOG_FAILED_INTERVALS,-LFI <Boolean>
+                              If true, intervals failing due to match below LIFTOVER_MIN_MATCH will be logged as a
+                              warning to the console.  Default value: true. Possible values: {true, false} 
+
+--MAX_RECORDS_IN_RAM <Integer>When writing files that need to be sorted, this will specify the number of records stored
+                              in RAM before spilling to disk. Increasing this number reduces the number of file handles
+                              needed to sort the file, and increases the amount of RAM needed.  Default value: 500000. 
+
+--QUIET <Boolean>             Whether to suppress job-summary info on System.err.  Default value: false. Possible
+                              values: {true, false} 
+
+--RECOVER_SWAPPED_REF_ALT <Boolean>
+                              If the REF allele of the lifted site does not match the target genome, that variant is
+                              normally rejected. For bi-allelic SNPs, if this is set to true and the ALT allele equals
+                              the new REF allele, the REF and ALT alleles will be swapped.  This can rescue some
+                              variants; however, do this carefully as some annotations may become invalid, such as any
+                              that are alelle-specifc.  See also TAGS_TO_REVERSE and TAGS_TO_DROP.  Default value:
+                              false. Possible values: {true, false} 
+
+--TAGS_TO_DROP <String>       INFO field annotations that should be deleted when swapping reference with variant
+                              alleles.  This argument may be specified 0 or more times. Default value: [MAX_AF]. 
+
+--TAGS_TO_REVERSE <String>    INFO field annotations that behave like an Allele Frequency and should be transformed with
+                              x->1-x when swapping reference with variant alleles.  This argument may be specified 0 or
+                              more times. Default value: [AF]. 
+
+--TMP_DIR <File>              One or more directories with space available to be used by this program for temporary
+                              storage of working files  This argument may be specified 0 or more times. Default value:
+                              null. 
+
+--USE_JDK_DEFLATER,-use_jdk_deflater <Boolean>
+                              Use the JDK Deflater instead of the Intel Deflater for writing compressed output  Default
+                              value: false. Possible values: {true, false} 
+
+--USE_JDK_INFLATER,-use_jdk_inflater <Boolean>
+                              Use the JDK Inflater instead of the Intel Inflater for reading compressed input  Default
+                              value: false. Possible values: {true, false} 
+
+--VALIDATION_STRINGENCY <ValidationStringency>
+                              Validation stringency for all SAM files read by this program.  Setting stringency to
+                              SILENT can improve performance when processing a BAM file in which variable-length data
+                              (read, qualities, tags) do not otherwise need to be decoded.  Default value: STRICT.
+                              Possible values: {STRICT, LENIENT, SILENT} 
+
+--VERBOSITY <LogLevel>        Control verbosity of logging.  Default value: INFO. Possible values: {ERROR, WARNING,
+                              INFO, DEBUG} 
+
+--version <Boolean>           display the version number for this tool  Default value: false. Possible values: {true,
+                              false} 
+
+--WARN_ON_MISSING_CONTIG,-WMC <Boolean>
+                              Warn on missing contig.  Default value: false. Possible values: {true, false} 
+
+--WRITE_ORIGINAL_ALLELES <Boolean>
+                              Write the original alleles for lifted variants to the INFO field.  If the alleles are
+                              identical, this attribute will be omitted.  Default value: false. Possible values: {true,
+                              false} 
+
+--WRITE_ORIGINAL_POSITION <Boolean>
+                              Write the original contig/position for lifted variants to the INFO field.  Default value:
+                              false. Possible values: {true, false} 
+
+
+Advanced Arguments:
+
+--showHidden <Boolean>        display hidden arguments  Default value: false. Possible values: {true, false} 
+

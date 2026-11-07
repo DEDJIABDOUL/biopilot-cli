@@ -60,10 +60,12 @@ General completion (git, cd, ls…) works as before; bio tools simply come first
 
 ## What the suggestions are based on
 
-1. **The Catalog** — a database shipped with BioPilot describing 10 tools (bcftools, blastn, bwa, fastp, fastqc, minimap2, multiqc, porechop, salmon, samtools): their options, subcommands, value types, file formats, read pairs, derived outputs, and a rank for each option. `biopilot info fastp` shows what it knows.
+1. **The Catalog** — a database shipped with BioPilot describing 34 tools (bcftools, blastn, bowtie2, bowtie2-build, busco, bwa, bwa-mem2, chopper, cutadapt, fastp, fastqc, filtlong, flye, hisat2, hisat2-build, medaka, medaka_consensus, medaka_variant, megahit, minimap2, mosdepth, multiqc, NanoPlot, picard, porechop, qualimap, quast, salmon, samtools, seqkit, seqtk, spades.py, STAR, trimmomatic): their options, subcommands, value types, file formats, read pairs, derived outputs, and a rank for each option. `biopilot info fastp` shows what it knows.
 2. **The binary you would run** — BioPilot looks up the tool in your shell's `PATH` (it follows `conda activate`), finds its version in `conda-meta/` or by asking the tool, and reads the tool's own `--help` once per version: its **Profile**. With a Profile, only the options your version really has are suggested (fastp 0.20.1 gets no `--dedup`). The first time, the Catalog's options (filtered by version when it is known) show while the Profile is computed in the background; `biopilot sync` computes them ahead of time.
 3. **The project** — from the first parent folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml`, BioPilot reads file names (never contents): files of the expected format, read pairs, the platform (illumina, nanopore) and the assay, which adjust the ranking.
 4. **Your habits** — options you accept often rise a little (+15 at most). `biopilot reset-usage` forgets them.
+
+**Tools outside the Catalog:** `biopilot learn <tool>` reads the tool's root help (`--help`, `-h`, or no argument), discovers its subcommands (one level, 50 at most) and how to print its version (`--version`, `-V` or `version`), and computes its Profiles. From then on it is completed like a Catalog tool, from its own help only: its options rank by your usage, and values are completed as files. BioPilot never runs a tool you merely type: only `learn` runs an unknown one.
 
 ## The status line
 
@@ -88,6 +90,8 @@ Turn it off with `statusLine = false` in [`rc.toml`](#configuration-rctoml).
 | `biopilot status [--json]` | show the environment, the project and, per Catalog tool, the binary, version and Profile |
 | `biopilot sync` | compute the Profiles of the Catalog tools of the active environment |
 | `biopilot info [--json] [tool] [command…] [option]` | what the Catalog knows about a tool, a subcommand or an option (`biopilot info samtools sort -o`) |
+| `biopilot learn <tool>` | import an installed tool that is not in the Catalog, from its own help; `--list`, `--forget <tool>` |
+| `biopilot search [--json] [--tool <tool>] "<text>"` | find options of the Catalog and of learned tools by their names and descriptions |
 | `biopilot reset-usage` | erase the usage statistics |
 | `biopilot uninstall [--yes]` | remove BioPilot entirely |
 | `biopilot -c` | tell whether this terminal runs in a BioPilot session |
@@ -132,7 +136,7 @@ key = "escape"
 
 - **No network, no telemetry, ever.** Everything happens on your machine.
 - **Reads:** file and folder *names* of the current project (depth 3, 2 000 entries at most, hidden folders, `node_modules`, `work/` and `.snakemake/` skipped); the content of `environment.yml` (64 KB at most) and `.biopilot.toml` only. Never the content of your data files.
-- **Runs:** only the tools of the Catalog found in your `PATH`, and only with their declared version and help commands (`fastp --version`, `fastp --help`): standard input closed, 2.5 s at most, stopped together with anything they started. Relative `PATH` entries are ignored, so the current folder never decides what runs. The prompt itself runs no command.
+- **Runs:** only the tools of the Catalog and the tools you imported with `biopilot learn` found in your `PATH`, and only with their declared version and help commands (`fastp --version`, `fastp --help`): standard input closed, 2.5 s at most, stopped together with anything they started. Relative `PATH` entries are ignored, so the current folder never decides what runs. The prompt itself runs no command.
 - **Stores** in `~/.local/share/biopilot/user.db` (readable by you only): the Profiles (the options of each tool version), the versions found, and how often you accepted each option. `biopilot reset-usage` erases the usage; `biopilot uninstall` erases everything.
 
 ## Troubleshooting

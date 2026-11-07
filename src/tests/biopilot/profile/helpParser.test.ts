@@ -62,6 +62,61 @@ describe("--help parser", () => {
     expect(byName(options, "--template")).toMatchObject({ takesValue: true }); // `(default|disco|…)`
   });
 
+  test("docopt style (mosdepth): names separated by a space, `-t --threads <threads>`", () => {
+    const options = parse("mosdepth", "0.3.14", "root.txt");
+    expect(byName(options, "--threads")).toMatchObject({ names: ["-t", "--threads"], takesValue: true });
+    expect(byName(options, "--no-per-base")).toMatchObject({ names: ["-n", "--no-per-base"], takesValue: false });
+  });
+
+  test("filtlong style: the value's type glued to the name, `-t[int], --target_bases [int]`", () => {
+    const options = parse("filtlong", "0.3.1", "root.txt");
+    expect(byName(options, "--target_bases")).toMatchObject({ names: ["-t", "--target_bases"], takesValue: true });
+    expect(byName(options, "--trim")).toMatchObject({ names: ["--trim"], takesValue: false });
+    expect(options.flatMap((option) => option.names)).not.toContain("-tint");
+  });
+
+  test("Barclay style (Picard, GATK): unindented `--INPUT,-I <File>`, ANSI colours, the type glued to the description", () => {
+    const options = parse("picard", "3.5.0", "SortSam.txt");
+    expect(byName(options, "--INPUT")).toMatchObject({ names: ["--INPUT", "-I"], takesValue: true });
+    expect(byName(options, "--INPUT")?.description).toMatch(/^The SAM, BAM or CRAM file to sort/);
+    expect(byName(options, "--MAX_RECORDS_IN_RAM")).toMatchObject({ names: ["--MAX_RECORDS_IN_RAM"], takesValue: true });
+    expect(byName(options, "--MAX_RECORDS_IN_RAM")?.description).toMatch(/^When writing files/);
+    expect(byName(options, "--REFERENCE_SEQUENCE")).toMatchObject({ names: ["--REFERENCE_SEQUENCE", "-R"], takesValue: true });
+    expect(byName(options, "--REFERENCE_SEQUENCE")?.description).toMatch(/^Reference sequence file/);
+    expect(options).toHaveLength(18);
+  });
+
+  test("STAR style: `name   default` at the start of a line, the type and description indented below", () => {
+    const options = parse("STAR", "2.7.11b", "root.txt");
+    expect(byName(options, "--runThreadN")).toEqual({ names: ["--runThreadN"], takesValue: true, description: "number of threads to run STAR" });
+    expect(byName(options, "--readFilesIn")).toMatchObject({ takesValue: true });
+    expect(byName(options, "--outSJfilterOverhangMin")?.description).toMatch(/^minimum overhang length/);
+    expect(byName(options, "--outReadsUnmapped")).toMatchObject({ takesValue: true }); // its type line is indented by 3
+    expect(byName(options, "--alignSJstitchMismatchNmax")).toMatchObject({ takesValue: true }); // `4*int>=0:`
+    expect(byName(options, "--outSJfilterIntronMaxVsReadN")).toMatchObject({ takesValue: true }); // `N integers>=0:`
+    expect(options.flatMap((option) => option.names)).not.toContain("-1"); // `-1 ... all alignments`: a value
+    expect(options).toHaveLength(203);
+  });
+
+  test("MEGAHIT style: the value in a column of its own, `-1      <pe1>      comma-separated…`", () => {
+    const options = parse("megahit", "1.2.9", "root.txt");
+    expect(byName(options, "-1")).toMatchObject({ names: ["-1"], takesValue: true });
+    expect(byName(options, "-1")?.description).toMatch(/^comma-separated list/);
+    expect(byName(options, "--read")).toMatchObject({ names: ["-r", "--read"], takesValue: true });
+    expect(byName(options, "--k-list")).toMatchObject({ takesValue: true }); // `<int,int,..>`
+    expect(byName(options, "--no-mercy")).toMatchObject({ takesValue: false });
+  });
+
+  test("QUAST style: unindented lines, the long name and its value in a column of their own", () => {
+    const options = parse("quast", "5.3.0", "root.txt");
+    expect(byName(options, "-o")).toMatchObject({ names: ["-o", "--output-dir"], takesValue: true });
+    expect(byName(options, "-r")).toMatchObject({ names: ["-r"], takesValue: true });
+    expect(byName(options, "--min-alignment")).toMatchObject({ names: ["-i", "--min-alignment"], takesValue: true });
+    expect(byName(options, "--min-alignment")?.description).toMatch(/^The minimum alignment length/);
+    expect(byName(options, "--eukaryote")).toMatchObject({ names: ["-e", "--eukaryote"], takesValue: false });
+    expect(byName(options, "-L")).toMatchObject({ takesValue: false });
+  });
+
   test("`--region[s]-file` gives both names", () => {
     expect(parseHelp("  -R, --region[s]-file FILE   restrict to regions\n")).toEqual([
       { names: ["-R", "--region-file", "--regions-file"], takesValue: true, description: "restrict to regions" },

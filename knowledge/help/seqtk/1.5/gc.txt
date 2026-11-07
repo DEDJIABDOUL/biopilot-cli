@@ -1,0 +1,6 @@
+Usage: seqtk gc [options] <in.fa>
+Options:
+  -w         identify high-AT regions
+  -f FLOAT   min GC fraction (or AT fraction for -w) [0.60]
+  -l INT     min region length to output [20]
+  -x FLOAT   X-dropoff [10.0]

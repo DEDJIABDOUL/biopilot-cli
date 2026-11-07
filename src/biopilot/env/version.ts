@@ -90,6 +90,8 @@ export const condaMetaVersion = (binary: Binary, pkg: string): string | undefine
 
 /** The version printed by the Tool's declared version command, read with its regular expression. */
 export const probeVersion = async (binary: Binary, query: ToolQuery): Promise<string | undefined> => {
+  // No version command known (a learned tool that answered none): never run anything to guess one.
+  if (query.versionRegex === "") return;
   const output = await runTool(binary, query.versionArgs);
   if (output === undefined) return;
   try {

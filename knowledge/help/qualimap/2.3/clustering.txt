@@ -1,0 +1,35 @@
+Java memory size is set to 1200M
+Launching application...
+
+QualiMap v.2.3
+Built on 2023-05-19 16:57
+
+Selected tool: clustering
+
+ERROR: Missing required options: sample, control, regions
+
+usage: qualimap clustering [-b <arg>] [-c <arg>] -control <arg> [-expr <arg>]
+       [-f <arg>] [-l <arg>] [-name <arg>] [-outdir <arg>] [-outfile <arg>]
+       [-outformat <arg>] [-R <arg>] [-r <arg>] -regions <arg> -sample <arg>
+       [-viz <arg>]
+ -b,--bin-size <arg>          Size of the bin (default is 100)
+ -c,--clusters <arg>          Comma-separated list of cluster sizes
+ -control <arg>               Comma-separated list of control BAM files
+ -expr <arg>                  Name of the experiment
+ -f,--fragment-length <arg>   Smoothing length of a fragment
+ -l <arg>                     Upstream offset (default is 2000)
+ -name <arg>                  Comma-separated names of the replicates
+ -outdir <arg>                Output folder for HTML report and raw data.
+ -outfile <arg>               Output file for PDF report (default value is
+                              report.pdf).
+ -outformat <arg>             Format of the output report (PDF, HTML or both
+                              PDF:HTML, default is HTML).
+ -R,--rscriptpath <arg>       Path to Rscript executable (by default it is
+                              assumed to be available from system $PATH)
+ -r <arg>                     Downstream offset (default is 500)
+ -regions <arg>               Path to regions file
+ -sample <arg>                Comma-separated list of sample BAM files
+ -viz <arg>                   Visualization type: heatmap or line
+
+
+

@@ -1,0 +1,93 @@
+Filtering and trimming of fastq or unaligned BAM files. Reads on stdin and writes to stdout.
+
+Usage: chopper [OPTIONS]
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Filtering Options:
+  -q, --quality <MINQUAL>
+          Sets a minimum Phred average quality score
+          
+          [default: 0]
+
+      --maxqual <MAXQUAL>
+          Sets a maximum Phred average quality score
+          
+          [default: 1000]
+
+  -l, --minlength <MINLENGTH>
+          Sets a minimum read length
+          
+          [default: 1]
+
+      --maxlength <MAXLENGTH>
+          Sets a maximum read length
+          
+          [default: INF]
+
+      --mingc <MINGC>
+          Filter min GC content
+
+      --maxgc <MAXGC>
+          Filter max GC content
+
+  -c, --contam <CONTAM>
+          Filter contaminants against a fasta
+
+Trimming Options:
+      --trim-approach <TRIM_APPROACH>
+          Select the trimming strategy to apply to the reads
+
+          Possible values:
+          - fixed-crop:           Remove a fixed number of bases from the start and/or end of the read. At least one of --headcrop and --tailcrop must be greater than 0
+          - trim-by-quality:      Trim low-quality bases from the ends of the read until reaching a base with quality ≥ --cutoff
+          - best-read-segment:    Extract the highest-quality read segment based on --cutoff, trimming low-quality bases from both ends
+          - split-by-low-quality: Split reads by low-quality segments and output high-quality parts on the left and right, provided they pass the length filter
+
+      --cutoff <CUTOFF>
+          Set the minimum quality score (Q-score) threshold for trimming low-quality bases from read ends. Required when using the `trim-by-quality`, `best-read-segment`, or `split-by-low-quality` trimming approaches
+
+      --split-window <SPLIT_WINDOW>
+          Minimum number of consecutive bases below --cutoff required to split a read. Shorter low-quality runs are tolerated and kept inside the segment. Only used with the `split-by-low-quality` trimming approach
+          
+          [default: 1]
+
+      --headcrop <HEADCROP>
+          Trim N bases from the start of each read. Used only with the `fixed-crop` trimming approach, which requires at least one of --headcrop and --tailcrop to be greater than 0
+          
+          [default: 0]
+
+      --tailcrop <TAILCROP>
+          Trim N bases from the end of each read. Used only with the `fixed-crop` trimming approach, which requires at least one of --headcrop and --tailcrop to be greater than 0
+          
+          [default: 0]
+
+      --update-mods
+          Recompute the base modification tags (MM, ML and MN), from unaligned BAM or as written by `samtools fastq -T MM,ML,MN`, so that they match the trimmed read. Only those tags are corrected; other position- or quality-dependent tags (qs, ns, ts, du, ...) are passed through unchanged and go stale. Reads whose tags are malformed or do not describe their sequence are reported as an error rather than written out with wrong coordinates
+
+      --trim-poly-tails [<MIN_LENGTH>]
+          Remove a poly(T) head from the start and a poly(A) tail from the end of each read (U counts as T), allowing up to 20% other bases in them. Runs shorter than MIN_LENGTH [default: 10] are left alone, since reads end in a few A's by chance. Tails must reach the end of the read (a few other bases past them are removed along with them, within that 20%), so remove adapters and primers first. Applied after --trim-approach, if any
+
+Setup Options:
+  -t, --threads <THREADS>
+          Use N parallel threads
+          
+          [default: 4]
+
+  -i, --input <INPUT>
+          Input filename [default: read from stdin]. FASTQ (optionally gzip, bzip2 or xz compressed) or unaligned BAM; the format is detected from the contents
+
+      --output-format <OUTPUT_FORMAT>
+          Output format [default: same as the input]. FASTQ output from BAM writes every BAM tag as a tab-separated SAM field after the read name, like `samtools fastq -T '*'`. BAM output keeps the input BAM header and tags, adding a @PG line
+
+          Possible values:
+          - fastq
+          - bam:   Unaligned BAM
+
+      --inverse
+          Output the opposite of the normal results

@@ -1,0 +1,78 @@
+compute message digest for all sequences in FASTA/Q files
+
+Attention:
+  1. By default, sequence headers and qualities are skipped, only sequences matter.
+     Optionally, the sequence ID can be included with the flag -i/--include-id.
+  2. The order of sequences records does not matter.
+  3. Circular complete genomes are supported with the flag -c/--circular.
+     - The same double-stranded genomes with different start positions or
+       in reverse complement strand will not affect the result.
+     - For single-stranded genomes like ssRNA genomes, use -s/--single-strand.
+     - The message digest would change with different values of k-mer size.
+  4. Multiple files are processed in parallel (-j/--threads).
+
+Method:
+  1. Converting the sequences to low cases, optionally removing gaps (-g).
+  2. Computing the hash (xxhash) for all sequences or k-mers of a circular
+     complete genome (-c/--circular).
+  3. Sorting all hash values, for ignoring the order of sequences.
+  4. Computing MD5 digest from the hash values, sequences length, and
+     the number of sequences.
+
+Following the seqhash in Poly (https://github.com/TimothyStiles/poly/),
+We add meta information to the message digest, with the format of:
+
+    seqkit.<version>_<seq type><seq structure><strand>[with seqid]_<kmer size>_<seq digest>
+
+    <version>:       digest version
+    <seq type>:      'D' for DNA, 'R' for RNA, 'P' for protein, 'N' for others
+    <seq structure>: 'L' for linear sequence, 'C' for circular genome
+    <strand>:        'D' for double-stranded, 'S' for single-stranded
+    [with seqid]:    'I' for including sequence ID, '' for not.
+    <kmer size>:     0 for linear sequence, other values for circular genome
+
+Examples:
+
+    seqkit.v0.1_DLS_k0_176250c8d1cde6c385397df525aa1a94    DNA.fq.gz
+    seqkit.v0.1_PLS_k0_c244954e4960dd2a1409cd8ee53d92b9    Protein.fasta
+    seqkit.v0.1_RLS_k0_0f1fb263f0c05a259ae179a61a80578d    single-stranded RNA.fasta
+
+    seqkit.v0.1_DCD_k31_e59dad6d561f1f1f28ebf185c6f4c183   double-stranded-circular DNA.fasta
+    seqkit.v0.1_DCS_k31_dd050490cd62ea5f94d73d4d636b7d60   single-stranded-circular DNA.fasta
+
+Usage:
+  seqkit sum [flags] 
+
+Flags:
+  -a, --all                  show all information, including the sequences length and the number of sequences
+  -b, --basename             only output basename of files
+  -c, --circular             the file contains a single circular genome sequence
+  -G, --gap-letters string   gap letters to delete with the flag -g/--remove-gaps (default "- \t.*")
+  -h, --help                 help for sum
+  -i, --include-id           include the sequence ID (defined by --id-regexp) when computing the digest
+  -k, --kmer-size int        k-mer size for processing circular genomes (default 1000)
+  -g, --remove-gaps          remove gap characters set in the option -G/gap-letters
+      --rna2dna              convert RNA to DNA
+  -s, --single-strand        only consider the positive strand of a circular genome, e.g., ssRNA virus
+                             genomes
+
+Global Flags:
+      --alphabet-guess-seq-length int   length of sequence prefix of the first FASTA record based on
+                                        which seqkit guesses the sequence type (0 for whole seq)
+                                        (default 10000)
+      --compress-level int              compression level for gzip, zstd, xz and bzip2. type "seqkit -h"
+                                        for the range and default value for each format (default -1)
+      --id-ncbi                         FASTA head is NCBI-style, e.g. >gi|110645304|ref|NC_002516.2|
+                                        Pseud...
+      --id-regexp string                regular expression for parsing ID (default "^(\\S+)\\s?")
+  -X, --infile-list string              file of input files list (one file per line), if given, they are
+                                        appended to files from cli arguments
+  -w, --line-width int                  line width when outputting FASTA format (0 for no wrap) (default 60)
+  -o, --out-file string                 out file ("-" for stdout, suffix .gz for gzipped out) (default "-")
+      --quiet                           be quiet and do not show extra information
+  -t, --seq-type string                 sequence type (dna|rna|protein|unlimit|auto) (for auto, it
+                                        automatically detect by the first sequence) (default "auto")
+      --skip-file-check                 skip input file checking when given a file list if you believe
+                                        these files do exist
+  -j, --threads int                     number of CPUs. can also set with environment variable
+                                        SEQKIT_THREADS) (default 4)

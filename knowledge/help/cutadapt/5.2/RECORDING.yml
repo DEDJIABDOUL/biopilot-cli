@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/cutadapt.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: cutadapt
+package: cutadapt
+version: 5.2
+build: py313hd978853_2
+channel: linux-64
+licence: MIT
+copyright: Marcel Martin et al., https://github.com/marcelm/cutadapt
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-2
+used_by_catalog: true
+files:
+  root.txt: cutadapt --help

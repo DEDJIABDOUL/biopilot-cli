@@ -1,0 +1,157 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# MEGAHIT 1.2.9, written from its recorded --help: knowledge/help/megahit/1.2.9/root.txt
+# (GPL-3.0-or-later; attribution in RECORDING.yml next to it) and its documentation
+# (https://github.com/voutcn/megahit), in our own words (spec decision 31).
+# Ranks follow the shared scale of spec §6.4.
+name: megahit
+package: megahit
+description: Fast, memory-light de novo assembler for large and complex metagenomes (short reads)
+version: { args: [ --version ], regex: "v(\\d[\\w.]*)" }
+help: [ --help ]
+options:
+  - names: [ "-1" ]
+    description: read 1 files of the pairs (comma-separated)
+    value: { type: file, format: [ fastq, fasta ], read_role: 1 }
+    rank: 95
+    repeatable: true
+  - names: [ "-2" ]
+    description: read 2 files of the pairs, in the order of -1
+    value: { type: file, format: [ fastq, fasta ], read_role: 2, mate_of: "-1" }
+    rank: 75
+    repeatable: true
+    rules:
+      - when: { used: [ "-1" ] }
+        boost: 30
+  - names: [ --12 ]
+    description: interleaved paired read files (comma-separated)
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 40
+    repeatable: true
+  - names: [ -r, --read ]
+    description: single-end read files (comma-separated)
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 60
+    repeatable: true
+  - names: [ -o, --out-dir ]
+    description: output folder, which must not exist yet
+    value: { type: dir }
+    default: ./megahit_out
+    rank: 92
+  - names: [ --out-prefix ]
+    description: prefix of the outputs (contigs in OUT_DIR/OUT_PREFIX.contigs.fa)
+    value: { type: string }
+    rank: 40
+  - names: [ --min-contig-len ]
+    description: shortest contig written
+    value: { type: int }
+    default: 200
+    rank: 55
+  - names: [ -t, --num-cpu-threads ]
+    description: threads (all logical processors by default)
+    value: { type: int }
+    rank: 85
+  - names: [ -m, --memory ]
+    description: memory for graph construction, in bytes, or a fraction of the machine's below 1
+    value: { type: float }
+    default: 0.9
+    rank: 60
+  - names: [ --mem-flag ]
+    description: "graph builder memory mode: 0 least, 1 moderate, other: all of -m"
+    value: { type: int }
+    default: 1
+    rank: 15
+  - names: [ --no-hw-accel ]
+    description: run without the BMI2 and POPCNT instructions
+    rank: 10
+  - names: [ --presets ]
+    description: parameter presets for metagenomes
+    value:
+      type: enum
+      values:
+        - { value: meta-sensitive, description: "more k-mer sizes, lower count threshold: slower, more sensitive" }
+        - { value: meta-large, description: "large and complex metagenomes, such as soil" }
+    rank: 55
+  - names: [ --min-count ]
+    description: least multiplicity of the (k_min+1)-mers kept
+    value: { type: int }
+    default: 2
+    rank: 35
+  - names: [ --k-list ]
+    description: k-mer sizes, odd, 15 to 255, comma-separated
+    value: { type: string }
+    rank: 40
+  - names: [ --k-min ]
+    description: smallest k-mer size, odd (overrides --k-list)
+    value: { type: int }
+    default: 21
+    rank: 30
+  - names: [ --k-max ]
+    description: largest k-mer size, odd (overrides --k-list)
+    value: { type: int }
+    default: 141
+    rank: 30
+  - names: [ --k-step ]
+    description: step between k-mer sizes, even, at most 28
+    value: { type: int }
+    default: 10
+    rank: 25
+  - names: [ --no-mercy ]
+    description: do not add mercy k-mers
+    rank: 15
+  - names: [ --bubble-level ]
+    description: bubble merging intensity, 0 (off) to 2
+    value: { type: int }
+    default: 2
+    rank: 10
+  - names: [ --merge-level ]
+    description: merge complex bubbles up to length l*k and similarity s, as l,s
+    value: { type: string }
+    rank: 10
+  - names: [ --prune-level ]
+    description: low-depth pruning strength, 0 to 3
+    value: { type: int }
+    default: 2
+    rank: 15
+  - names: [ --prune-depth ]
+    description: remove unitigs whose mean k-mer depth is below this
+    value: { type: int }
+    default: 2
+    rank: 15
+  - names: [ --disconnect-ratio ]
+    description: disconnect unitigs whose depth is below this share of their neighbourhood's
+    value: { type: float }
+    default: 0.1
+    rank: 10
+  - names: [ --low-local-ratio ]
+    description: remove unitigs whose depth is below this share of their neighbours' mean
+    value: { type: float }
+    default: 0.2
+    rank: 10
+  - names: [ --max-tip-len ]
+    description: remove tips shorter than this (2*k by default)
+    value: { type: int }
+    rank: 10
+  - names: [ --cleaning-rounds ]
+    description: rounds of graph cleaning
+    value: { type: int }
+    default: 5
+    rank: 10
+  - names: [ --no-local ]
+    description: no local assembly
+    rank: 15
+  - names: [ --kmin-1pass ]
+    description: one-pass mode for the k_min graph (less memory on very low coverage)
+    rank: 15
+  - names: [ --keep-tmp-files ]
+    description: keep the temporary files
+    rank: 20
+  - names: [ --tmp-dir ]
+    description: folder for temporary files
+    value: { type: dir }
+    rank: 25
+  - names: [ --continue ]
+    description: resume a run from its last checkpoint (same output folder)
+    rank: 40
+  - names: [ --test ]
+    description: run on the bundled toy dataset
+    rank: 10

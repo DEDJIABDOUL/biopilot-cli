@@ -1,0 +1,438 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# seqtk 1.5, written from its recorded usages: knowledge/help/seqtk/1.5/ (MIT;
+# attribution in RECORDING.yml next to it) and its documentation
+# (https://github.com/lh3/seqtk), in our own words (spec decision 31). Options shown only
+# in a usage line (comp -u -r, fqchk -q, gap -l) are included. Results go to standard output.
+# seq, comp, rename, dropse, hpc, size and telo print their usage only in a terminal
+# (without one they read standard input), so they have no help to read: their Catalog options stay.
+name: seqtk
+package: seqtk
+description: Small, fast toolkit to convert, sample, subset and trim FASTA and FASTQ files
+version: { args: [], regex: 'Version: (\d[\w.-]*)' }
+help: []
+commands:
+  - name: seq
+    description: convert and transform sequences (FASTQ to FASTA, reverse complement, masking, length filter)
+    options:
+      - names: ["-A"]
+        description: write FASTA, dropping qualities
+        rank: 85
+      - names: ["-r"]
+        description: reverse-complement the sequences
+        rank: 70
+      - names: ["-L"]
+        description: drop sequences shorter than this
+        value: { type: int }
+        default: 0
+        rank: 65
+      - names: ["-q"]
+        description: mask bases whose quality is below this
+        value: { type: int }
+        default: 0
+        rank: 60
+      - names: ["-n"]
+        description: character for masked bases; 0 writes them in lower case
+        value: { type: string }
+        rank: 40
+      - names: ["-l"]
+        description: residues per line (0 for one line)
+        value: { type: int }
+        default: 0
+        rank: 45
+      - names: ["-f"]
+        description: keep this fraction of the sequences, at random
+        value: { type: float }
+        default: 1
+        rank: 45
+      - names: ["-s"]
+        description: random seed for -f
+        value: { type: int }
+        default: 11
+        rank: 25
+      - names: ["-M"]
+        description: mask the regions of this BED file or list of names
+        value: { type: file, format: bed }
+        rank: 40
+      - names: ["-c"]
+        description: with -M, mask everything outside the regions instead
+        rank: 25
+      - names: ["-X"]
+        description: mask bases whose quality is above this
+        value: { type: int }
+        default: 255
+        rank: 20
+      - names: ["-Q"]
+        description: quality offset of the input
+        value: { type: int }
+        default: 33
+        rank: 25
+      - names: ["-V"]
+        description: shift qualities by the -Q offset minus 33
+        rank: 15
+      - names: ["-F"]
+        description: write FASTQ with this fake quality character (from FASTA input)
+        value: { type: string }
+        rank: 30
+      - names: ["-R"]
+        description: write each sequence forward and reverse-complemented
+        rank: 30
+      - names: ["-C"]
+        description: drop the comments of header lines
+        rank: 35
+      - names: ["-N"]
+        description: drop sequences with ambiguous bases
+        rank: 35
+      - names: ["-1"]
+        description: write only the odd-numbered records (read 1 of an interleaved file)
+        rank: 45
+      - names: ["-2"]
+        description: write only the even-numbered records (read 2 of an interleaved file)
+        rank: 45
+      - names: ["-U"]
+        description: write all bases in upper case
+        rank: 25
+      - names: ["-x"]
+        description: turn lower-case bases into the -n character
+        rank: 15
+      - names: ["-S"]
+        description: remove white space inside sequences
+        rank: 15
+    arguments:
+      - name: in.fq
+        description: sequences to transform, FASTA or FASTQ
+        value: { type: file, format: [fastq, fasta] }
+  - name: sample
+    help: ["sample"]
+    description: random subsample of reads, by fraction or count; same seed for both files of a pair
+    options:
+      - names: ["-s"]
+        description: random seed; give both reads of a pair the same one
+        value: { type: int }
+        default: 11
+        rank: 85
+      - names: ["-2"]
+        description: two passes over the file, twice as slow but much less memory
+        rank: 45
+    arguments:
+      - name: in.fq
+        description: sequences to sample
+        value: { type: file, format: [fastq, fasta] }
+      - name: frac-or-number
+        description: fraction (below 1) or number of reads to keep
+        value: { type: string }
+  - name: subseq
+    help: ["subseq"]
+    description: extract the sequences or regions listed in a BED file or a list of names
+    options:
+      - names: ["-t"]
+        description: tab-separated output
+        rank: 40
+      - names: ["-s"]
+        description: honour the strand of BED regions
+        rank: 45
+      - names: ["-l"]
+        description: residues per line (0 for one line)
+        value: { type: int }
+        default: 0
+        rank: 30
+    arguments:
+      - name: in.fa
+        description: sequences to extract from
+        value: { type: file, format: [fasta, fastq] }
+      - name: regions
+        description: BED file of regions, or file of sequence names
+        value: { type: file, format: bed }
+  - name: trimfq
+    help: ["trimfq"]
+    description: trim low-quality ends of reads (Phred algorithm), or a fixed number of bases
+    options:
+      - names: ["-q"]
+        description: error-rate threshold of the quality trimming
+        value: { type: float }
+        default: 0.05
+        rank: 70
+      - names: ["-l"]
+        description: never trim reads below this length
+        value: { type: int }
+        default: 30
+        rank: 60
+      - names: ["-b"]
+        description: remove this many bases from the start (turns quality trimming off)
+        value: { type: int }
+        default: 0
+        rank: 55
+      - names: ["-e"]
+        description: remove this many bases from the end (turns quality trimming off)
+        value: { type: int }
+        default: 0
+        rank: 50
+      - names: ["-L"]
+        description: keep at most this many bases from the 5' end (turns quality trimming off)
+        value: { type: int }
+        default: 0
+        rank: 40
+      - names: ["-Q"]
+        description: always write FASTQ
+        rank: 30
+    arguments:
+      - name: in.fq
+        description: reads to trim
+        value: { type: file, format: fastq }
+  - name: fqchk
+    help: ["fqchk"]
+    description: base and quality summary of a FASTQ file, per position
+    options:
+      - names: ["-q"]
+        description: quality threshold reported (0 lists every quality value)
+        value: { type: int }
+        default: 20
+        rank: 50
+    arguments:
+      - name: in.fq
+        description: reads to check
+        value: { type: file, format: fastq }
+  - name: size
+    description: count the sequences and bases of a file
+    arguments:
+      - name: in.fq
+        description: sequences to count
+        value: { type: file, format: [fastq, fasta] }
+  - name: comp
+    description: base composition of each sequence (A, C, G, T, CpG, transitions, transversions)
+    options:
+      - names: ["-u"]
+        description: count upper-case bases only
+        rank: 30
+      - names: ["-r"]
+        description: count only within the regions of this BED file
+        value: { type: file, format: bed }
+        rank: 40
+    arguments:
+      - name: in.fa
+        description: sequences to count
+        value: { type: file, format: [fasta, fastq] }
+  - name: mergepe
+    help: ["mergepe"]
+    description: interleave the two files of paired reads into one
+    arguments:
+      - name: in1.fq
+        description: read 1 of the pairs
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: in2.fq
+        description: read 2 of the pairs
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq }
+  - name: split
+    help: ["split"]
+    description: split a file into several smaller ones
+    options:
+      - names: ["-n"]
+        description: number of files
+        value: { type: int }
+        default: 10
+        rank: 70
+      - names: ["-l"]
+        description: residues per line (0 for one line)
+        value: { type: int }
+        default: 0
+        rank: 25
+    arguments:
+      - name: prefix
+        description: prefix of the files written
+        value: { type: string }
+      - name: in.fa
+        description: sequences to split
+        value: { type: file, format: [fasta, fastq] }
+  - name: dropse
+    description: drop unpaired reads from an interleaved file
+    arguments:
+      - name: in.fq
+        description: interleaved reads
+        value: { type: file, format: fastq }
+  - name: rename
+    description: rename sequences with a prefix and a running number
+    arguments:
+      - name: in.fq
+        description: sequences to rename
+        value: { type: file, format: [fastq, fasta] }
+      - name: prefix
+        description: prefix of the new names
+        value: { type: string, optional: true }
+  - name: cutN
+    help: ["cutN"]
+    description: cut sequences at long runs of N
+    options:
+      - names: ["-n"]
+        description: shortest run of N that cuts
+        value: { type: int }
+        default: 1000
+        rank: 60
+      - names: ["-p"]
+        description: penalty of a non-N base inside a run
+        value: { type: int }
+        default: 10
+        rank: 25
+      - names: ["-g"]
+        description: print the gaps only, not the sequences
+        rank: 35
+    arguments:
+      - name: in.fa
+        description: sequences to cut
+        value: { type: file, format: fasta }
+  - name: gap
+    help: ["gap"]
+    description: locations of gaps (runs of N)
+    options:
+      - names: ["-l"]
+        description: shortest gap reported
+        value: { type: int }
+        default: 50
+        rank: 50
+    arguments:
+      - name: in.fa
+        description: sequences to scan
+        value: { type: file, format: fasta }
+  - name: gc
+    help: ["gc"]
+    description: regions of high (or low) GC content
+    options:
+      - names: ["-w"]
+        description: look for high-AT regions instead
+        rank: 40
+      - names: ["-f"]
+        description: lowest GC fraction (AT with -w)
+        value: { type: float }
+        default: 0.6
+        rank: 50
+      - names: ["-l"]
+        description: shortest region reported
+        value: { type: int }
+        default: 20
+        rank: 40
+      - names: ["-x"]
+        description: X-drop of the region extension
+        value: { type: float }
+        default: 10
+        rank: 15
+    arguments:
+      - name: in.fa
+        description: sequences to scan
+        value: { type: file, format: fasta }
+  - name: hety
+    help: ["hety"]
+    description: heterozygosity per window
+    options:
+      - names: ["-w"]
+        description: window size
+        value: { type: int }
+        default: 50000
+        rank: 50
+      - names: ["-t"]
+        description: start positions within a window
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: ["-m"]
+        description: treat lower-case bases as masked
+        rank: 25
+    arguments:
+      - name: in.fa
+        description: sequences with IUPAC heterozygous bases
+        value: { type: file, format: fasta }
+  - name: listhet
+    help: ["listhet"]
+    description: position of each heterozygous (IUPAC) base
+    arguments:
+      - name: in.fa
+        description: sequences to scan
+        value: { type: file, format: fasta }
+  - name: randbase
+    help: ["randbase"]
+    description: replace each heterozygous base by one of its alleles, at random
+    arguments:
+      - name: in.fa
+        description: sequences with IUPAC heterozygous bases
+        value: { type: file, format: fasta }
+  - name: mergefa
+    help: ["mergefa"]
+    description: merge two FASTA files of the same sequences base by base
+    options:
+      - names: ["-q"]
+        description: quality threshold
+        value: { type: int }
+        default: 0
+        rank: 30
+      - names: ["-i"]
+        description: keep the intersection only
+        rank: 35
+      - names: ["-m"]
+        description: write lower case where one input has N
+        rank: 25
+      - names: ["-r"]
+        description: pick a random allele at heterozygous bases
+        rank: 25
+      - names: ["-h"]
+        description: ignore heterozygous bases of the inputs
+        rank: 20
+    arguments:
+      - name: in1.fa
+        description: first sequences
+        value: { type: file, format: fasta }
+      - name: in2.fa
+        description: second sequences
+        value: { type: file, format: fasta }
+  - name: famask
+    help: ["famask"]
+    description: mask a FASTA with the X positions of another one
+    arguments:
+      - name: src.fa
+        description: sequences to mask
+        value: { type: file, format: fasta }
+      - name: mask.fa
+        description: same sequences, with X where to mask
+        value: { type: file, format: fasta }
+  - name: mutfa
+    help: ["mutfa"]
+    description: apply point mutations listed in a file
+    arguments:
+      - name: in.fa
+        description: sequences to mutate
+        value: { type: file, format: fasta }
+      - name: in.snp
+        description: mutations, one per line (chromosome, 1-based position, any, new base)
+        value: { type: file }
+  - name: hpc
+    description: homopolymer-compressed sequences
+    arguments:
+      - name: in.fq
+        description: sequences to compress
+        value: { type: file, format: [fastq, fasta] }
+  - name: telo
+    description: find telomere repeats in assemblies or long reads
+    options:
+      - names: ["-m"]
+        description: telomere motif
+        value: { type: string }
+        default: CCCTAA
+        rank: 50
+      - names: ["-p"]
+        description: mismatch penalty
+        value: { type: int }
+        default: 1
+        rank: 20
+      - names: ["-d"]
+        description: largest score drop
+        value: { type: int }
+        default: 2000
+        rank: 20
+      - names: ["-s"]
+        description: lowest score reported
+        value: { type: int }
+        default: 300
+        rank: 25
+      - names: ["-P"]
+        description: print the scores
+        rank: 15
+    arguments:
+      - name: in.fq
+        description: assembly or long reads
+        value: { type: file, format: [fasta, fastq] }

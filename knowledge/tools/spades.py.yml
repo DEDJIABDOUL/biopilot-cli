@@ -1,0 +1,273 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# SPAdes 4.3.0, written from its recorded --help: knowledge/help/spades.py/4.3.0/root.txt
+# (GPL-2.0-only; attribution in RECORDING.yml next to it) and its manual
+# (https://ablab.github.io/spades/), in our own words (spec decision 31). The numbered
+# library options (--pe-1 <#> <file>) take the library number, then the file.
+# Ranks follow the shared scale of spec §6.4.
+name: spades.py
+package: spades
+description: SPAdes de novo assembler for isolates, metagenomes (--meta), transcriptomes (--rna) and plasmids
+version: { args: [ --version ], regex: "v(\\d[\\w.]*)" }
+help: [ --help ]
+options:
+  - names: [ -o ]
+    description: output folder (required)
+    value: { type: dir }
+    rank: 98
+  - names: [ --isolate ]
+    description: mode for high-coverage isolate and multi-cell data (recommended there)
+    rank: 70
+  - names: [ --careful ]
+    description: fewer mismatches and short indels (slower; not with --isolate)
+    rank: 60
+  - names: [ --meta ]
+    description: metagenomic data (metaSPAdes)
+    rank: 60
+  - names: [ --rna ]
+    description: RNA-seq data (rnaSPAdes)
+    rank: 50
+  - names: [ --sc ]
+    description: single-cell data from MDA
+    rank: 35
+  - names: [ --plasmid ]
+    description: plasmid detection (plasmidSPAdes)
+    rank: 35
+  - names: [ --metaviral ]
+    description: virus detection in metagenomes (metaviralSPAdes)
+    rank: 25
+  - names: [ --metaplasmid ]
+    description: plasmid detection in metagenomes (same as --meta --plasmid)
+    rank: 25
+  - names: [ --rnaviral ]
+    description: virus assembly from RNA-seq (rnaviralSPAdes)
+    rank: 20
+  - names: [ --corona ]
+    description: coronavirus assembly (coronaSPAdes)
+    rank: 15
+  - names: [ --bio ]
+    description: biosynthetic gene clusters (biosyntheticSPAdes)
+    rank: 15
+  - names: [ --sewage ]
+    description: sewage samples (mixtures of viral strains)
+    rank: 10
+  - names: [ --iontorrent ]
+    description: IonTorrent data
+    rank: 20
+  - names: [ --test ]
+    description: run on the bundled toy dataset
+    rank: 10
+  - names: [ "-1" ]
+    description: forward reads of the pairs
+    value: { type: file, format: [ fastq, fasta ], read_role: 1 }
+    rank: 95
+  - names: [ "-2" ]
+    description: reverse reads of the pairs
+    value: { type: file, format: [ fastq, fasta ], read_role: 2, mate_of: "-1" }
+    rank: 75
+    rules:
+      - when: { used: [ "-1" ] }
+        boost: 30
+  - names: [ -s ]
+    description: unpaired reads
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 60
+  - names: [ --12 ]
+    description: interleaved paired reads
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 35
+  - names: [ --merged ]
+    description: merged (overlapping) paired reads
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 25
+  - names: [ --pe-12 ]
+    description: library <number>, then its file of interleaved paired-end pairs
+    value: { type: string }
+    rank: 25
+    repeatable: true
+  - names: [ --pe-1 ]
+    description: library <number>, then its file of forward paired-end reads
+    value: { type: string }
+    rank: 25
+    repeatable: true
+  - names: [ --pe-2 ]
+    description: library <number>, then its file of reverse paired-end reads
+    value: { type: string }
+    rank: 25
+    repeatable: true
+  - names: [ --pe-s ]
+    description: library <number>, then its file of unpaired reads
+    value: { type: string }
+    rank: 20
+    repeatable: true
+  - names: [ --pe-or ]
+    description: "library <number>, then the orientation of its reads: fr, rf or ff"
+    value: { type: string }
+    rank: 15
+    repeatable: true
+  - names: [ --pe-m ]
+    description: library <number>, then its file of merged reads
+    value: { type: string }
+    rank: 15
+    repeatable: true
+  - names: [ --s ]
+    description: library <number>, then its file of single reads
+    value: { type: string }
+    rank: 15
+    repeatable: true
+  - names: [ --mp-12 ]
+    description: library <number>, then its file of interleaved mate-pair pairs
+    value: { type: string }
+    rank: 15
+    repeatable: true
+  - names: [ --mp-1 ]
+    description: library <number>, then its file of forward mate-pair reads
+    value: { type: string }
+    rank: 15
+    repeatable: true
+  - names: [ --mp-2 ]
+    description: library <number>, then its file of reverse mate-pair reads
+    value: { type: string }
+    rank: 15
+    repeatable: true
+  - names: [ --mp-s ]
+    description: library <number>, then its file of unpaired reads
+    value: { type: string }
+    rank: 10
+    repeatable: true
+  - names: [ --mp-or ]
+    description: "library <number>, then the orientation of its reads: fr, rf or ff"
+    value: { type: string }
+    rank: 5
+    repeatable: true
+  - names: [ --hqmp-12 ]
+    description: library <number>, then its file of interleaved high-quality mate-pair pairs
+    value: { type: string }
+    rank: 10
+    repeatable: true
+  - names: [ --hqmp-1 ]
+    description: library <number>, then its file of forward high-quality mate-pair reads
+    value: { type: string }
+    rank: 10
+    repeatable: true
+  - names: [ --hqmp-2 ]
+    description: library <number>, then its file of reverse high-quality mate-pair reads
+    value: { type: string }
+    rank: 10
+    repeatable: true
+  - names: [ --hqmp-s ]
+    description: library <number>, then its file of unpaired reads
+    value: { type: string }
+    rank: 5
+    repeatable: true
+  - names: [ --hqmp-or ]
+    description: "library <number>, then the orientation of its reads: fr, rf or ff"
+    value: { type: string }
+    rank: 0
+    repeatable: true
+  - names: [ --nanopore ]
+    description: Nanopore reads, for hybrid assembly
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 50
+  - names: [ --pacbio ]
+    description: PacBio reads, for hybrid assembly
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 45
+  - names: [ --sanger ]
+    description: Sanger reads
+    value: { type: file, format: [ fastq, fasta ] }
+    rank: 15
+  - names: [ --trusted-contigs ]
+    description: reliable contigs used in the graph
+    value: { type: file, format: fasta }
+    rank: 25
+  - names: [ --untrusted-contigs ]
+    description: contigs used to resolve repeats, with caution
+    value: { type: file, format: fasta }
+    rank: 20
+  - names: [ --dataset ]
+    description: YAML file describing the libraries
+    value: { type: file }
+    rank: 25
+  - names: [ --only-error-correction ]
+    description: correct reads only, no assembly
+    rank: 25
+  - names: [ --only-assembler ]
+    description: assemble only, no read error correction
+    rank: 40
+  - names: [ --checkpoints ]
+    description: "save checkpoints: last or all"
+    value: { type: enum, values: [ last, all ] }
+    rank: 20
+  - names: [ --continue ]
+    description: resume from the last checkpoint (give only -o)
+    rank: 45
+  - names: [ --restart-from ]
+    description: "restart with new options from a checkpoint: ec, as, k<int>, mc or last"
+    value: { type: string }
+    rank: 30
+  - names: [ --disable-gzip-output ]
+    description: do not compress the corrected reads
+    rank: 10
+  - names: [ --disable-rr ]
+    description: no repeat resolution
+    rank: 10
+  - names: [ -t, --threads ]
+    description: threads
+    value: { type: int }
+    default: 16
+    rank: 85
+  - names: [ -m, --memory ]
+    description: RAM limit in GB; SPAdes stops beyond it
+    value: { type: int }
+    default: 250
+    rank: 75
+  - names: [ --tmp-dir ]
+    description: folder for temporary files (<output_dir>/tmp by default)
+    value: { type: dir }
+    rank: 25
+  - names: [ -k ]
+    description: k-mer sizes, odd and below 128, comma-separated (auto by default)
+    value: { type: string }
+    rank: 45
+  - names: [ --cov-cutoff ]
+    description: "coverage cutoff: a positive number, auto or off"
+    value: { type: string }
+    rank: 30
+  - names: [ --phred-offset ]
+    description: quality offset of the reads (guessed by default)
+    value: { type: enum, values: [ "33", "64" ] }
+    rank: 15
+  - names: [ --custom-hmms ]
+    description: folder of custom HMMs replacing the default ones
+    value: { type: dir }
+    rank: 10
+  - names: [ --gfa11 ]
+    description: assembly graph in GFA 1.1
+    rank: 15
+  - names: [ --frugal ]
+    description: use less memory, possibly at the cost of the assembly
+    rank: 15
+  - names: [ --grid-engine ]
+    description: how to run the jobs
+    value: { type: enum, values: [ local, slurm, mpi, save_yaml ] }
+    default: local
+    rank: 15
+  - names: [ --grid-queue ]
+    description: queue the jobs are sent to
+    value: { type: string }
+    rank: 10
+  - names: [ --grid-nnodes ]
+    description: number of processors
+    value: { type: int }
+    rank: 10
+  - names: [ --grid-wait ]
+    description: wait for the jobs to finish
+    rank: 10
+  - names: [ --grid-extra ]
+    description: extra commands for the jobs
+    value: { type: string }
+    rank: 5
+  - names: [ --grid-time ]
+    description: time limit of the jobs
+    value: { type: string }
+    rank: 5

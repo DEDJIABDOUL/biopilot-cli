@@ -11,9 +11,10 @@
 export type HelpOption = { names: string[]; takesValue: boolean; description: string | null };
 
 /** An option line: indentation, then a dash and a name character (`-@`, `-5`, `--in1`). */
-const OPTION_LINE = /^(\s+)(--?[A-Za-z0-9@?][^\s]*.*)$/;
+const OPTION_LINE = /^(\s*)(--?[A-Za-z0-9@?][^\s]*.*)$/;
 /** An option name, possibly with a value glued on (`--opt=VAL`, `--opt[=VAL]`) or `[s]` in its middle. */
-const NAME = /^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\[[a-z]+\])*)(\[?=.*)?$/;
+// A bracket inside a name is a variant (`--region[s]-file`); at its end, the value's type (`-t[int]`, filtlong).
+const NAME = /^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\[[a-z]+\](?=[A-Za-z0-9_.-]))*)(\[?=.*|\[[a-z]+\])?$/;
 /** fastp's way to say an option takes a value: `(string [=])`, `(int [=4])` at the end of the description. */
 const CMDLINE_VALUE = /\((?:string|int|long|float|double)(?: \[=[^\]]*\])?\)\s*$/;
 
@@ -21,8 +22,19 @@ const CMDLINE_VALUE = /\((?:string|int|long|float|double)(?: \[=[^\]]*\])?\)\s*$
 const RICH_VALUE = /\((?:[A-Z][A-Z _-]*|[\w.-]+(?:\|[\w.-]+)+)\)\s*$/;
 /** rich-click's alias column: the description starts with another name of the option, then two spaces. */
 const ALIAS_COLUMN = /^(--?[A-Za-z0-9@?][A-Za-z0-9_.@?-]*)(?:\s{2,}(.*))?$/;
+/** MEGAHIT: the value in a column of its own, between the names and the description: `<pe1>   comma-…`. */
+const VALUE_COLUMN = /^<[^>\s]+>(?:\s{2,}(.*))?$/;
 /** rich-click's box: `│ ` at the start of a line and ` │` at its end become spaces. */
 const unbox = (line: string) => line.replace(/^(\s*)│/, "$1 ").replace(/\s*│\s*$/, "");
+/** Terminal colour codes (Picard, GATK). */
+// eslint-disable-next-line no-control-regex -- the escape character is what is matched
+const ANSI = /\x1b\[[0-9;]*m/g;
+/** STAR: `runThreadN   1` at the start of a line, an option typed with `--` before its name. */
+const STAR_NAME = /^([a-z][A-Za-z0-9]+)\s+\S/;
+/** STAR: the line below the name, its value's type then its description, `    int>0: number of…`, `    4 integers: …`. */
+const STAR_TYPE = /^\s{3,}(?:(?:\d+|N)\s+|\d+\*)?(?:string|int|uint|real|double|integer)[a-z]*(?:\(s\))?(?:\s*[<>=][^:]*)?(?:,[^:]*)?:\s*(.*)$/;
+/** Barclay (Picard, GATK): unindented `--INPUT,-I <File>`, the description after `>`, sometimes without a space. */
+const BARCLAY_LINE = /^(--[A-Za-z][A-Za-z0-9_]*(?:,-[A-Za-z0-9_]+)?\s*<[^>]+>)(.*)$/;
 
 /** `--region[s]-file` → `--region-file`, `--regions-file`. */
 const expandBrackets = (name: string): string[] => {
@@ -42,7 +54,17 @@ const readSpec = (spec: string): { names: string[]; takesValue: boolean } | unde
     const match = first?.match(NAME);
     if (!match) return;
     names.push(...expandBrackets(match[1]));
-    if (match[2] !== undefined || rest.length > 0) takesValue = true;
+    if (match[2] !== undefined) takesValue = true;
+    // `-1 ... all alignments`: a value in a list of values (STAR), not an option.
+    if (rest[0] === "...") return;
+    for (const word of rest) {
+      // docopt (mosdepth): more names after a space, `-t --threads <threads>`; anything else is the value.
+      const more = word.startsWith("-") ? word.match(NAME) : null;
+      if (more) {
+        names.push(...expandBrackets(more[1]));
+        if (more[2] !== undefined) takesValue = true;
+      } else takesValue = true;
+    }
   }
   return names.length > 0 ? { names, takesValue } : undefined;
 };
@@ -56,19 +78,45 @@ const splitLine = (body: string): [string, string | null] => {
 export const parseHelp = (text: string): HelpOption[] => {
   const options: HelpOption[] = [];
   const seen = new Set<string>();
-  const lines = text.split(/\r?\n/).map(unbox);
+  const lines = text.replace(ANSI, "").split(/\r?\n/).map(unbox);
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].match(OPTION_LINE);
-    if (!line) continue;
-    const indent = line[1].length;
-    const [specText, rest] = splitLine(line[2]);
+    const star = lines[i].match(STAR_NAME);
+    const starType = star && i + 1 < lines.length ? lines[i + 1].match(STAR_TYPE) : null;
+    if (star && starType) {
+      const name = `--${star[1]}`;
+      if (!seen.has(name)) {
+        seen.add(name);
+        options.push({ names: [name], takesValue: true, description: starType[1].trim() || null });
+      }
+      i++;
+      continue;
+    }
+    const barclay = lines[i].match(BARCLAY_LINE);
+    const line = barclay ? null : lines[i].match(OPTION_LINE);
+    if (!barclay && !line) continue;
+    const indent = line ? line[1].length : 0;
+    const [specText, rest] = barclay ? [barclay[1], barclay[2].trim() || null] : splitLine(line![2]);
     const spec = readSpec(specText);
-    if (!spec) continue;
+    if (!spec || rest?.startsWith("...")) continue;
     let inline = rest;
     const alias = rest?.match(ALIAS_COLUMN);
     if (alias) {
       spec.names.push(alias[1]);
       inline = alias[2]?.trim() || null;
+    } else if (rest?.startsWith("-")) {
+      // QUAST: the long name in a column of its own, with its value: `-i  --min-alignment <int>   The minimum…`.
+      const [aliasText, aliasRest] = splitLine(rest);
+      const more = aliasRest !== null ? readSpec(aliasText) : undefined;
+      if (more && more.names.every((name) => name.startsWith("--"))) {
+        spec.names.push(...more.names);
+        spec.takesValue ||= more.takesValue;
+        inline = aliasRest;
+      }
+    }
+    const valueColumn = inline?.match(VALUE_COLUMN);
+    if (valueColumn) {
+      spec.takesValue = true;
+      inline = valueColumn[1]?.trim() || null;
     }
     // Continuation: following lines indented deeper that are not themselves options.
     const parts = inline ? [inline] : [];

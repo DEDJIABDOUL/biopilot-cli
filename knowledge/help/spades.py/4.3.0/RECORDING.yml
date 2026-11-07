@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/spades.py.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: spades.py
+package: spades
+version: 4.3.0
+build: hde4eca7_2
+channel: linux-64
+licence: GPL-2.0-only
+copyright: Center for Algorithmic Biotechnology, St. Petersburg State University, https://github.com/ablab/spades
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-3
+used_by_catalog: true
+files:
+  root.txt: spades.py --help

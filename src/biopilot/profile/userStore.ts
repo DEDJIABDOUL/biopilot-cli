@@ -10,7 +10,20 @@ import type Database from "better-sqlite3";
 import { allResourcesPath } from "../../utils/constants.js";
 import { USER_STORE_FILE_NAME } from "../resources.js";
 import { openSqlite } from "../sqlite.js";
+import type { ToolQuery } from "../knowledge/catalog.js";
 import type { HelpOption } from "./helpParser.js";
+
+/**
+ * A Learned tool (spec §6.3): how to query a tool absent from the Catalog, as the Catalog says it for its own
+ * Tools; its options come from its Profiles.
+ */
+export type LearnedTool = {
+  name: string;
+  description: string | null;
+  query: ToolQuery;
+  subcommands: { name: string; description: string | null }[];
+  learnedAt: number;
+};
 
 /** Environment variable that, when set, is the User store file (tests, development). */
 export const USER_STORE_ENV = "BIOPILOT_USER_STORE";
@@ -38,6 +51,10 @@ CREATE TABLE IF NOT EXISTS binaries (
   tool        TEXT NOT NULL,
   version     TEXT
 );
+CREATE TABLE IF NOT EXISTS learned_tools (
+  name        TEXT PRIMARY KEY,
+  definition  TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS usage (
   tool        TEXT NOT NULL,
   command     TEXT NOT NULL,
@@ -57,6 +74,13 @@ export interface UserStore {
   usageCounts(tool: string, command: string): Map<string, number>;
   addUsage(tool: string, command: string, optionName: string, now?: number): void;
   resetUsage(): void;
+  /** Every Profile stored for a tool, most recent first. */
+  listProfiles(tool: string): Profile[];
+  getLearnedTool(name: string): LearnedTool | undefined;
+  listLearnedTools(): LearnedTool[];
+  putLearnedTool(tool: LearnedTool): void;
+  /** Forgets a learned tool and its Profiles; whether it was learned. */
+  forgetLearnedTool(name: string): boolean;
   close(): void;
 }
 
@@ -78,6 +102,14 @@ class SqliteUserStore implements UserStore {
         "INSERT INTO usage (tool, command, option_name, count, last_used) VALUES (?, ?, ?, 1, ?) ON CONFLICT (tool, command, option_name) DO UPDATE SET count = count + 1, last_used = excluded.last_used",
       ),
       resetUsage: db.prepare("DELETE FROM usage"),
+      listProfiles: db.prepare<[string], { version: string; command: string; options: string; fingerprint: string; created_at: number }>(
+        "SELECT version, command, options, fingerprint, created_at FROM profiles WHERE tool = ? ORDER BY created_at DESC",
+      ),
+      getLearned: db.prepare<[string], { definition: string }>("SELECT definition FROM learned_tools WHERE name = ?"),
+      listLearned: db.prepare<[], { definition: string }>("SELECT definition FROM learned_tools ORDER BY name"),
+      putLearned: db.prepare("INSERT OR REPLACE INTO learned_tools (name, definition) VALUES (?, ?)"),
+      forgetLearned: db.prepare("DELETE FROM learned_tools WHERE name = ?"),
+      forgetProfiles: db.prepare("DELETE FROM profiles WHERE tool = ?"),
     };
   }
 
@@ -122,6 +154,48 @@ class SqliteUserStore implements UserStore {
 
   resetUsage(): void {
     this.#statements.resetUsage.run();
+  }
+
+  listProfiles(tool: string): Profile[] {
+    try {
+      return this.#statements.listProfiles.all(tool).map((row) => ({
+        tool,
+        version: row.version,
+        command: row.command,
+        options: JSON.parse(row.options) as HelpOption[],
+        fingerprint: row.fingerprint,
+        createdAt: row.created_at,
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  getLearnedTool(name: string): LearnedTool | undefined {
+    try {
+      const row = this.#statements.getLearned.get(name);
+      return row ? (JSON.parse(row.definition) as LearnedTool) : undefined;
+    } catch {
+      return;
+    }
+  }
+
+  listLearnedTools(): LearnedTool[] {
+    try {
+      return this.#statements.listLearned.all().map((row) => JSON.parse(row.definition) as LearnedTool);
+    } catch {
+      return [];
+    }
+  }
+
+  putLearnedTool(tool: LearnedTool): void {
+    this.#statements.putLearned.run(tool.name, JSON.stringify(tool));
+  }
+
+  forgetLearnedTool(name: string): boolean {
+    const forgotten = this.#statements.forgetLearned.run(name).changes > 0;
+    this.#statements.forgetProfiles.run(name);
+    return forgotten;
   }
 
   close(): void {

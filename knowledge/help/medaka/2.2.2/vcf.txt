@@ -1,0 +1,21 @@
+usage: medaka vcf [-h] [--debug | --quiet] [--regions REGIONS [REGIONS ...]]
+                  [--verbose] [--ambig_ref] [--gvcf]
+                  inputs [inputs ...] ref_fasta output
+
+positional arguments:
+  inputs                Consensus .hdf files.
+  ref_fasta             Reference sequence .fasta file.
+  output                Output .vcf.
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+  --regions REGIONS [REGIONS ...]
+                        Genomic ref_names to process, or a bed file. (default:
+                        None)
+  --verbose             Populate VCF info fields. (default: False)
+  --ambig_ref           Decode variants at ambiguous reference positions.
+                        (default: False)
+  --gvcf                Output VCF records for reference loci predicted to be
+                        non-variant. (default: False)

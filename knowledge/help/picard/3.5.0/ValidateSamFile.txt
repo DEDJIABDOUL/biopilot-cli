@@ -1,0 +1,148 @@
+/home/abdoul/miniconda3/envs/biopilot-tools-2/bin/picard: line 5: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+USAGE: ValidateSamFile [arguments]
+
+Validates a SAM/BAM/CRAM file.<p>This tool reports on the validity of a SAM/BAM/CRAM file relative to the SAM format
+specification.  This is useful for troubleshooting errors encountered with other tools that may be caused by improper
+formatting, faulty alignments, incorrect flag values, etc. </p> <p>By default, the tool runs in VERBOSE mode and will
+exit after finding 100 errors and output them to the console (stdout). Therefore, it is often more practical to run this
+tool initially using the MODE=SUMMARY option.  This mode outputs a summary table listing the numbers of all 'errors' and
+'warnings'.</p> <p>When fixing errors in your file, it is often useful to prioritize the severe validation errors and
+ignore the errors/warnings of lesser concern.  This can be done using the IGNORE and/or IGNORE_WARNINGS arguments.  For
+helpful suggestions on error prioritization, please follow this link to obtain additional documentation on <a
+href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>ValidateSamFile</a>.</p><p>After identifying and fixing
+your 'warnings/errors', we recommend that you rerun this tool to validate your SAM/BAM file prior to proceeding with
+your downstream analysis.  This will verify that all problems in your file have been addressed.</p><h3>Usage
+example:</h3><pre>java -jar picard.jar ValidateSamFile \<br />      I=input.bam \<br />      MODE=SUMMARY</pre><p>To
+obtain a complete list with descriptions of both 'ERROR' and 'WARNING' messages, please see our additional <a
+href='https://www.broadinstitute.org/gatk/guide/article?id=7571'>documentation</a> for this tool.</p><hr />Return codes
+depend on the errors/warnings discovered:<p>-1 failed to complete execution
+0  ran successfully
+1  warnings but no errors
+2  errors and warnings
+3  errors but no warnings
+Version:3.5.0
+
+
+Required Arguments:
+
+--INPUT,-I <PicardHtsPath>    Input SAM/BAM/CRAM file  Required. 
+
+
+Optional Arguments:
+
+--arguments_file <File>       read one or more arguments files and add them to the command line  This argument may be
+                              specified 0 or more times. Default value: null. 
+
+--COMPRESSION_LEVEL <Integer> Compression level for all compressed files created (e.g. BAM and VCF).  Default value: 5. 
+
+--CREATE_INDEX <Boolean>      Whether to create an index when writing VCF or coordinate sorted BAM output.  Default
+                              value: false. Possible values: {true, false} 
+
+--CREATE_MD5_FILE <Boolean>   Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value:
+                              false. Possible values: {true, false} 
+
+--help,-h <Boolean>           display the help message  Default value: false. Possible values: {true, false} 
+
+--IGNORE <Type>               List of validation error types to ignore.  This argument may be specified 0 or more times.
+                              Default value: null. Possible values: {INVALID_QUALITY_FORMAT, INVALID_FLAG_PROPER_PAIR,
+                              INVALID_FLAG_MATE_UNMAPPED, MISMATCH_FLAG_MATE_UNMAPPED, INVALID_FLAG_MATE_NEG_STRAND,
+                              MISMATCH_FLAG_MATE_NEG_STRAND, INVALID_FLAG_FIRST_OF_PAIR, INVALID_FLAG_SECOND_OF_PAIR,
+                              PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND, INVALID_FLAG_NOT_PRIM_ALIGNMENT,
+                              INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT, INVALID_FLAG_READ_UNMAPPED, INVALID_INSERT_SIZE,
+                              INVALID_MAPPING_QUALITY, INVALID_CIGAR, ADJACENT_INDEL_IN_CIGAR, INVALID_MATE_REF_INDEX,
+                              MISMATCH_MATE_REF_INDEX, INVALID_REFERENCE_INDEX, INVALID_ALIGNMENT_START,
+                              MISMATCH_MATE_ALIGNMENT_START, MATE_FIELD_MISMATCH, INVALID_TAG_NM, MISSING_TAG_NM,
+                              MISSING_HEADER, MISSING_SEQUENCE_DICTIONARY, MISSING_READ_GROUP, RECORD_OUT_OF_ORDER,
+                              READ_GROUP_NOT_FOUND, RECORD_MISSING_READ_GROUP, INVALID_INDEXING_BIN,
+                              MISSING_VERSION_NUMBER, INVALID_VERSION_NUMBER, TRUNCATED_FILE,
+                              MISMATCH_READ_LENGTH_AND_QUALS_LENGTH, EMPTY_READ, CIGAR_MAPS_OFF_REFERENCE,
+                              MISMATCH_READ_LENGTH_AND_E2_LENGTH, MISMATCH_READ_LENGTH_AND_U2_LENGTH,
+                              E2_BASE_EQUALS_PRIMARY_BASE, BAM_FILE_MISSING_TERMINATOR_BLOCK, UNRECOGNIZED_HEADER_TYPE,
+                              POORLY_FORMATTED_HEADER_TAG, HEADER_TAG_MULTIPLY_DEFINED,
+                              HEADER_RECORD_MISSING_REQUIRED_TAG, HEADER_TAG_NON_CONFORMING_VALUE, INVALID_DATE_STRING,
+                              TAG_VALUE_TOO_LARGE, INVALID_INDEX_FILE_POINTER, INVALID_PREDICTED_MEDIAN_INSERT_SIZE,
+                              DUPLICATE_READ_GROUP_ID, MISSING_PLATFORM_VALUE, INVALID_PLATFORM_VALUE,
+                              DUPLICATE_PROGRAM_GROUP_ID, MATE_NOT_FOUND, MATES_ARE_SAME_END,
+                              MISMATCH_MATE_CIGAR_STRING, MATE_CIGAR_STRING_INVALID_PRESENCE,
+                              INVALID_UNPAIRED_MATE_REFERENCE, INVALID_UNALIGNED_MATE_START, MISMATCH_CIGAR_SEQ_LENGTH,
+                              MISMATCH_SEQ_QUAL_LENGTH, MISMATCH_FILE_SEQ_DICT, QUALITY_NOT_STORED, DUPLICATE_SAM_TAG,
+                              CG_TAG_FOUND_IN_ATTRIBUTES, REF_SEQ_TOO_LONG_FOR_BAI, HEADER_TAG_INVALID_KEY} 
+
+--IGNORE_WARNINGS <Boolean>   If true, only report errors and ignore warnings.  Default value: false. Possible values:
+                              {true, false} 
+
+--INDEX_VALIDATION_STRINGENCY <IndexValidationStringency>
+                              If set to anything other than IndexValidationStringency.NONE and input is a BAM file with
+                              an index file, also validates the index at the specified stringency. Until VALIDATE_INDEX
+                              is retired, VALIDATE INDEX and INDEX_VALIDATION_STRINGENCY must agree on whether to
+                              validate the index.  Default value: EXHAUSTIVE. Possible values: {EXHAUSTIVE,
+                              LESS_EXHAUSTIVE, NONE} 
+
+--IS_BISULFITE_SEQUENCED,-BISULFITE <Boolean>
+                              Whether the input file consists of bisulfite sequenced reads. If so, C->T is not counted
+                              as an error in computing the value of the NM tag.  Default value: false. Possible values:
+                              {true, false} 
+
+--MAX_OPEN_TEMP_FILES <Integer>
+                              Relevant for a coordinate-sorted file containing read pairs only. Maximum number of file
+                              handles to keep open when spilling mate info to disk. Set this number a little lower than
+                              the per-process maximum number of file that may be open. This number can be found by
+                              executing the 'ulimit -n' command on a Unix system.  Default value: 8000. 
+
+--MAX_OUTPUT,-MO <Integer>    The maximum number of lines output in verbose mode  Default value: 100. 
+
+--MAX_RECORDS_IN_RAM <Integer>When writing files that need to be sorted, this will specify the number of records stored
+                              in RAM before spilling to disk. Increasing this number reduces the number of file handles
+                              needed to sort the file, and increases the amount of RAM needed.  Default value: 500000. 
+
+--MODE,-M <Mode>              Mode of output  Default value: VERBOSE. Possible values: {VERBOSE, SUMMARY} 
+
+--OUTPUT,-O <PicardHtsPath>   Output file or standard out if missing  Default value: null. 
+
+--QUIET <Boolean>             Whether to suppress job-summary info on System.err.  Default value: false. Possible
+                              values: {true, false} 
+
+--REFERENCE_SEQUENCE,-R <PicardHtsPath>
+                              Reference sequence file.  Default value: null. 
+
+--SKIP_MATE_VALIDATION,-SMV <Boolean>
+                              If true, this tool will not attempt to validate mate information. In general cases, this
+                              option should not be used.  However, in cases where samples have very high duplication or
+                              chimerism rates (> 10%), the mate validation process often requires extremely large
+                              amounts of memory to run, so this flag allows you to forego that check.  Default value:
+                              false. Possible values: {true, false} 
+
+--TMP_DIR <File>              One or more directories with space available to be used by this program for temporary
+                              storage of working files  This argument may be specified 0 or more times. Default value:
+                              null. 
+
+--USE_JDK_DEFLATER,-use_jdk_deflater <Boolean>
+                              Use the JDK Deflater instead of the Intel Deflater for writing compressed output  Default
+                              value: false. Possible values: {true, false} 
+
+--USE_JDK_INFLATER,-use_jdk_inflater <Boolean>
+                              Use the JDK Inflater instead of the Intel Inflater for reading compressed input  Default
+                              value: false. Possible values: {true, false} 
+
+--VALIDATE_INDEX <Boolean>    DEPRECATED.  Use INDEX_VALIDATION_STRINGENCY instead.  If true and input is a BAM file
+                              with an index file, also validates the index.  Until this parameter is retired VALIDATE
+                              INDEX and INDEX_VALIDATION_STRINGENCY must agree on whether to validate the index. 
+                              Default value: true. Possible values: {true, false} 
+
+--VALIDATION_STRINGENCY <ValidationStringency>
+                              Validation stringency for all SAM files read by this program.  Setting stringency to
+                              SILENT can improve performance when processing a BAM file in which variable-length data
+                              (read, qualities, tags) do not otherwise need to be decoded.  Default value: STRICT.
+                              Possible values: {STRICT, LENIENT, SILENT} 
+
+--VERBOSITY <LogLevel>        Control verbosity of logging.  Default value: INFO. Possible values: {ERROR, WARNING,
+                              INFO, DEBUG} 
+
+--version <Boolean>           display the version number for this tool  Default value: false. Possible values: {true,
+                              false} 
+
+
+Advanced Arguments:
+
+--showHidden <Boolean>        display hidden arguments  Default value: false. Possible values: {true, false} 
+

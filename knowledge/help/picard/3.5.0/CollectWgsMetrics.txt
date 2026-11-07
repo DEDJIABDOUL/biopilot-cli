@@ -1,0 +1,120 @@
+/home/abdoul/miniconda3/envs/biopilot-tools-2/bin/picard: line 5: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+USAGE: CollectWgsMetrics [arguments]
+
+Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.<p>This tool collects
+metrics about the fractions of reads that pass base- and mapping-quality filters as well as coverage (read-depth) levels
+for WGS analyses. Both minimum base- and mapping-quality values as well as the maximum read depths (coverage cap) are
+user defined.</p><p>Note: Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage
+Example:</h4><pre>java -jar picard.jar CollectWgsMetrics \<br />       I=input.bam \<br />      
+O=collect_wgs_metrics.txt \<br />       R=reference_sequence.fasta </pre>Please see <a
+href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>CollectWgsMetrics</a>
+for detailed explanations of the output metrics.<hr />
+Version:3.5.0
+
+
+Required Arguments:
+
+--INPUT,-I <File>             Input SAM/BAM/CRAM file.  Required. 
+
+--OUTPUT,-O <File>            Output metrics file.  Required. 
+
+--REFERENCE_SEQUENCE,-R <PicardHtsPath>
+                              Reference sequence file.  Required. 
+
+
+Optional Arguments:
+
+--ALLELE_FRACTION <Double>    Allele fraction for which to calculate theoretical sensitivity.  This argument may be
+                              specified 0 or more times. Default value: [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3,
+                              0.5]. 
+
+--arguments_file <File>       read one or more arguments files and add them to the command line  This argument may be
+                              specified 0 or more times. Default value: null. 
+
+--COMPRESSION_LEVEL <Integer> Compression level for all compressed files created (e.g. BAM and VCF).  Default value: 5. 
+
+--COUNT_UNPAIRED <Boolean>    If true, count unpaired reads, and paired reads with one end unmapped  Default value:
+                              false. Possible values: {true, false} 
+
+--COVERAGE_CAP,-CAP <Integer> Treat positions with coverage exceeding this value as if they had coverage at this value
+                              (but calculate the difference for PCT_EXC_CAPPED).  Default value: 250. 
+
+--CREATE_INDEX <Boolean>      Whether to create an index when writing VCF or coordinate sorted BAM output.  Default
+                              value: false. Possible values: {true, false} 
+
+--CREATE_MD5_FILE <Boolean>   Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value:
+                              false. Possible values: {true, false} 
+
+--help,-h <Boolean>           display the help message  Default value: false. Possible values: {true, false} 
+
+--INCLUDE_BQ_HISTOGRAM <Boolean>
+                              Determines whether to include the base quality histogram in the metrics file.  Default
+                              value: false. Possible values: {true, false} 
+
+--INTERVALS <File>            An interval list file that contains the positions to restrict the assessment. Please note
+                              that all bases of reads that overlap these intervals will be considered, even if some of
+                              those bases extend beyond the boundaries of the interval. The ideal use case for this
+                              argument is to use it to restrict the calculation to a subset of (whole) contigs.  Default
+                              value: null. 
+
+--LOCUS_ACCUMULATION_CAP <Integer>
+                              At positions with coverage exceeding this value, completely ignore reads that accumulate
+                              beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep
+                              memory consumption in check, but could create bias if set too low  Default value: 100000. 
+
+--MAX_RECORDS_IN_RAM <Integer>When writing files that need to be sorted, this will specify the number of records stored
+                              in RAM before spilling to disk. Increasing this number reduces the number of file handles
+                              needed to sort the file, and increases the amount of RAM needed.  Default value: 500000. 
+
+--MINIMUM_BASE_QUALITY,-Q <Integer>
+                              Minimum base quality for a base to contribute coverage. N bases will be treated as having
+                              a base quality of negative infinity and will therefore be excluded from coverage
+                              regardless of the value of this parameter.  Default value: 20. 
+
+--MINIMUM_MAPPING_QUALITY,-MQ <Integer>
+                              Minimum mapping quality for a read to contribute coverage.  Default value: 20. 
+
+--QUIET <Boolean>             Whether to suppress job-summary info on System.err.  Default value: false. Possible
+                              values: {true, false} 
+
+--READ_LENGTH <Integer>       Average read length in the file. Default is 150.  Default value: 150. 
+
+--SAMPLE_SIZE <Integer>       Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.  Default
+                              value: 10000. 
+
+--STOP_AFTER <Long>           For debugging purposes, stop after processing this many genomic bases.  Default value: -1.
+
+--THEORETICAL_SENSITIVITY_OUTPUT <File>
+                              Output for Theoretical Sensitivity metrics.  Default value: null. 
+
+--TMP_DIR <File>              One or more directories with space available to be used by this program for temporary
+                              storage of working files  This argument may be specified 0 or more times. Default value:
+                              null. 
+
+--USE_FAST_ALGORITHM <Boolean>If true, fast algorithm is used.  Default value: false. Possible values: {true, false} 
+
+--USE_JDK_DEFLATER,-use_jdk_deflater <Boolean>
+                              Use the JDK Deflater instead of the Intel Deflater for writing compressed output  Default
+                              value: false. Possible values: {true, false} 
+
+--USE_JDK_INFLATER,-use_jdk_inflater <Boolean>
+                              Use the JDK Inflater instead of the Intel Inflater for reading compressed input  Default
+                              value: false. Possible values: {true, false} 
+
+--VALIDATION_STRINGENCY <ValidationStringency>
+                              Validation stringency for all SAM files read by this program.  Setting stringency to
+                              SILENT can improve performance when processing a BAM file in which variable-length data
+                              (read, qualities, tags) do not otherwise need to be decoded.  Default value: STRICT.
+                              Possible values: {STRICT, LENIENT, SILENT} 
+
+--VERBOSITY <LogLevel>        Control verbosity of logging.  Default value: INFO. Possible values: {ERROR, WARNING,
+                              INFO, DEBUG} 
+
+--version <Boolean>           display the version number for this tool  Default value: false. Possible values: {true,
+                              false} 
+
+
+Advanced Arguments:
+
+--showHidden <Boolean>        display hidden arguments  Default value: false. Possible values: {true, false} 
+

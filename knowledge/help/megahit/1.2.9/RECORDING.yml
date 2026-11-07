@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/megahit.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: megahit
+package: megahit
+version: 1.2.9
+build: haf24da9_8
+channel: linux-64
+licence: GPL-3.0-or-later
+copyright: Dinghua Li et al., https://github.com/voutcn/megahit
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-3
+used_by_catalog: true
+files:
+  root.txt: megahit --help

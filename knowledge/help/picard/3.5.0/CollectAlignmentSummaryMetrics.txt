@@ -1,0 +1,116 @@
+/home/abdoul/miniconda3/envs/biopilot-tools-2/bin/picard: line 5: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+USAGE: CollectAlignmentSummaryMetrics [arguments]
+
+<b>Produces a summary of alignment metrics from a SAM or BAM file.</b>  This tool takes a SAM/BAM file input and
+produces metrics detailing the quality of the read alignments as well as the proportion of the reads that passed machine
+signal-to-noise threshold quality filters. Note that these quality filters are specific to Illumina data; for additional
+information, please see the corresponding <a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK
+Dictionary entry</a>. </p><p>Note: Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage
+example:</h4><pre>    java -jar picard.jar CollectAlignmentSummaryMetrics \<br />          R=reference_sequence.fasta
+\<br />          I=input.bam \<br />          O=output.txt</pre><p>Please see the CollectAlignmentSummaryMetrics <a
+href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics'>definitions</a> for
+a complete description of the metrics produced by this tool.</p><hr />
+Version:3.5.0
+
+
+Required Arguments:
+
+--INPUT,-I <File>             Input SAM/BAM/CRAM file.  Required. 
+
+--OUTPUT,-O <File>            The file to write the output to.  Required. 
+
+
+Optional Arguments:
+
+--ADAPTER_SEQUENCE <String>   List of adapter sequences to use when processing the alignment metrics.  This argument may
+                              be specified 0 or more times. Default value:
+                              [AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT,
+                              AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG,
+                              AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT,
+                              AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG,
+                              AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT,
+                              AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNNNATCTCGTATGCCGTCTTCTGCTTG]. 
+
+--arguments_file <File>       read one or more arguments files and add them to the command line  This argument may be
+                              specified 0 or more times. Default value: null. 
+
+--ASSUME_SORTED,-AS <Boolean> If true (default), then the sort order in the header file will be ignored.  Default value:
+                              true. Possible values: {true, false} 
+
+--COLLECT_ALIGNMENT_INFORMATION <Boolean>
+                              A flag to disable the collection of actual alignment information. If false, tool will only
+                              count READS, PF_READS, and NOISE_READS. (For backwards compatibility).  Default value:
+                              true. Possible values: {true, false} 
+
+--COMPRESSION_LEVEL <Integer> Compression level for all compressed files created (e.g. BAM and VCF).  Default value: 5. 
+
+--CREATE_INDEX <Boolean>      Whether to create an index when writing VCF or coordinate sorted BAM output.  Default
+                              value: false. Possible values: {true, false} 
+
+--CREATE_MD5_FILE <Boolean>   Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value:
+                              false. Possible values: {true, false} 
+
+--EXPECTED_PAIR_ORIENTATIONS <PairOrientation>
+                              Paired-end reads that do not have this expected orientation will be considered chimeric. 
+                              This argument may be specified 0 or more times. Default value: [FR]. Possible values: {FR,
+                              RF, TANDEM} 
+
+--help,-h <Boolean>           display the help message  Default value: false. Possible values: {true, false} 
+
+--HISTOGRAM_FILE,-H <File>    If Provided, file to write read-length chart pdf.  Default value: null. 
+
+--IS_BISULFITE_SEQUENCED,-BS <Boolean>
+                              Whether the SAM or BAM file consists of bisulfite sequenced reads.  Default value: false.
+                              Possible values: {true, false} 
+
+--MAX_INSERT_SIZE <Integer>   Paired-end reads above this insert size will be considered chimeric along with
+                              inter-chromosomal pairs.  Default value: 100000. 
+
+--MAX_RECORDS_IN_RAM <Integer>When writing files that need to be sorted, this will specify the number of records stored
+                              in RAM before spilling to disk. Increasing this number reduces the number of file handles
+                              needed to sort the file, and increases the amount of RAM needed.  Default value: 500000. 
+
+--METRIC_ACCUMULATION_LEVEL,-LEVEL <MetricAccumulationLevel>
+                              The level(s) at which to accumulate metrics.  This argument may be specified 0 or more
+                              times. Default value: [ALL_READS]. Possible values: {ALL_READS, SAMPLE, LIBRARY,
+                              READ_GROUP} 
+
+--QUIET <Boolean>             Whether to suppress job-summary info on System.err.  Default value: false. Possible
+                              values: {true, false} 
+
+--REFERENCE_SEQUENCE,-R <File>Reference sequence file. Note that while this argument isn't required, without it a small
+                              subset (MISMATCH-related) of the metrics cannot be calculated. Note also that if a
+                              reference sequence is provided, it must be accompanied by a sequence dictionary.  Default
+                              value: null. 
+
+--STOP_AFTER <Long>           Stop after processing N reads, mainly for debugging.  Default value: 0. 
+
+--TMP_DIR <File>              One or more directories with space available to be used by this program for temporary
+                              storage of working files  This argument may be specified 0 or more times. Default value:
+                              null. 
+
+--USE_JDK_DEFLATER,-use_jdk_deflater <Boolean>
+                              Use the JDK Deflater instead of the Intel Deflater for writing compressed output  Default
+                              value: false. Possible values: {true, false} 
+
+--USE_JDK_INFLATER,-use_jdk_inflater <Boolean>
+                              Use the JDK Inflater instead of the Intel Inflater for reading compressed input  Default
+                              value: false. Possible values: {true, false} 
+
+--VALIDATION_STRINGENCY <ValidationStringency>
+                              Validation stringency for all SAM files read by this program.  Setting stringency to
+                              SILENT can improve performance when processing a BAM file in which variable-length data
+                              (read, qualities, tags) do not otherwise need to be decoded.  Default value: STRICT.
+                              Possible values: {STRICT, LENIENT, SILENT} 
+
+--VERBOSITY <LogLevel>        Control verbosity of logging.  Default value: INFO. Possible values: {ERROR, WARNING,
+                              INFO, DEBUG} 
+
+--version <Boolean>           display the version number for this tool  Default value: false. Possible values: {true,
+                              false} 
+
+
+Advanced Arguments:
+
+--showHidden <Boolean>        display hidden arguments  Default value: false. Possible values: {true, false} 
+

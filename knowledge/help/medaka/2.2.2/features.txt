@@ -1,0 +1,46 @@
+usage: medaka features [-h] [--debug | --quiet] [--batch_size BATCH_SIZE]
+                       [--chunk_len CHUNK_LEN] [--chunk_ovlp CHUNK_OVLP]
+                       [--regions REGIONS [REGIONS ...]] [--truth TRUTH]
+                       [--truth_haplotag TRUTH_HAPLOTAG]
+                       [--min_region_size MIN_REGION_SIZE] [--threads THREADS]
+                       [--label_scheme {DiploidLabelScheme,HaploidLabelScheme,RLELabelScheme}]
+                       [--label_scheme_args KEY1=VAL1 KEY2=VAL2a,VAL2b... [KEY1=VAL1 KEY2=VAL2a,VAL2b... ...]]
+                       [--feature_encoder {CountsFeatureEncoder,HardRLEFeatureEncoder,ReadAlignmentFeatureEncoder,SoftRLEFeatureEncoder,SymHardRLEFeatureEncoder}]
+                       [--feature_encoder_args KEY1=VAL1 KEY2=VAL2a,VAL2b... [KEY1=VAL1 KEY2=VAL2a,VAL2b... ...]]
+                       bam output
+
+positional arguments:
+  bam                   Input alignments.
+  output                Output features file.
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+  --batch_size BATCH_SIZE
+                        Inference batch size. (default: 100)
+  --chunk_len CHUNK_LEN
+                        Chunk length of samples. (default: 10000)
+  --chunk_ovlp CHUNK_OVLP
+                        Overlap of chunks. (default: 1000)
+  --regions REGIONS [REGIONS ...]
+                        Genomic regions to analyse, or a bed file. (default:
+                        None)
+  --truth TRUTH         Bam of truth aligned to ref to create features for
+                        training. (default: None)
+  --truth_haplotag TRUTH_HAPLOTAG
+                        Two-letter tag defining haplotype of alignments for
+                        polyploidy labels. (default: None)
+  --min_region_size MIN_REGION_SIZE
+                        Filter out draft regions shorter than this from
+                        feature generation. (default: 0)
+  --threads THREADS     Number of threads for parallel execution. (default: 1)
+  --label_scheme {DiploidLabelScheme,HaploidLabelScheme,RLELabelScheme}
+                        Labelling scheme. (default: HaploidLabelScheme)
+  --label_scheme_args KEY1=VAL1 KEY2=VAL2a,VAL2b... [KEY1=VAL1 KEY2=VAL2a,VAL2b... ...]
+                        Label scheme key-word arguments. (default: {})
+  --feature_encoder {CountsFeatureEncoder,HardRLEFeatureEncoder,ReadAlignmentFeatureEncoder,SoftRLEFeatureEncoder,SymHardRLEFeatureEncoder}
+                        FeatureEncoder used to create the features. (default:
+                        CountsFeatureEncoder)
+  --feature_encoder_args KEY1=VAL1 KEY2=VAL2a,VAL2b... [KEY1=VAL1 KEY2=VAL2a,VAL2b... ...]
+                        Feature encoder key-word arguments. (default: {})

@@ -1,7 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
+- **`biopilot learn <tool>`:** imports an installed tool that is not in the Catalog from its own help: its subcommands (one level), its version command and its real options per version. It is then completed like a built-in tool, in the session where it was learned too. `--list`, `--forget <tool>`. BioPilot never runs a tool you merely type.
+- **Catalog: 10 more tools** for read QC and preprocessing — chopper, cutadapt, filtlong, mosdepth, NanoPlot, picard (its 20 most used tools), qualimap, seqkit, seqtk, trimmomatic — written from their recorded helps and documentation. The help reader also understands Picard and GATK helps.
+- **Catalog: 14 more tools** for alignment and assembly — bowtie2, bowtie2-build, hisat2, hisat2-build, STAR, bwa-mem2, spades.py, megahit, flye, quast, busco, medaka, medaka_consensus, medaka_variant — and the index formats of bowtie2, hisat2, bwa-mem2 and STAR. The help reader also understands the helps of STAR, MEGAHIT and QUAST.
+- **`biopilot search "<text>"`:** finds options of the Catalog and of learned tools by their names and descriptions; `--tool`, `--json`.
+- **npm:** `npm install -g biopilot-cli` installs the same standalone program as the install script.
 - **Signed releases:** each release's `SHA256SUMS` is signed (ECDSA P-256) by the BioPilot release key; `install.sh` checks the signature with `openssl` before trusting any checksum, and refuses an unsigned or tampered release. Releases 0.1.0 to 1.0.1 were signed after the fact.
 
 ## 1.0.1

@@ -1,0 +1,10 @@
+
+Usage:   seqtk trimfq [options] <in.fq>
+
+Options: -q FLOAT    error rate threshold (disabled by -b/-e) [0.05]
+         -l INT      maximally trim down to INT bp (disabled by -b/-e) [30]
+         -b INT      trim INT bp from left (non-zero to disable -q/-l) [0]
+         -e INT      trim INT bp from right (non-zero to disable -q/-l) [0]
+         -L INT      retain at most INT bp from the 5'-end (non-zero to disable -q/-l) [0]
+         -Q          force FASTQ output
+

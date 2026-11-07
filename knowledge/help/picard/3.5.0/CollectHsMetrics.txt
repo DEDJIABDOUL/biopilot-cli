@@ -1,0 +1,139 @@
+/home/abdoul/miniconda3/envs/biopilot-tools-2/bin/picard: line 5: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+USAGE: CollectHsMetrics [arguments]
+
+Collects hybrid-selection (HS) metrics for a SAM or BAM file.  <p>This tool takes a SAM/BAM file input and collects
+metrics that are specific for sequence datasets generated through hybrid-selection. Hybrid-selection (HS) is the most
+commonly used technique to capture exon-specific sequences for targeted sequencing experiments such as exome sequencing;
+for more information, please see the corresponding <a
+href='http://www.broadinstitute.org/gatk/guide/article?id=6331'>GATK Dictionary entry</a>. </p> <p>This tool requires an
+aligned SAM or BAM file as well as bait and target interval files in Picard interval_list format. You should use the
+bait and interval files that correspond to the capture kit that was used to generate the capture libraries for
+sequencing, which can generally be obtained from the kit manufacturer. If the baits and target intervals are provided in
+BED format, you can convert them to the Picard interval_list format using Picard's <a
+href='http://broadinstitute.github.io/picard/command-line-overview.html#BedToIntervalList'>BedToInterval</a> tool.
+</p><p>If a reference sequence is provided, this program will calculate both AT_DROPOUT and GC_DROPOUT metrics. Dropout
+metrics are an attempt to measure the reduced representation of reads, in regions that deviate from 50% G/C content.
+This reduction in the number of aligned reads is due to the increased numbers of errors associated with sequencing
+regions with excessive or deficient numbers of G/C bases, ultimately leading to poor mapping efficiencies and
+lowcoverage in the affected regions. </p><p>If you are interested in getting G/C content and mean sequence depth
+information for every target interval, use the PER_TARGET_COVERAGE option. </p><p>Note: Metrics labeled as percentages
+are actually expressed as fractions!</p>  <h4>Usage Example:</h4><pre>java -jar picard.jar CollectHsMetrics \<br />     
+I=input_reads.bam \<br />      O=output_hs_metrics.txt \<br />      R=reference.fasta \<br />     
+BAIT_INTERVALS=bait.interval_list \<br />      TARGET_INTERVALS=target.interval_list</pre> <p>Please see <a
+href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#HsMetrics'>CollectHsMetrics</a> for detailed
+descriptions of the output metrics produced by this tool.</p><hr />
+Version:3.5.0
+
+
+Required Arguments:
+
+--BAIT_INTERVALS,-BI <File>   An interval list file that contains the locations of the baits used.  This argument must
+                              be specified at least once. Required. 
+
+--INPUT,-I <File>             An aligned SAM/BAM/CRAM file.  Required. 
+
+--OUTPUT,-O <File>            The output file to write the metrics to.  Required. 
+
+--TARGET_INTERVALS,-TI <File> An interval list file that contains the locations of the targets.  This argument must be
+                              specified at least once. Required. 
+
+
+Optional Arguments:
+
+--ALLELE_FRACTION <Double>    Allele fraction for which to calculate theoretical sensitivity.  This argument may be
+                              specified 0 or more times. Default value: [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3,
+                              0.5]. 
+
+--arguments_file <File>       read one or more arguments files and add them to the command line  This argument may be
+                              specified 0 or more times. Default value: null. 
+
+--BAIT_SET_NAME,-N <String>   Bait set name. If not provided it is inferred from the filename of the bait intervals. 
+                              Default value: null. 
+
+--CLIP_OVERLAPPING_READS <Boolean>
+                              True if we are to clip overlapping reads, false otherwise.  Default value: true. Possible
+                              values: {true, false} 
+
+--COMPRESSION_LEVEL <Integer> Compression level for all compressed files created (e.g. BAM and VCF).  Default value: 5. 
+
+--COVERAGE_CAP,-covMax <Integer>
+                              Parameter to set a max coverage limit for Theoretical Sensitivity calculations. Default is
+                              200.  Default value: 200. 
+
+--CREATE_INDEX <Boolean>      Whether to create an index when writing VCF or coordinate sorted BAM output.  Default
+                              value: false. Possible values: {true, false} 
+
+--CREATE_MD5_FILE <Boolean>   Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value:
+                              false. Possible values: {true, false} 
+
+--help,-h <Boolean>           display the help message  Default value: false. Possible values: {true, false} 
+
+--INCLUDE_INDELS <Boolean>    If true count inserted bases as on target and deleted bases as covered by a read.  Default
+                              value: false. Possible values: {true, false} 
+
+--MAX_RECORDS_IN_RAM <Integer>When writing files that need to be sorted, this will specify the number of records stored
+                              in RAM before spilling to disk. Increasing this number reduces the number of file handles
+                              needed to sort the file, and increases the amount of RAM needed.  Default value: 500000. 
+
+--METRIC_ACCUMULATION_LEVEL,-LEVEL <MetricAccumulationLevel>
+                              The level(s) at which to accumulate metrics.  This argument may be specified 0 or more
+                              times. Default value: [ALL_READS]. Possible values: {ALL_READS, SAMPLE, LIBRARY,
+                              READ_GROUP} 
+
+--MINIMUM_BASE_QUALITY,-Q <Integer>
+                              Minimum base quality for a base to contribute coverage.  Default value: 20. 
+
+--MINIMUM_MAPPING_QUALITY,-MQ <Integer>
+                              Minimum mapping quality for a read to contribute coverage.  Default value: 20. 
+
+--NEAR_DISTANCE <Integer>     The maximum distance between a read and the nearest probe/bait/amplicon for the read to be
+                              considered 'near probe' and included in percent selected.  Default value: 250. 
+
+--PER_BASE_COVERAGE <File>    An optional file to output per base coverage information to. The per-base file contains
+                              one line per target base and can grow very large. It is not recommended for use with large
+                              target sets.  Default value: null. 
+
+--PER_TARGET_COVERAGE <File>  An optional file to output per target coverage information to.  Default value: null. 
+
+--QUIET <Boolean>             Whether to suppress job-summary info on System.err.  Default value: false. Possible
+                              values: {true, false} 
+
+--REFERENCE_SEQUENCE,-R <PicardHtsPath>
+                              Reference sequence file.  Default value: null. 
+
+--SAMPLE_SIZE <Integer>       Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.  Default
+                              value: 10000. 
+
+--THEORETICAL_SENSITIVITY_OUTPUT <File>
+                              Output for Theoretical Sensitivity metrics where the allele fractions are provided by the
+                              ALLELE_FRACTION argument.  Default value: null. 
+
+--TMP_DIR <File>              One or more directories with space available to be used by this program for temporary
+                              storage of working files  This argument may be specified 0 or more times. Default value:
+                              null. 
+
+--USE_JDK_DEFLATER,-use_jdk_deflater <Boolean>
+                              Use the JDK Deflater instead of the Intel Deflater for writing compressed output  Default
+                              value: false. Possible values: {true, false} 
+
+--USE_JDK_INFLATER,-use_jdk_inflater <Boolean>
+                              Use the JDK Inflater instead of the Intel Inflater for reading compressed input  Default
+                              value: false. Possible values: {true, false} 
+
+--VALIDATION_STRINGENCY <ValidationStringency>
+                              Validation stringency for all SAM files read by this program.  Setting stringency to
+                              SILENT can improve performance when processing a BAM file in which variable-length data
+                              (read, qualities, tags) do not otherwise need to be decoded.  Default value: STRICT.
+                              Possible values: {STRICT, LENIENT, SILENT} 
+
+--VERBOSITY <LogLevel>        Control verbosity of logging.  Default value: INFO. Possible values: {ERROR, WARNING,
+                              INFO, DEBUG} 
+
+--version <Boolean>           display the version number for this tool  Default value: false. Possible values: {true,
+                              false} 
+
+
+Advanced Arguments:
+
+--showHidden <Boolean>        display hidden arguments  Default value: false. Possible values: {true, false} 
+

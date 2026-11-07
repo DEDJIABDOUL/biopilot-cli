@@ -1,0 +1,23 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/qualimap.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: qualimap
+package: qualimap
+version: 2.3
+build: hdfd78af_0
+channel: noarch
+licence: GPL-2.0-or-later
+copyright: Conesa lab (Konstantin Okonechnikov et al.), http://qualimap.conesalab.org
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-2
+used_by_catalog: true
+files:
+  root.txt: qualimap --help
+  bamqc.txt: qualimap bamqc
+  rnaseq.txt: qualimap rnaseq
+  counts.txt: qualimap counts
+  multi-bamqc.txt: qualimap multi-bamqc
+  clustering.txt: qualimap clustering
+  comp-counts.txt: qualimap comp-counts

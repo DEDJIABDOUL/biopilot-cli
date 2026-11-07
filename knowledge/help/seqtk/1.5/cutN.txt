@@ -1,0 +1,7 @@
+
+Usage:   seqtk cutN [options] <in.fa>
+
+Options: -n INT    min size of N tract [1000]
+         -p INT    penalty for a non-N [10]
+         -g        print gaps only, no sequence
+

@@ -1,0 +1,3583 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# SeqKit 2.14.0, written from its recorded helps: knowledge/help/seqkit/2.14.0/ (MIT;
+# attribution in RECORDING.yml next to it) and its documentation
+# (https://bioinf.shenwei.me/seqkit), in our own words (spec decision 31). Every subcommand
+# repeats the global flags, as each of their helps does. The command list leaves out
+# genautocomplete and version. Ranks follow the shared scale of spec §6.4.
+name: seqkit
+package: seqkit
+description: "Fast toolkit for FASTA and FASTQ files: statistics, filtering, search, sampling, splitting, conversion"
+version: { args: [ version ], regex: "v(\\d[\\w.]*)" }
+help: [ --help ]
+options:
+  - names: [ -j, --threads ]
+    description: CPUs to use (also SEQKIT_THREADS)
+    value: { type: int }
+    default: 4
+    rank: 55
+  - names: [ -o, --out-file ]
+    description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+    value: { type: file, format: [ fasta, fastq ] }
+    default: "-"
+    rank: 60
+  - names: [ -w, --line-width ]
+    description: residues per FASTA line (0 for one line)
+    value: { type: int }
+    default: 60
+    rank: 35
+  - names: [ -t, --seq-type ]
+    description: sequence type; auto guesses it from the first sequence
+    value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+    default: auto
+    rank: 25
+  - names: [ -X, --infile-list ]
+    description: file listing input files, one per line, added to those given
+    value: { type: file }
+    rank: 25
+  - names: [ --id-regexp ]
+    description: regular expression whose first group is the sequence ID
+    value: { type: string }
+    default: ^(\S+)\s?
+    rank: 15
+  - names: [ --id-ncbi ]
+    description: headers are NCBI-style (gi|…|ref|…|)
+    rank: 10
+  - names: [ --quiet ]
+    description: print no extra information
+    rank: 25
+  - names: [ --skip-file-check ]
+    description: do not check that the listed input files exist
+    rank: 10
+  - names: [ --compress-level ]
+    description: compression level of compressed output (-1 for the format's default)
+    value: { type: int }
+    default: -1
+    rank: 15
+  - names: [ --alphabet-guess-seq-length ]
+    description: length of the first sequence's prefix used to guess its type (0 for all of it)
+    value: { type: int }
+    default: 10000
+    rank: 10
+commands:
+  - name: seq
+    help: [ seq, --help ]
+    description: "transform sequences: IDs, length and quality filters, gaps, reverse complement, case"
+    options:
+      - names: [ -m, --min-len ]
+        description: keep sequences at least this long (-1 for no limit)
+        value: { type: int }
+        default: -1
+        rank: 80
+      - names: [ -M, --max-len ]
+        description: keep sequences at most this long (-1 for no limit)
+        value: { type: int }
+        default: -1
+        rank: 60
+      - names: [ -Q, --min-qual ]
+        description: keep reads whose mean quality is at least this (-1 for no limit)
+        value: { type: float }
+        default: -1
+        rank: 60
+      - names: [ -R, --max-qual ]
+        description: keep reads whose mean quality is below this (-1 for no limit)
+        value: { type: float }
+        default: -1
+        rank: 25
+      - names: [ -r, --reverse ]
+        description: reverse the sequences
+        rank: 55
+      - names: [ -p, --complement ]
+        description: complement the sequences (with -r, reverse complement); -v is advised
+        rank: 55
+      - names: [ -n, --name ]
+        description: print headers only
+        rank: 55
+      - names: [ -i, --only-id ]
+        description: print IDs instead of full headers
+        rank: 55
+      - names: [ -s, --seq ]
+        description: print sequences only
+        rank: 50
+      - names: [ -q, --qual ]
+        description: print qualities only
+        rank: 25
+      - names: [ -g, --remove-gaps ]
+        description: remove the gap letters of -G (spaces, tabs, dashes)
+        rank: 45
+      - names: [ -G, --gap-letters ]
+        description: letters that -g removes
+        value: { type: string }
+        default: "- \t."
+        rank: 20
+      - names: [ -u, --upper-case ]
+        description: write sequences in upper case
+        rank: 40
+      - names: [ -l, --lower-case ]
+        description: write sequences in lower case
+        rank: 30
+      - names: [ -v, --validate-seq ]
+        description: check bases against the alphabet
+        rank: 35
+      - names: [ --dna2rna ]
+        description: turn DNA into RNA
+        rank: 30
+      - names: [ --rna2dna ]
+        description: turn RNA into DNA
+        rank: 30
+      - names: [ -b, --qual-ascii-base ]
+        description: quality offset (33 for Phred+33)
+        value: { type: int }
+        default: 33
+        rank: 20
+      - names: [ -k, --color ]
+        description: colour the sequences, for less -R
+        rank: 15
+      - names: [ --f-pattern ]
+        description: apply only to records matching these patterns (comma-separated or repeated)
+        value: { type: string }
+        rank: 30
+        repeatable: true
+      - names: [ --f-pattern-file ]
+        description: apply only to records matching the patterns of this file, one per line
+        value: { type: file }
+        rank: 25
+      - names: [ --f-use-regexp ]
+        description: the --f-* patterns are regular expressions
+        rank: 20
+      - names: [ --f-by-name ]
+        description: match the --f-* patterns on full headers, not IDs
+        rank: 15
+      - names: [ --f-by-seq ]
+        description: match the --f-* patterns on sequences, both strands
+        rank: 15
+      - names: [ --f-only-positive-strand ]
+        description: with --f-by-seq, search the positive strand only
+        rank: 10
+      - names: [ --f-ignore-case ]
+        description: the --f-* patterns ignore case
+        rank: 10
+      - names: [ --f-invert-match ]
+        description: apply to the records that do not match instead
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: stats
+    help: [ stats, --help ]
+    description: "statistics of FASTA/FASTQ files: counts, lengths, N50, Q20/Q30, GC"
+    options:
+      - names: [ -a, --all ]
+        description: "every statistic: length quartiles, gaps, N50, Q20/Q30, mean quality, GC"
+        rank: 85
+      - names: [ -T, --tabular ]
+        description: tab-separated output for scripts
+        rank: 75
+      - names: [ -b, --basename ]
+        description: print file base names only
+        rank: 40
+      - names: [ -N, --N ]
+        description: add N50-like columns for these values (0 to 100), e.g. 50,90
+        value: { type: string }
+        rank: 35
+        repeatable: true
+      - names: [ -E, --fq-encoding ]
+        description: quality encoding of FASTQ input
+        value: { type: enum, values: [ sanger, solexa, illumina-1.3+, illumina-1.5+, illumina-1.8+ ] }
+        default: sanger
+        rank: 20
+      - names: [ -G, --gap-letters ]
+        description: letters counted as gaps (add Nn to count N)
+        value: { type: string }
+        default: "- ."
+        rank: 20
+      - names: [ -e, --skip-err ]
+        description: warn on errors instead of stopping
+        rank: 25
+      - names: [ -S, --skip-file-check ]
+        description: do not check that the input files exist
+        rank: 10
+      - names: [ -i, --stdin-label ]
+        description: name shown for standard input
+        value: { type: string }
+        default: "-"
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: grep
+    help: [ grep, --help ]
+    description: select records by ID, name, sequence or motif, mismatches allowed
+    options:
+      - names: [ -p, --pattern ]
+        description: patterns to look for (comma-separated or repeated); quote literal commas
+        value: { type: string }
+        rank: 85
+        repeatable: true
+      - names: [ -f, --pattern-file ]
+        description: file of patterns, one per line
+        value: { type: file }
+        rank: 80
+      - names: [ -v, --invert-match ]
+        description: keep the records that do not match
+        rank: 65
+      - names: [ -r, --use-regexp ]
+        description: patterns are regular expressions
+        rank: 60
+      - names: [ -n, --by-name ]
+        description: match full headers instead of IDs
+        rank: 55
+      - names: [ -s, --by-seq ]
+        description: match within sequences, both strands unless -P
+        rank: 55
+      - names: [ -i, --ignore-case ]
+        description: ignore case
+        rank: 45
+      - names: [ -m, --max-mismatch ]
+        description: mismatches allowed with -s
+        value: { type: int }
+        rank: 40
+      - names: [ -P, --only-positive-strand ]
+        description: search the positive strand only
+        rank: 35
+      - names: [ -d, --degenerate ]
+        description: patterns contain degenerate bases
+        rank: 30
+      - names: [ -R, --region ]
+        description: search only this region of each sequence, e.g. 1:12 or -12:-1
+        value: { type: string }
+        rank: 30
+      - names: [ -C, --count ]
+        description: print only the number of matching records
+        rank: 40
+      - names: [ -c, --circular ]
+        description: sequences are circular genomes
+        rank: 20
+      - names: [ -D, --allow-duplicated-patterns ]
+        description: write a record once per duplicated pattern it matches
+        rank: 15
+      - names: [ --delete-matched ]
+        description: drop a pattern once matched (faster with regular expressions)
+        rank: 15
+      - names: [ -I, --immediate-output ]
+        description: write without buffering
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: subseq
+    help: [ subseq, --help ]
+    description: extract subsequences by region, BED or GTF, with flanks
+    options:
+      - names: [ -r, --region ]
+        description: region, e.g. 1:12 (first 12 bases), -12:-1 (last 12), 13:-1 (drop the first 12)
+        value: { type: string }
+        rank: 80
+      - names: [ --bed ]
+        description: regions from a BED file
+        value: { type: file, format: bed }
+        rank: 75
+      - names: [ --gtf ]
+        description: regions from a GTF 2.2 file
+        value: { type: file, format: gtf }
+        rank: 65
+      - names: [ --chr ]
+        description: with --bed or --gtf, only these sequence IDs
+        value: { type: string }
+        rank: 35
+        repeatable: true
+      - names: [ --feature ]
+        description: with --gtf, only these feature types
+        value: { type: string }
+        rank: 40
+        repeatable: true
+      - names: [ --gtf-tag ]
+        description: GTF attribute written as the sequence comment
+        value: { type: string }
+        default: gene_id
+        rank: 25
+      - names: [ -u, --up-stream ]
+        description: add this many upstream bases
+        value: { type: int }
+        rank: 45
+      - names: [ -d, --down-stream ]
+        description: add this many downstream bases
+        value: { type: int }
+        rank: 45
+      - names: [ -f, --only-flank ]
+        description: return only the flanking bases
+        rank: 25
+      - names: [ -R, --region-coord ]
+        description: add the coordinates of -r to the IDs
+        rank: 25
+      - names: [ -U, --update-faidx ]
+        description: rebuild the FASTA index if it exists
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: fx2tab
+    help: [ fx2tab, --help ]
+    description: FASTA/FASTQ to a table, with length, GC, quality and other columns
+    options:
+      - names: [ -n, --name ]
+        description: print names only, no sequences or qualities
+        rank: 55
+      - names: [ -i, --only-id ]
+        description: print IDs instead of full headers
+        rank: 50
+      - names: [ -l, --length ]
+        description: add the sequence length
+        rank: 75
+      - names: [ -g, --gc ]
+        description: add the GC content
+        rank: 70
+      - names: [ -q, --avg-qual ]
+        description: add the mean quality of each read
+        rank: 55
+      - names: [ -H, --header-line ]
+        description: print a header line
+        rank: 55
+      - names: [ -B, --base-content ]
+        description: add the content of these bases, e.g. AT or N
+        value: { type: string }
+        rank: 35
+        repeatable: true
+      - names: [ -C, --base-count ]
+        description: add the count of these bases
+        value: { type: string }
+        rank: 30
+        repeatable: true
+      - names: [ -G, --gc-skew ]
+        description: add the GC skew
+        rank: 25
+      - names: [ -a, --alphabet ]
+        description: add the letters each sequence uses
+        rank: 20
+      - names: [ -s, --seq-hash ]
+        description: add the MD5 of the sequence
+        rank: 20
+      - names: [ -I, --case-sensitive ]
+        description: case-sensitive base contents and hashes
+        rank: 10
+      - names: [ -Q, --no-qual ]
+        description: two columns only, even for FASTQ
+        rank: 25
+      - names: [ -f, --file-name ]
+        description: add the input file name
+        rank: 20
+      - names: [ --basename ]
+        description: add the input file base name
+        rank: 15
+      - names: [ -b, --qual-ascii-base ]
+        description: quality offset (33 for Phred+33)
+        value: { type: int }
+        default: 33
+        rank: 15
+      - names: [ --stdin-label ]
+        description: name shown for standard input
+        value: { type: string }
+        default: "-"
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: tab2fx
+    help: [ tab2fx, --help ]
+    description: table (first two or three columns) back to FASTA/FASTQ
+    options:
+      - names: [ -b, --buffer-size ]
+        description: buffer size (K, M, G); raise it on 'token too long'
+        value: { type: string }
+        default: 1G
+        rank: 15
+      - names: [ -p, --comment-line-prefix ]
+        description: prefixes of comment lines to skip
+        value: { type: string }
+        rank: 15
+        repeatable: true
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: tables of records; standard input when none
+        variadic: true
+        value: { type: file, optional: true }
+  - name: fq2fa
+    help: [ fq2fa, --help ]
+    description: FASTQ to FASTA
+    options:
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: fastq, optional: true }
+  - name: fa2fq
+    help: [ fa2fq, --help ]
+    description: fetch the FASTQ records of the sequences of a FASTA file
+    options:
+      - names: [ -f, --fasta-file ]
+        description: FASTA file of the sequences to fetch
+        value: { type: file, format: fasta }
+        rank: 85
+      - names: [ -P, --only-positive-strand ]
+        description: search the positive strand only
+        rank: 25
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: fastq, optional: true }
+  - name: convert
+    help: [ convert, --help ]
+    description: convert FASTQ quality encoding (Sanger, Solexa, Illumina)
+    options:
+      - names: [ --to ]
+        description: target encoding
+        value: { type: enum, values: [ Sanger, Solexa, Illumina-1.3+, Illumina-1.5+, Illumina-1.8+ ] }
+        default: Sanger
+        rank: 70
+      - names: [ --from ]
+        description: source encoding, guessed when absent
+        value: { type: enum, values: [ Sanger, Solexa, Illumina-1.3+, Illumina-1.5+, Illumina-1.8+ ] }
+        rank: 50
+      - names: [ -d, --dry-run ]
+        description: only report the guessed encoding
+        rank: 40
+      - names: [ -f, --force ]
+        description: for Illumina-1.8+ to Sanger, cap qualities at 40
+        rank: 20
+      - names: [ -n, --nrecords ]
+        description: records read to guess the encoding
+        value: { type: int }
+        default: 1000
+        rank: 20
+      - names: [ -N, --thresh-B-in-n-most-common ]
+        description: threshold of 'B' among the most common qualities to guess Illumina 1.5
+        value: { type: int }
+        default: 2
+        rank: 10
+      - names: [ -F, --thresh-illumina1.5-frac ]
+        description: fraction of Illumina 1.5 records needed to guess it
+        value: { type: float }
+        default: 0.1
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: fastq, optional: true }
+  - name: sample
+    help: [ sample, --help ]
+    description: random subsample of records, by number or proportion
+    options:
+      - names: [ -p, --proportion ]
+        description: keep this fraction of the records
+        value: { type: float }
+        rank: 85
+      - names: [ -n, --number ]
+        description: keep about this many records (loads them all unless -2)
+        value: { type: int }
+        rank: 75
+      - names: [ -s, --rand-seed ]
+        description: random seed; the same for both files of a pair
+        value: { type: int }
+        default: 11
+        rank: 65
+      - names: [ "-2", --two-pass ]
+        description: with -n, count first instead of loading everything (needs a file)
+        rank: 35
+      - names: [ -r, --non-deterministic ]
+        description: time-based seed, different on each run
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: sample2
+    help: [ sample2, --help ]
+    description: "random subsample, version 2: exact numbers"
+    options:
+      - names: [ -n, --number ]
+        description: keep exactly this many records (or all of them)
+        value: { type: int }
+        rank: 80
+      - names: [ -p, --proportion ]
+        description: keep this fraction of the records
+        value: { type: float }
+        rank: 80
+      - names: [ -s, --rand-seed ]
+        description: random seed; the same for both files of a pair
+        value: { type: int }
+        default: 11
+        rank: 65
+      - names: [ "-2", --two-pass ]
+        description: lower memory, exact counts (needs a file)
+        rank: 35
+      - names: [ -r, --non-deterministic ]
+        description: time-based seed, different on each run
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: head
+    help: [ head, --help ]
+    description: first N records, or first records adding up to L bases
+    options:
+      - names: [ -n, --number ]
+        description: number of records
+        value: { type: int }
+        default: 10
+        rank: 80
+      - names: [ -l, --length ]
+        description: records up to this total length (K, M, G suffixes); overrides -n
+        value: { type: string }
+        rank: 40
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: range
+    help: [ range, --help ]
+    description: records in a range of positions
+    options:
+      - names: [ -r, --range ]
+        description: range of records, e.g. 1:12 (first 12) or -12:-1 (last 12)
+        value: { type: string }
+        rank: 85
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: rmdup
+    help: [ rmdup, --help ]
+    description: remove duplicate records by ID, name or sequence
+    options:
+      - names: [ -s, --by-seq ]
+        description: duplicates by sequence
+        rank: 75
+      - names: [ -n, --by-name ]
+        description: duplicates by full header
+        rank: 50
+      - names: [ -i, --ignore-case ]
+        description: ignore case
+        rank: 35
+      - names: [ -P, --only-positive-strand ]
+        description: compare sequences on the positive strand only
+        rank: 25
+      - names: [ -d, --dup-seqs-file ]
+        description: file for the duplicates removed
+        value: { type: file, format: [ fasta, fastq ] }
+        rank: 35
+      - names: [ -D, --dup-num-file ]
+        description: file for the number and IDs of each duplicate group
+        value: { type: file }
+        rank: 30
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: common
+    help: [ common, --help ]
+    description: records shared by several files, by ID, name or sequence
+    options:
+      - names: [ -s, --by-seq ]
+        description: compare sequences
+        rank: 65
+      - names: [ -n, --by-name ]
+        description: compare full headers
+        rank: 50
+      - names: [ -i, --ignore-case ]
+        description: ignore case
+        rank: 30
+      - names: [ -P, --only-positive-strand ]
+        description: compare sequences on the positive strand only
+        rank: 20
+      - names: [ -e, --check-embedded-seqs ]
+        description: also match a sequence contained in another, keeping the shorter
+        rank: 20
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: duplicate
+    help: [ duplicate, --help ]
+    description: repeat each record N times
+    options:
+      - names: [ -n, --times ]
+        description: number of copies
+        value: { type: int }
+        default: 1
+        rank: 75
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: head-genome
+    help: [ head-genome, --help ]
+    description: records of the first genome, by shared name prefix
+    options:
+      - names: [ -m, --mini-common-words ]
+        description: shortest shared prefix, in words
+        value: { type: int }
+        default: 1
+        rank: 50
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: split
+    help: [ split, --help ]
+    description: split into files by ID, region, size or number of parts (mainly FASTA)
+    options:
+      - names: [ -p, --by-part ]
+        description: into this many files
+        value: { type: int }
+        rank: 75
+      - names: [ -s, --by-size ]
+        description: into files of this many records
+        value: { type: int }
+        rank: 75
+      - names: [ -i, --by-id ]
+        description: one file per sequence ID
+        rank: 65
+      - names: [ -r, --by-region ]
+        description: by the subsequence of this region, e.g. 1:12
+        value: { type: string }
+        rank: 30
+      - names: [ -O, --out-dir ]
+        description: output folder (input name + .split by default)
+        value: { type: dir }
+        rank: 60
+      - names: [ -P, --out-prefix ]
+        description: file prefix, over the --by-*-prefix ones
+        value: { type: string }
+        rank: 35
+      - names: [ --by-part-prefix ]
+        description: file prefix for --by-part
+        value: { type: string }
+        rank: 15
+      - names: [ --by-size-prefix ]
+        description: file prefix for --by-size
+        value: { type: string }
+        rank: 15
+      - names: [ --by-id-prefix ]
+        description: file prefix for --by-id
+        value: { type: string }
+        rank: 15
+      - names: [ --by-region-prefix ]
+        description: file prefix for --by-region
+        value: { type: string }
+        rank: 10
+      - names: [ -e, --extension ]
+        description: extension of the files, e.g. .gz, .xz or .zst
+        value: { type: string }
+        rank: 40
+      - names: [ -W, --part-width ]
+        description: digits of the part numbers (zero-padded)
+        value: { type: int }
+        default: 3
+        rank: 15
+      - names: [ -f, --force ]
+        description: overwrite the output folder
+        rank: 35
+      - names: [ -I, --ignore-case ]
+        description: with -i, ignore case
+        rank: 10
+      - names: [ "-2", --two-pass ]
+        description: read the input twice to use less memory (FASTA only)
+        rank: 25
+      - names: [ -k, --keep-temp ]
+        description: keep the temporary FASTA and index of -2
+        rank: 10
+      - names: [ -U, --update-faidx ]
+        description: rebuild the FASTA index if it exists
+        rank: 10
+      - names: [ -d, --dry-run ]
+        description: only print what would be written
+        rank: 20
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: split2
+    help: [ split2, --help ]
+    description: split into files by size or number of parts, FASTA or FASTQ, paired reads included
+    options:
+      - names: [ -p, --by-part ]
+        description: into this many files, records dealt in turn
+        value: { type: int }
+        rank: 80
+      - names: [ -s, --by-size ]
+        description: into files of this many records
+        value: { type: int }
+        rank: 75
+      - names: [ -l, --by-length ]
+        description: into chunks of at least this many bases (K, M, G suffixes)
+        value: { type: string }
+        rank: 40
+      - names: [ "-1", --read1 ]
+        description: read 1 file of the pairs
+        value: { type: file, format: fastq, read_role: 1 }
+        rank: 65
+      - names: [ "-2", --read2 ]
+        description: read 2 file of the pairs
+        value: { type: file, format: fastq, read_role: 2, mate_of: "-1" }
+        rank: 60
+        rules:
+          - when: { used: [ "-1" ] }
+            boost: 30
+      - names: [ -O, --out-dir ]
+        description: output folder (input name + .split by default)
+        value: { type: dir }
+        rank: 60
+      - names: [ -P, --out-prefix ]
+        description: file prefix, over the --by-*-prefix ones; paired files need {read}
+        value: { type: string }
+        rank: 30
+      - names: [ --by-part-prefix ]
+        description: file prefix for --by-part; paired files need {read}
+        value: { type: string }
+        rank: 15
+      - names: [ --by-size-prefix ]
+        description: file prefix for --by-size; paired files need {read}
+        value: { type: string }
+        rank: 15
+      - names: [ --by-length-prefix ]
+        description: file prefix for --by-length; paired files need {read}
+        value: { type: string }
+        rank: 10
+      - names: [ -e, --extension ]
+        description: extension of the files, e.g. .gz, .xz or .zst
+        value: { type: string }
+        rank: 40
+      - names: [ -W, --part-width ]
+        description: digits of the part numbers (zero-padded)
+        value: { type: int }
+        default: 3
+        rank: 15
+      - names: [ -N, --seqid-as-filename ]
+        description: name each file after its first sequence ID
+        rank: 20
+      - names: [ -f, --force ]
+        description: overwrite the output folder
+        rank: 35
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: pair
+    help: [ pair, --help ]
+    description: match up the reads of two FASTQ files of pairs
+    options:
+      - names: [ "-1", --read1 ]
+        description: read 1 file of the pairs
+        value: { type: file, format: fastq, read_role: 1 }
+        rank: 85
+      - names: [ "-2", --read2 ]
+        description: read 2 file of the pairs
+        value: { type: file, format: fastq, read_role: 2, mate_of: "-1" }
+        rank: 80
+        rules:
+          - when: { used: [ "-1" ] }
+            boost: 30
+      - names: [ -O, --out-dir ]
+        description: output folder
+        value: { type: dir }
+        rank: 55
+      - names: [ -u, --save-unpaired ]
+        description: also write the reads without a mate
+        rank: 45
+      - names: [ -f, --force ]
+        description: overwrite the output folder
+        rank: 30
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments: []
+  - name: concat
+    help: [ concat, --help ]
+    description: join the sequences of the same ID across files
+    options:
+      - names: [ -f, --full ]
+        description: keep every ID, like an outer join
+        rank: 45
+      - names: [ -F, --fill ]
+        description: with -f, fill missing IDs with this letter
+        value: { type: string }
+        rank: 25
+      - names: [ -s, --separator ]
+        description: separator between the joined descriptions
+        value: { type: string }
+        default: "|"
+        rank: 20
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: mutate
+    help: [ mutate, --help ]
+    description: "edit sequences: point mutations, insertions, deletions"
+    options:
+      - names: [ -p, --point ]
+        description: point mutation, e.g. 2:C (second base to C) or -1:A (last base)
+        value: { type: string }
+        rank: 65
+        repeatable: true
+      - names: [ -i, --insertion ]
+        description: insert bases after a position, e.g. 0:ACGT at the start
+        value: { type: string }
+        rank: 55
+      - names: [ -d, --deletion ]
+        description: delete a range, e.g. 1:2 or -3:-1
+        value: { type: string }
+        rank: 55
+      - names: [ -s, --pattern ]
+        description: edit only the records matching these patterns
+        value: { type: string }
+        rank: 40
+        repeatable: true
+      - names: [ -f, --pattern-file ]
+        description: edit only the records matching the patterns of this file
+        value: { type: file }
+        rank: 30
+      - names: [ -r, --use-regexp ]
+        description: the patterns are regular expressions
+        rank: 25
+      - names: [ -n, --by-name ]
+        description: match the patterns on full headers
+        rank: 20
+      - names: [ -I, --ignore-case ]
+        description: the patterns ignore case
+        rank: 15
+      - names: [ -v, --invert-match ]
+        description: edit the records that do not match instead
+        rank: 20
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: rename
+    help: [ rename, --help ]
+    description: make duplicate IDs unique by numbering them
+    options:
+      - names: [ -n, --by-name ]
+        description: find duplicates by full header
+        rank: 40
+      - names: [ -s, --separator ]
+        description: separator between the ID and the number
+        value: { type: string }
+        default: _
+        rank: 35
+      - names: [ -N, --start-num ]
+        description: number given to the first duplicate
+        value: { type: int }
+        default: 2
+        rank: 25
+      - names: [ "-1", --rename-1st-rec ]
+        description: number the first record too
+        rank: 30
+      - names: [ -m, --multiple-outfiles ]
+        description: one output file per input file
+        rank: 25
+      - names: [ -O, --out-dir ]
+        description: output folder of -m
+        value: { type: dir }
+        default: renamed
+        rank: 20
+      - names: [ -f, --force ]
+        description: overwrite the output folder
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: replace
+    help: [ replace, --help ]
+    description: rewrite headers or sequences with a regular expression
+    options:
+      - names: [ -p, --pattern ]
+        description: regular expression to look for
+        value: { type: string }
+        rank: 85
+      - names: [ -r, --replacement ]
+        description: replacement; $1 is the first group, {nr} the record number, {fn} the file, {kv} the -k value
+        value: { type: string }
+        rank: 85
+      - names: [ -s, --by-seq ]
+        description: rewrite sequences instead of headers
+        rank: 45
+      - names: [ -i, --ignore-case ]
+        description: ignore case
+        rank: 35
+      - names: [ -k, --kv-file ]
+        description: tab-separated key-value file, for {kv}
+        value: { type: file }
+        rank: 40
+      - names: [ -I, --key-capt-idx ]
+        description: group of the pattern holding the key (from 1)
+        value: { type: int }
+        default: 1
+        rank: 15
+      - names: [ -m, --key-miss-repl ]
+        description: replacement when a key has no value
+        value: { type: string }
+        rank: 20
+      - names: [ -K, --keep-key ]
+        description: keep the key itself when it has no value
+        rank: 20
+      - names: [ -U, --keep-untouch ]
+        description: change nothing when a key has no value
+        rank: 20
+      - names: [ --nr-width ]
+        description: least width of {nr}, zero-padded
+        value: { type: int }
+        default: 1
+        rank: 15
+      - names: [ --f-pattern ]
+        description: apply only to records matching these patterns (comma-separated or repeated)
+        value: { type: string }
+        rank: 30
+        repeatable: true
+      - names: [ --f-pattern-file ]
+        description: apply only to records matching the patterns of this file, one per line
+        value: { type: file }
+        rank: 25
+      - names: [ --f-use-regexp ]
+        description: the --f-* patterns are regular expressions
+        rank: 20
+      - names: [ --f-by-name ]
+        description: match the --f-* patterns on full headers, not IDs
+        rank: 15
+      - names: [ --f-by-seq ]
+        description: match the --f-* patterns on sequences, both strands
+        rank: 15
+      - names: [ --f-only-positive-strand ]
+        description: with --f-by-seq, search the positive strand only
+        rank: 10
+      - names: [ --f-ignore-case ]
+        description: the --f-* patterns ignore case
+        rank: 10
+      - names: [ --f-invert-match ]
+        description: apply to the records that do not match instead
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: restart
+    help: [ restart, --help ]
+    description: rotate circular genomes to a new start
+    options:
+      - names: [ -i, --new-start ]
+        description: new start position, from 1 (negative counts from the end)
+        value: { type: int }
+        default: 1
+        rank: 65
+      - names: [ -s, --start-with ]
+        description: start the genome at this subsequence
+        value: { type: string }
+        rank: 55
+      - names: [ -m, --max-mismatch ]
+        description: mismatches allowed with -s
+        value: { type: int }
+        rank: 25
+      - names: [ -I, --ignore-case ]
+        description: -s ignores case
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: sana
+    help: [ sana, --help ]
+    description: repair broken one-line FASTQ files
+    options:
+      - names: [ -i, --format ]
+        description: input and output format
+        value: { type: enum, values: [ fastq, fasta ] }
+        default: fastq
+        rank: 35
+      - names: [ -I, --in-format ]
+        description: input format
+        value: { type: enum, values: [ fastq, fasta ] }
+        rank: 20
+      - names: [ -O, --out-format ]
+        description: output format
+        value: { type: enum, values: [ fastq, fasta ] }
+        rank: 20
+      - names: [ -A, --allow-gaps ]
+        description: accept '-' in sequences
+        rank: 20
+      - names: [ -b, --qual-ascii-base ]
+        description: quality offset (33 for Phred+33)
+        value: { type: int }
+        default: 33
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: shuffle
+    help: [ shuffle, --help ]
+    description: shuffle the order of the records
+    options:
+      - names: [ -s, --rand-seed ]
+        description: random seed
+        value: { type: int }
+        default: 23
+        rank: 55
+      - names: [ "-2", --two-pass ]
+        description: read the input twice to use less memory (FASTA only)
+        rank: 35
+      - names: [ --tmp-dir ]
+        description: folder for the temporary files of -2
+        value: { type: dir }
+        default: ./
+        rank: 15
+      - names: [ -k, --keep-temp ]
+        description: keep the temporary FASTA and index of -2
+        rank: 10
+      - names: [ -U, --update-faidx ]
+        description: rebuild the FASTA index if it exists
+        rank: 10
+      - names: [ -r, --non-deterministic ]
+        description: time-based seed, different on each run
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: sort
+    help: [ sort, --help ]
+    description: sort records by ID, name, sequence or length
+    options:
+      - names: [ -l, --by-length ]
+        description: by sequence length
+        rank: 70
+      - names: [ -n, --by-name ]
+        description: by full header
+        rank: 50
+      - names: [ -s, --by-seq ]
+        description: by sequence
+        rank: 45
+      - names: [ -b, --by-bases ]
+        description: by bases other than gaps
+        rank: 20
+      - names: [ -r, --reverse ]
+        description: reverse the order
+        rank: 60
+      - names: [ -N, --natural-order ]
+        description: natural order of IDs and names (seq2 before seq10)
+        rank: 35
+      - names: [ -i, --ignore-case ]
+        description: ignore case
+        rank: 25
+      - names: [ -G, --gap-letters ]
+        description: letters taken as gaps
+        value: { type: string }
+        default: "- \t."
+        rank: 10
+      - names: [ -L, --seq-prefix-length ]
+        description: length of the prefix compared by -s (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+      - names: [ "-2", --two-pass ]
+        description: read the input twice to use less memory (FASTA only)
+        rank: 30
+      - names: [ -k, --keep-temp ]
+        description: keep the temporary FASTA and index of -2
+        rank: 10
+      - names: [ -U, --update-faidx ]
+        description: rebuild the FASTA index if it exists
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: faidx
+    help: [ faidx, --help ]
+    description: index a FASTA file and extract regions from it
+    options:
+      - names: [ -l, --region-file ]
+        description: file of regions, one per line
+        value: { type: file }
+        rank: 55
+      - names: [ -f, --full-head ]
+        description: print full headers, not just IDs (index in .seqkit.fai)
+        rank: 35
+      - names: [ -i, --ignore-case ]
+        description: ignore case
+        rank: 25
+      - names: [ -r, --use-regexp ]
+        description: IDs are regular expressions (no regions then)
+        rank: 30
+      - names: [ -U, --update-faidx ]
+        description: rebuild the index if it exists
+        rank: 30
+      - names: [ -I, --immediate-output ]
+        description: write without buffering
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: fasta-file
+        description: FASTA file to index or read
+        value: { type: file, format: fasta }
+      - name: regions
+        description: IDs or regions to extract, e.g. chr1 or chr1:1-100
+        variadic: true
+        value: { type: string, optional: true }
+  - name: sliding
+    help: [ sliding, --help ]
+    description: subsequences in sliding windows
+    options:
+      - names: [ -W, --window ]
+        description: window size
+        value: { type: int }
+        rank: 85
+      - names: [ -s, --step ]
+        description: step between windows
+        value: { type: int }
+        rank: 80
+      - names: [ -g, --greedy ]
+        description: also write the last window, even when shorter
+        rank: 35
+      - names: [ -C, --circular-genome ]
+        description: sequences are circular genomes
+        rank: 25
+      - names: [ -c, --circular ]
+        description: same as -C
+        rank: 15
+      - names: [ -S, --suffix ]
+        description: suffix added to the IDs
+        value: { type: string }
+        default: _sliding
+        rank: 20
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: merge-slides
+    help: [ merge-slides, --help ]
+    description: merge the windows written by seqkit sliding
+    options:
+      - names: [ -l, --min-overlap ]
+        description: least overlap of two neighbouring windows (step - 1 advised)
+        value: { type: int }
+        default: 1
+        rank: 50
+      - names: [ -g, --max-gap ]
+        description: largest distance between window starts (0 for no limit, 1 merges nothing)
+        value: { type: int }
+        rank: 40
+      - names: [ -r, --regexp ]
+        description: regular expression capturing the reference and window positions
+        value: { type: string }
+        default: ^(.+)_sliding:(\d+)\-(\d+)
+        rank: 20
+      - names: [ -b, --buffer-size ]
+        description: buffer size (K, M, G); raise it on 'token too long'
+        value: { type: string }
+        default: 1G
+        rank: 10
+      - names: [ -p, --comment-line-prefix ]
+        description: prefixes of comment lines to skip
+        value: { type: string }
+        rank: 10
+        repeatable: true
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: tables of windows; standard input when none
+        variadic: true
+        value: { type: file, optional: true }
+  - name: translate
+    help: [ translate, --help ]
+    description: translate DNA or RNA to protein, ambiguous bases included
+    options:
+      - names: [ -T, --transl-table ]
+        description: genetic code (NCBI table number)
+        value: { type: int }
+        default: 1
+        rank: 65
+      - names: [ -f, --frame ]
+        description: "frames to translate: 1, 2, 3, -1, -2, -3, or 6 for all six"
+        value: { type: string }
+        default: "1"
+        rank: 65
+        repeatable: true
+      - names: [ -F, --append-frame ]
+        description: add the frame to the IDs
+        rank: 35
+      - names: [ -M, --init-codon-as-M ]
+        description: translate the first codon as M
+        rank: 30
+      - names: [ --trim ]
+        description: remove X and * from the end of translations
+        rank: 40
+      - names: [ --clean ]
+        description: write stop codons as X instead of *
+        rank: 25
+      - names: [ -x, --allow-unknown-codon ]
+        description: translate unknown codons as X
+        rank: 25
+      - names: [ -s, --out-subseqs ]
+        description: write the pieces between stop codons apart
+        rank: 25
+      - names: [ -m, --min-len ]
+        description: shortest protein written
+        value: { type: int }
+        rank: 30
+      - names: [ -e, --skip-translate-errors ]
+        description: write an empty sequence on a translation error
+        rank: 15
+      - names: [ -l, --list-transl-table ]
+        description: print genetic code N (0 for all)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ -L, --list-transl-table-with-amb-codons ]
+        description: print genetic code N with ambiguous codons (0 for all)
+        value: { type: int }
+        default: -1
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: locate
+    help: [ locate, --help ]
+    description: positions of subsequences or motifs, mismatches allowed
+    options:
+      - names: [ -p, --pattern ]
+        description: motifs to look for (comma-separated or repeated)
+        value: { type: string }
+        rank: 85
+        repeatable: true
+      - names: [ -f, --pattern-file ]
+        description: FASTA file of motifs
+        value: { type: file, format: fasta }
+        rank: 75
+      - names: [ -m, --max-mismatch ]
+        description: mismatches allowed
+        value: { type: int }
+        rank: 50
+      - names: [ -i, --ignore-case ]
+        description: ignore case
+        rank: 40
+      - names: [ -d, --degenerate ]
+        description: motifs contain degenerate bases
+        rank: 35
+      - names: [ -r, --use-regexp ]
+        description: motifs are regular expressions
+        rank: 35
+      - names: [ -P, --only-positive-strand ]
+        description: search the positive strand only
+        rank: 35
+      - names: [ --bed ]
+        description: BED6 output
+        rank: 45
+      - names: [ --gtf ]
+        description: GTF output
+        rank: 30
+      - names: [ -M, --hide-matched ]
+        description: do not print the matched sequences
+        rank: 20
+      - names: [ -G, --non-greedy ]
+        description: faster, may miss overlapping motifs
+        rank: 15
+      - names: [ -F, --use-fmi ]
+        description: FM-index, much faster for many motifs
+        rank: 25
+      - names: [ -c, --circular ]
+        description: sequences are circular genomes
+        rank: 20
+      - names: [ -s, --max-len-to-show ]
+        description: print at most this many characters of motifs and matches
+        value: { type: int }
+        rank: 10
+      - names: [ -I, --immediate-output ]
+        description: write without buffering
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: amplicon
+    help: [ amplicon, --help ]
+    description: extract amplicons, or regions around them, from their primers
+    options:
+      - names: [ -F, --forward ]
+        description: forward primer, 5' to 3', degenerate bases allowed
+        value: { type: string }
+        rank: 85
+      - names: [ -R, --reverse ]
+        description: reverse primer, 5' to 3', degenerate bases allowed
+        value: { type: string }
+        rank: 80
+        rules:
+          - when: { used: [ -F ] }
+            boost: 20
+      - names: [ -p, --primer-file ]
+        description: "table of primers: name, forward and (optional) reverse"
+        value: { type: file }
+        rank: 70
+      - names: [ -m, --max-mismatch ]
+        description: mismatches allowed in primers (no degenerate bases then)
+        value: { type: int }
+        rank: 45
+      - names: [ -r, --region ]
+        description: region to return, relative to the amplicon (see seqkit amplicon -h)
+        value: { type: string }
+        rank: 40
+      - names: [ -f, --flanking-region ]
+        description: -r is a region flanking the amplicon
+        rank: 25
+      - names: [ -s, --strict-mode ]
+        description: drop sequences shorter than the -r region
+        rank: 20
+      - names: [ -P, --only-positive-strand ]
+        description: search the positive strand only
+        rank: 25
+      - names: [ --bed ]
+        description: BED6+1 output, the amplicon in column 7
+        rank: 35
+      - names: [ -M, --output-mismatches ]
+        description: add the mismatches, total and at each end
+        rank: 20
+      - names: [ -u, --save-unmatched ]
+        description: also write the records no primer matched
+        rank: 20
+      - names: [ -I, --immediate-output ]
+        description: write without buffering
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: fish
+    help: [ fish, --help ]
+    description: find short sequences in longer ones by local alignment
+    options:
+      - names: [ -f, --query-fastx ]
+        description: FASTA file of the queries
+        value: { type: file, format: fasta }
+        rank: 75
+      - names: [ -F, --query-sequences ]
+        description: query sequences, given directly
+        value: { type: string }
+        rank: 65
+      - names: [ -a, --all ]
+        description: search every target
+        rank: 35
+      - names: [ -q, --min-qual ]
+        description: lowest mapping quality kept
+        value: { type: float }
+        default: 5
+        rank: 35
+      - names: [ -p, --aln-params ]
+        description: match,mismatch,gap open,gap extension scores
+        value: { type: string }
+        default: 4,-4,-2,-1
+        rank: 25
+      - names: [ -r, --ranges ]
+        description: "target ranges, e.g. :10,30:40,-20:"
+        value: { type: string }
+        rank: 25
+      - names: [ -s, --stranded ]
+        description: positive strand only
+        rank: 25
+      - names: [ -i, --invert ]
+        description: print the targets no query matched
+        rank: 20
+      - names: [ -b, --out-bam ]
+        description: write the alignments to this BAM file (memory intensive)
+        value: { type: file, format: bam }
+        rank: 30
+      - names: [ -g, --print-aln ]
+        description: print the alignments
+        rank: 25
+      - names: [ -D, --print-desc ]
+        description: print full headers
+        rank: 15
+      - names: [ -x, --pass ]
+        description: pass the input through to standard output
+        rank: 15
+      - names: [ -v, --validate-seq ]
+        description: check bases against the alphabet
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: sum
+    help: [ sum, --help ]
+    description: digest of all the sequences of each file
+    options:
+      - names: [ -a, --all ]
+        description: also print the sequence count and total length
+        rank: 50
+      - names: [ -b, --basename ]
+        description: print file base names only
+        rank: 30
+      - names: [ -i, --include-id ]
+        description: include the IDs in the digest
+        rank: 30
+      - names: [ -g, --remove-gaps ]
+        description: ignore the gap letters of -G
+        rank: 30
+      - names: [ -G, --gap-letters ]
+        description: letters that -g ignores
+        value: { type: string }
+        default: "- \t.*"
+        rank: 10
+      - names: [ -c, --circular ]
+        description: the file holds one circular genome
+        rank: 25
+      - names: [ -k, --kmer-size ]
+        description: k-mer size used for circular genomes
+        value: { type: int }
+        default: 1000
+        rank: 10
+      - names: [ -s, --single-strand ]
+        description: circular genome on one strand (e.g. ssRNA virus)
+        rank: 15
+      - names: [ --rna2dna ]
+        description: turn RNA into DNA first
+        rank: 15
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: scat
+    help: [ scat, --help ]
+    description: follow folders and stream the FASTA/FASTQ files written there, as they grow
+    options:
+      - names: [ -f, --find-only ]
+        description: concatenate the existing files and stop
+        rank: 45
+      - names: [ -i, --format ]
+        description: input and output format
+        value: { type: enum, values: [ fastq, fasta ] }
+        default: fastq
+        rank: 40
+      - names: [ -I, --in-format ]
+        description: input format
+        value: { type: enum, values: [ fastq, fasta ] }
+        rank: 15
+      - names: [ -O, --out-format ]
+        description: output format
+        value: { type: enum, values: [ fastq, fasta ] }
+        rank: 15
+      - names: [ -g, --gz-only ]
+        description: only gzipped files (.gz)
+        rank: 30
+      - names: [ -r, --regexp ]
+        description: regular expression of the files to follow
+        value: { type: string }
+        rank: 30
+      - names: [ -T, --time-limit ]
+        description: stop after this long without activity, e.g. 10m
+        value: { type: string }
+        rank: 35
+      - names: [ -p, --wait-pid ]
+        description: stop after this process ends
+        value: { type: int }
+        default: -1
+        rank: 25
+      - names: [ -d, --delta ]
+        description: least growth, in kilobytes, before a file is read again
+        value: { type: int }
+        default: 5
+        rank: 15
+      - names: [ -D, --drop-time ]
+        description: interval between notifications
+        value: { type: string }
+        default: 500ms
+        rank: 10
+      - names: [ -A, --allow-gaps ]
+        description: accept '-' in sequences
+        rank: 10
+      - names: [ -b, --qual-ascii-base ]
+        description: quality offset (33 for Phred+33)
+        value: { type: int }
+        default: 33
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: dirs
+        description: folders to follow
+        variadic: true
+        value: { type: dir }
+  - name: watch
+    help: [ watch, --help ]
+    description: live histograms of read length, quality or GC
+    options:
+      - names: [ -f, --fields ]
+        description: feature to plot
+        value: { type: enum, values: [ ReadLen, MeanQual, GC, GCSkew ] }
+        default: ReadLen
+        rank: 70
+      - names: [ -O, --img ]
+        description: save the histogram to this PDF or image file
+        value: { type: file }
+        rank: 55
+      - names: [ -p, --print-freq ]
+        description: report every this many records (-1 at the end)
+        value: { type: int }
+        default: -1
+        rank: 35
+      - names: [ -B, --bins ]
+        description: number of bins
+        value: { type: int }
+        default: -1
+        rank: 30
+      - names: [ -L, --log ]
+        description: log10(x+1) of the values
+        rank: 25
+      - names: [ -y, --dump ]
+        description: print the histogram data instead of plotting
+        rank: 25
+      - names: [ -x, --pass ]
+        description: pass the input through to standard output
+        rank: 25
+      - names: [ -Q, --quiet-mode ]
+        description: no plot on standard error
+        rank: 15
+      - names: [ -R, --reset ]
+        description: reset the histogram after each report
+        rank: 15
+      - names: [ -W, --delay ]
+        description: seconds to wait after each plot
+        value: { type: int }
+        default: 1
+        rank: 10
+      - names: [ -H, --list-fields ]
+        description: list the features
+        rank: 20
+      - names: [ -b, --qual-ascii-base ]
+        description: quality offset (33 for Phred+33)
+        value: { type: int }
+        default: 33
+        rank: 10
+      - names: [ -v, --validate-seq ]
+        description: check bases against the alphabet
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: FASTA or FASTQ files, plain or compressed; standard input when none
+        variadic: true
+        value: { type: file, format: [ fasta, fastq ], optional: true }
+  - name: bam
+    help: [ bam, --help ]
+    description: statistics, filters and live histograms of BAM records
+    options:
+      - names: [ -s, --stat ]
+        description: statistics of the BAM files
+        rank: 70
+      - names: [ -i, --idx-stat ]
+        description: fast statistics from the BAM index
+        rank: 55
+      - names: [ -C, --idx-count ]
+        description: fast read counts per reference from the BAM index
+        rank: 50
+      - names: [ -c, --count ]
+        description: count reads per reference into this file
+        value: { type: file }
+        rank: 45
+      - names: [ -f, --field ]
+        description: features to plot (see -H)
+        value: { type: string }
+        rank: 45
+      - names: [ -H, --list-fields ]
+        description: list the record features
+        rank: 30
+      - names: [ -q, --map-qual ]
+        description: lowest mapping quality kept
+        value: { type: int }
+        rank: 45
+      - names: [ -F, --prim-only ]
+        description: drop secondary and supplementary alignments
+        rank: 40
+      - names: [ -g, --grep-ids ]
+        description: keep only the reads whose IDs are in this file
+        value: { type: file }
+        rank: 30
+      - names: [ -G, --exclude-ids ]
+        description: drop the reads whose IDs are in this file
+        value: { type: file }
+        rank: 25
+      - names: [ -m, --range-min ]
+        description: drop records whose -f value is below this
+        value: { type: float }
+        rank: 20
+      - names: [ -M, --range-max ]
+        description: drop records whose -f value is at least this
+        value: { type: float }
+        rank: 20
+      - names: [ -x, --pass ]
+        description: pass the filtered BAM through to standard output
+        rank: 25
+      - names: [ -O, --img ]
+        description: save the histogram to this PDF or image file
+        value: { type: file }
+        rank: 30
+      - names: [ -p, --print-freq ]
+        description: report every this many records (-1 at the end)
+        value: { type: int }
+        default: -1
+        rank: 20
+      - names: [ -B, --bins ]
+        description: number of bins
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ -L, --log ]
+        description: log10(x+1) of the values
+        rank: 15
+      - names: [ -y, --dump ]
+        description: print the histogram data instead of plotting
+        rank: 15
+      - names: [ -k, --pretty ]
+        description: aligned columns for some tables
+        rank: 15
+      - names: [ -N, --bundle ]
+        description: split the BAM into loci (-1) or bundles of at least this size
+        value: { type: int }
+        rank: 10
+      - names: [ -T, --tool ]
+        description: run a toolbox described in YAML (see the documentation)
+        value: { type: string }
+        rank: 15
+      - names: [ -@, --top-bam ]
+        description: save the top records to this BAM file
+        value: { type: file, format: bam }
+        rank: 10
+      - names: [ -?, --top-size ]
+        description: size of the top buffer
+        value: { type: int }
+        default: 100
+        rank: 10
+      - names: [ -e, --exec-after ]
+        description: command to run after each report
+        value: { type: string }
+        rank: 10
+      - names: [ -E, --exec-before ]
+        description: command to run before each report
+        value: { type: string }
+        rank: 10
+      - names: [ -Q, --quiet-mode ]
+        description: no plot on standard error
+        rank: 10
+      - names: [ -Z, --silent-mode ]
+        description: no table on standard error
+        rank: 10
+      - names: [ -R, --reset ]
+        description: reset the histogram after each report
+        rank: 10
+      - names: [ -W, --delay ]
+        description: seconds to wait after each plot
+        value: { type: int }
+        default: 1
+        rank: 10
+      - names: [ -j, --threads ]
+        description: CPUs to use (also SEQKIT_THREADS)
+        value: { type: int }
+        default: 4
+        rank: 55
+      - names: [ -o, --out-file ]
+        description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
+        value: { type: file, format: [ fasta, fastq ] }
+        default: "-"
+        rank: 60
+      - names: [ -w, --line-width ]
+        description: residues per FASTA line (0 for one line)
+        value: { type: int }
+        default: 60
+        rank: 35
+      - names: [ -t, --seq-type ]
+        description: sequence type; auto guesses it from the first sequence
+        value: { type: enum, values: [ dna, rna, protein, unlimit, auto ] }
+        default: auto
+        rank: 25
+      - names: [ -X, --infile-list ]
+        description: file listing input files, one per line, added to those given
+        value: { type: file }
+        rank: 25
+      - names: [ --id-regexp ]
+        description: regular expression whose first group is the sequence ID
+        value: { type: string }
+        default: ^(\S+)\s?
+        rank: 15
+      - names: [ --id-ncbi ]
+        description: headers are NCBI-style (gi|…|ref|…|)
+        rank: 10
+      - names: [ --quiet ]
+        description: print no extra information
+        rank: 25
+      - names: [ --skip-file-check ]
+        description: do not check that the listed input files exist
+        rank: 10
+      - names: [ --compress-level ]
+        description: compression level of compressed output (-1 for the format's default)
+        value: { type: int }
+        default: -1
+        rank: 15
+      - names: [ --alphabet-guess-seq-length ]
+        description: length of the first sequence's prefix used to guess its type (0 for all of it)
+        value: { type: int }
+        default: 10000
+        rank: 10
+    arguments:
+      - name: files
+        description: BAM files; standard input when none
+        variadic: true
+        value: { type: file, format: bam, optional: true }

@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/hisat2.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: hisat2
+package: hisat2
+version: 2.2.3
+build: h8471819_1
+channel: linux-64
+licence: GPL-3.0-or-later
+copyright: Daehwan Kim et al., https://github.com/DaehwanKimLab/hisat2
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-3
+used_by_catalog: true
+files:
+  root.txt: hisat2 --help

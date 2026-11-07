@@ -1,0 +1,47 @@
+Java memory size is set to 1200M
+Launching application...
+
+QualiMap v.2.3
+Built on 2023-05-19 16:57
+
+Selected tool: multi-bamqc
+
+ERROR: Missing required option: d
+
+usage: qualimap multi-bamqc [-c] -d <arg> [-gff <arg>] [-hm <arg>] [-nr <arg>]
+       [-nw <arg>] [-outdir <arg>] [-outfile <arg>] [-outformat <arg>] [-p
+       <arg>] [-r]
+ -c,--paint-chromosome-limits     Only for -r mode. Paint chromosome limits
+                                  inside charts
+ -d,--data <arg>                  File describing the input data. Format of the
+                                  file is a 2- or 3-column tab-delimited table.
+                                  Column 1: sample name
+                                  Column 2: either path to the BAM QC result or
+                                  path to BAM file (-r mode)
+                                  Column 3: group name (activates sample group
+                                  marking)
+ -gff,--feature-file <arg>        Only for -r mode. Feature file with regions of
+                                  interest in GFF/GTF or BED format
+ -hm <arg>                        Only for -r mode. Minimum size for a
+                                  homopolymer to be considered in indel analysis
+                                  (default is 3)
+ -nr <arg>                        Only for -r mode. Number of reads analyzed in
+                                  a chunk (default is 1000)
+ -nw <arg>                        Only for -r mode. Number of windows (default
+                                  is 400)
+ -outdir <arg>                    Output folder for HTML report and raw data.
+ -outfile <arg>                   Output file for PDF report (default value is
+                                  report.pdf).
+ -outformat <arg>                 Format of the output report (PDF, HTML or both
+                                  PDF:HTML, default is HTML).
+ -p,--sequencing-protocol <arg>   Only for -r mode. Sequencing library protocol:
+                                  strand-specific-forward,
+                                  strand-specific-reverse or non-strand-specific
+                                  (default)
+ -r,--run-bamqc                   Raw BAM files are provided as input. If this
+                                  option is activated BAM QC process first will
+                                  be run for each sample, then multi-sample
+                                  analysis will be performed.
+
+
+

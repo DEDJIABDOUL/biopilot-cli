@@ -1,0 +1,19 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/bwa-mem2.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: bwa-mem2
+package: bwa-mem2
+version: 2.3
+build: he70b90d_0
+channel: linux-64
+licence: MIT
+copyright: Vasimuddin Md, Sanchit Misra, Heng Li, https://github.com/bwa-mem2/bwa-mem2
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-3
+used_by_catalog: true
+files:
+  root.txt: bwa-mem2
+  mem.txt: bwa-mem2 mem
+  index.txt: bwa-mem2 index

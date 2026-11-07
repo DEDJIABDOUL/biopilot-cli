@@ -1,0 +1,37 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/picard.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: picard
+package: picard
+version: 3.5.0
+build: hdfd78af_0
+channel: noarch
+licence: MIT
+copyright: Broad Institute, https://broadinstitute.github.io/picard/
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-2
+used_by_catalog: true
+files:
+  root.txt: picard -h
+  SortSam.txt: picard SortSam -h
+  MarkDuplicates.txt: picard MarkDuplicates -h
+  CollectAlignmentSummaryMetrics.txt: picard CollectAlignmentSummaryMetrics -h
+  CollectInsertSizeMetrics.txt: picard CollectInsertSizeMetrics -h
+  CollectWgsMetrics.txt: picard CollectWgsMetrics -h
+  CollectMultipleMetrics.txt: picard CollectMultipleMetrics -h
+  CollectHsMetrics.txt: picard CollectHsMetrics -h
+  CollectRnaSeqMetrics.txt: picard CollectRnaSeqMetrics -h
+  AddOrReplaceReadGroups.txt: picard AddOrReplaceReadGroups -h
+  CreateSequenceDictionary.txt: picard CreateSequenceDictionary -h
+  MergeSamFiles.txt: picard MergeSamFiles -h
+  ValidateSamFile.txt: picard ValidateSamFile -h
+  BuildBamIndex.txt: picard BuildBamIndex -h
+  FastqToSam.txt: picard FastqToSam -h
+  SamToFastq.txt: picard SamToFastq -h
+  ReorderSam.txt: picard ReorderSam -h
+  FilterSamReads.txt: picard FilterSamReads -h
+  LiftoverVcf.txt: picard LiftoverVcf -h
+  FixMateInformation.txt: picard FixMateInformation -h
+  DownsampleSam.txt: picard DownsampleSam -h

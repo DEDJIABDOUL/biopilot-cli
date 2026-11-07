@@ -1,0 +1,412 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Qualimap 2.3, written from its recorded helps: knowledge/help/qualimap/2.3/ (GPL-2.0-or-later;
+# attribution in RECORDING.yml next to it) and its manual (http://qualimap.conesalab.org),
+# in our own words (spec decision 31). Without a tool, qualimap opens its graphical
+# interface: the version is read from --help, and each tool prints its help when run alone.
+# --java-mem-size, listed in the root help only, applies to every tool.
+# Ranks follow the shared scale of spec §6.4.
+name: qualimap
+package: qualimap
+description: Quality control of alignments (BAM) and RNA-seq data, with HTML or PDF reports
+version: { args: [ --help ], regex: "QualiMap v\\.(\\d[\\w.]*)" }
+help: [ --help ]
+options:
+  - names: [ --java-mem-size ]
+    description: Java heap size, e.g. --java-mem-size=4G for large BAM files
+    value: { type: string }
+    rank: 40
+commands:
+  - name: bamqc
+    help: [ bamqc ]
+    description: quality of the mapping of reads to a reference genome
+    options:
+      - names: [ -bam ]
+        description: alignments, BAM
+        value: { type: file, format: bam }
+        rank: 95
+      - names: [ -gff, --feature-file ]
+        description: regions of interest (GFF, GTF or BED), e.g. the exome targets
+        value: { type: file, format: [ bed, gtf, gff ] }
+        rank: 65
+      - names: [ -os, --outside-stats ]
+        description: with -gff, also report the regions outside them
+        rank: 25
+      - names: [ -nt ]
+        description: threads
+        value: { type: int }
+        rank: 70
+      - names: [ -outdir ]
+        description: folder for the HTML report and the raw data
+        value: { type: dir }
+        rank: 75
+      - names: [ -outformat ]
+        description: report format
+        value: { type: enum, values: [ HTML, PDF, PDF:HTML ] }
+        default: HTML
+        rank: 45
+      - names: [ -outfile ]
+        description: file name of the PDF report
+        value: { type: file }
+        default: report.pdf
+        rank: 30
+      - names: [ -p, --sequencing-protocol ]
+        description: strandedness of the library
+        value:
+          type: enum
+          values:
+            - { value: non-strand-specific, description: unstranded (default) }
+            - { value: strand-specific-forward, description: reads on the transcript's strand }
+            - { value: strand-specific-reverse, description: reads on the opposite strand (e.g. dUTP) }
+        default: non-strand-specific
+        rank: 40
+      - names: [ -c, --paint-chromosome-limits ]
+        description: draw chromosome limits in the charts
+        rank: 40
+      - names: [ -ip, --collect-overlap-pairs ]
+        description: statistics of overlapping read pairs
+        rank: 30
+      - names: [ -sd, --skip-duplicated ]
+        description: leave duplicate alignments out (flagged, or detected by Qualimap)
+        rank: 45
+      - names: [ -sdmode, --skip-dup-mode ]
+        description: duplicates left out by -sd
+        value:
+          type: enum
+          values:
+            - { value: "0", description: flagged in the BAM only (default) }
+            - { value: "1", description: detected by Qualimap only }
+            - { value: "2", description: both }
+        default: "0"
+        rank: 20
+      - names: [ -gd, --genome-gc-distr ]
+        description: genome whose GC distribution is drawn for comparison (HUMAN hg19/hg38, MOUSE mm9/mm10)
+        value: { type: string }
+        rank: 25
+      - names: [ -oc, --output-genome-coverage ]
+        description: file for the coverage of each covered base (large for big genomes)
+        value: { type: file }
+        rank: 20
+      - names: [ -nw ]
+        description: number of windows along the genome
+        value: { type: int }
+        default: 400
+        rank: 25
+      - names: [ -nr ]
+        description: reads read per chunk
+        value: { type: int }
+        default: 1000
+        rank: 15
+      - names: [ -hm ]
+        description: shortest homopolymer counted in the indel analysis
+        value: { type: int }
+        default: 3
+        rank: 15
+      - names: [ -cl, --cov-hist-lim ]
+        description: upper limit of the per-bin coverage histogram
+        value: { type: int }
+        default: 50
+        rank: 15
+      - names: [ -dl, --dup-rate-lim ]
+        description: upper limit of the duplication rate histogram
+        value: { type: int }
+        default: 50
+        rank: 15
+      - names: [ --java-mem-size ]
+        description: Java heap size, e.g. --java-mem-size=4G for large BAM files
+        value: { type: string }
+        rank: 40
+  - name: rnaseq
+    help: [ rnaseq ]
+    description: "quality of RNA-seq alignments: read origin, coverage along transcripts, 5'-3' bias"
+    options:
+      - names: [ -bam ]
+        description: alignments, BAM
+        value: { type: file, format: bam }
+        rank: 95
+      - names: [ -gtf ]
+        description: annotations, Ensembl GTF
+        value: { type: file, format: [ gtf, gff, bed ] }
+        rank: 90
+      - names: [ -outdir ]
+        description: folder for the HTML report and the raw data
+        value: { type: dir }
+        rank: 75
+      - names: [ -outformat ]
+        description: report format
+        value: { type: enum, values: [ HTML, PDF, PDF:HTML ] }
+        default: HTML
+        rank: 45
+      - names: [ -outfile ]
+        description: file name of the PDF report
+        value: { type: file }
+        default: report.pdf
+        rank: 30
+      - names: [ -p, --sequencing-protocol ]
+        description: strandedness of the library
+        value:
+          type: enum
+          values:
+            - { value: non-strand-specific, description: unstranded (default) }
+            - { value: strand-specific-forward, description: reads on the transcript's strand }
+            - { value: strand-specific-reverse, description: reads on the opposite strand (e.g. dUTP) }
+        default: non-strand-specific
+        rank: 60
+      - names: [ -a, --algorithm ]
+        description: how reads mapped to several features count
+        value: { type: enum, values: [ uniquely-mapped-reads, proportional ] }
+        default: uniquely-mapped-reads
+        rank: 35
+      - names: [ -pe, --paired ]
+        description: "paired-end data: count fragments, not reads"
+        rank: 60
+      - names: [ -s, --sorted ]
+        description: the BAM is already sorted by name (paired-end only; sorted otherwise)
+        rank: 35
+      - names: [ -oc ]
+        description: file for the computed counts (in -outdir when a bare name)
+        value: { type: file }
+        rank: 35
+      - names: [ -npb, --num-pr-bases ]
+        description: bases upstream and downstream used for the 5'-3' bias
+        value: { type: int }
+        default: 100
+        rank: 15
+      - names: [ -ntb, --num-tr-bias ]
+        description: most expressed transcripts used for the 5'-3' bias
+        value: { type: int }
+        default: 1000
+        rank: 15
+      - names: [ --java-mem-size ]
+        description: Java heap size, e.g. --java-mem-size=4G for large BAM files
+        value: { type: string }
+        rank: 40
+  - name: multi-bamqc
+    help: [ multi-bamqc ]
+    description: compare the bamqc results of several samples
+    options:
+      - names: [ -d, --data ]
+        description: "table, tab-separated: sample, bamqc result folder (or BAM with -r), optional group"
+        value: { type: file }
+        rank: 95
+      - names: [ -r, --run-bamqc ]
+        description: "the table lists BAM files: run bamqc on each first"
+        rank: 55
+      - names: [ -outdir ]
+        description: folder for the HTML report and the raw data
+        value: { type: dir }
+        rank: 75
+      - names: [ -outformat ]
+        description: report format
+        value: { type: enum, values: [ HTML, PDF, PDF:HTML ] }
+        default: HTML
+        rank: 45
+      - names: [ -outfile ]
+        description: file name of the PDF report
+        value: { type: file }
+        default: report.pdf
+        rank: 30
+      - names: [ -gff, --feature-file ]
+        description: with -r, regions of interest (GFF, GTF or BED)
+        value: { type: file, format: [ bed, gtf, gff ] }
+        rank: 30
+      - names: [ -p, --sequencing-protocol ]
+        description: strandedness of the library
+        value:
+          type: enum
+          values:
+            - { value: non-strand-specific, description: unstranded (default) }
+            - { value: strand-specific-forward, description: reads on the transcript's strand }
+            - { value: strand-specific-reverse, description: reads on the opposite strand (e.g. dUTP) }
+        default: non-strand-specific
+        rank: 20
+      - names: [ -c, --paint-chromosome-limits ]
+        description: with -r, draw chromosome limits in the charts
+        rank: 15
+      - names: [ -nw ]
+        description: with -r, number of windows
+        value: { type: int }
+        default: 400
+        rank: 10
+      - names: [ -nr ]
+        description: with -r, reads read per chunk
+        value: { type: int }
+        default: 1000
+        rank: 10
+      - names: [ -hm ]
+        description: with -r, shortest homopolymer counted in the indel analysis
+        value: { type: int }
+        default: 3
+        rank: 10
+      - names: [ --java-mem-size ]
+        description: Java heap size, e.g. --java-mem-size=4G for large BAM files
+        value: { type: string }
+        rank: 40
+  - name: counts
+    help: [ counts ]
+    description: "analysis of count tables: biotypes, saturation, comparison of conditions (needs R)"
+    options:
+      - names: [ -d, --data ]
+        description: "table, tab-separated: sample, condition, counts file, counts column"
+        value: { type: file }
+        rank: 95
+      - names: [ -c, --compare ]
+        description: compare the conditions (two at most)
+        rank: 50
+      - names: [ -s, --species ]
+        description: use the built-in gene info of this species
+        value: { type: enum, values: [ HUMAN, MOUSE ] }
+        rank: 50
+      - names: [ -i, --info ]
+        description: file of gene GC content, length and type
+        value: { type: file }
+        rank: 35
+      - names: [ -k, --threshold ]
+        description: least count for a gene to be counted
+        value: { type: int }
+        rank: 30
+      - names: [ -outdir ]
+        description: folder for the HTML report and the raw data
+        value: { type: dir }
+        rank: 75
+      - names: [ -outformat ]
+        description: report format
+        value: { type: enum, values: [ HTML, PDF, PDF:HTML ] }
+        default: HTML
+        rank: 45
+      - names: [ -outfile ]
+        description: file name of the PDF report
+        value: { type: file }
+        default: report.pdf
+        rank: 30
+      - names: [ -R, --rscriptpath ]
+        description: Rscript to use (from PATH by default)
+        value: { type: file }
+        rank: 15
+      - names: [ --java-mem-size ]
+        description: Java heap size, e.g. --java-mem-size=4G for large BAM files
+        value: { type: string }
+        rank: 40
+  - name: clustering
+    help: [ clustering ]
+    description: cluster epigenomic signals around regions (needs R)
+    options:
+      - names: [ -sample ]
+        description: sample BAM files, comma-separated
+        value: { type: string }
+        rank: 90
+      - names: [ -control ]
+        description: control BAM files, comma-separated
+        value: { type: string }
+        rank: 85
+      - names: [ -regions ]
+        description: file of the regions
+        value: { type: file }
+        rank: 85
+      - names: [ -name ]
+        description: names of the replicates, comma-separated
+        value: { type: string }
+        rank: 40
+      - names: [ -expr ]
+        description: name of the experiment
+        value: { type: string }
+        rank: 30
+      - names: [ -c, --clusters ]
+        description: cluster sizes, comma-separated
+        value: { type: string }
+        rank: 40
+      - names: [ -viz ]
+        description: type of plot
+        value: { type: enum, values: [ heatmap, line ] }
+        rank: 35
+      - names: [ -b, --bin-size ]
+        description: bin size
+        value: { type: int }
+        default: 100
+        rank: 30
+      - names: [ -l ]
+        description: offset upstream of the regions
+        value: { type: int }
+        default: 2000
+        rank: 30
+      - names: [ -r ]
+        description: offset downstream of the regions
+        value: { type: int }
+        default: 500
+        rank: 30
+      - names: [ -f, --fragment-length ]
+        description: smoothing length of a fragment
+        value: { type: int }
+        rank: 20
+      - names: [ -outdir ]
+        description: folder for the HTML report and the raw data
+        value: { type: dir }
+        rank: 75
+      - names: [ -outformat ]
+        description: report format
+        value: { type: enum, values: [ HTML, PDF, PDF:HTML ] }
+        default: HTML
+        rank: 45
+      - names: [ -outfile ]
+        description: file name of the PDF report
+        value: { type: file }
+        default: report.pdf
+        rank: 30
+      - names: [ -R, --rscriptpath ]
+        description: Rscript to use (from PATH by default)
+        value: { type: file }
+        rank: 15
+      - names: [ --java-mem-size ]
+        description: Java heap size, e.g. --java-mem-size=4G for large BAM files
+        value: { type: string }
+        rank: 40
+  - name: comp-counts
+    help: [ comp-counts ]
+    description: count reads per feature (gene) from a BAM and an annotation
+    options:
+      - names: [ -bam ]
+        description: alignments, BAM
+        value: { type: file, format: bam }
+        rank: 95
+      - names: [ -gtf ]
+        description: "features: GTF (counted by attribute), GFF or BED (by name)"
+        value: { type: file, format: [ gtf, gff, bed ] }
+        rank: 90
+      - names: [ -out ]
+        description: file for the counts
+        value: { type: file }
+        rank: 75
+      - names: [ -id ]
+        description: GTF attribute grouping regions into features
+        value: { type: string }
+        default: gene_id
+        rank: 35
+      - names: [ -type ]
+        description: GTF feature type counted (third column)
+        value: { type: string }
+        default: exon
+        rank: 35
+      - names: [ -p, --sequencing-protocol ]
+        description: strandedness of the library
+        value:
+          type: enum
+          values:
+            - { value: non-strand-specific, description: unstranded (default) }
+            - { value: strand-specific-forward, description: reads on the transcript's strand }
+            - { value: strand-specific-reverse, description: reads on the opposite strand (e.g. dUTP) }
+        default: non-strand-specific
+        rank: 60
+      - names: [ -a, --algorithm ]
+        description: how reads mapped to several features count
+        value: { type: enum, values: [ uniquely-mapped-reads, proportional ] }
+        default: uniquely-mapped-reads
+        rank: 35
+      - names: [ -pe, --paired ]
+        description: "paired-end data: count fragments, not reads"
+        rank: 60
+      - names: [ -s, --sorted ]
+        description: the BAM is already sorted by name (paired-end only; sorted otherwise)
+        rank: 35
+      - names: [ --java-mem-size ]
+        description: Java heap size, e.g. --java-mem-size=4G for large BAM files
+        value: { type: string }
+        rank: 40

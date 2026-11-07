@@ -1,0 +1,94 @@
+# BIOPILOT: phase 5 (ticket #56). Pushing a `v*` tag builds the standalone binary of each supported
+# platform on its own runner, checks it answers from its embedded Catalog, and publishes the binaries with
+# SHA256SUMS and install.sh on a GitHub Release. Run manually, it builds and keeps the binaries as workflow
+# artifacts, publishing nothing.
+name: Release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: The tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { runner: ubuntu-latest, target: linux-x64 }
+          - { runner: ubuntu-24.04-arm, target: linux-arm64 }
+          - { runner: macos-latest, target: darwin-arm64 }
+          - { runner: macos-15-intel, target: darwin-x64 }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use Node.js 22.21.1
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.21.1
+
+      - run: npm ci
+      - run: npm run build:db
+      - run: npm run build
+      - run: npm run package
+
+      - name: The binary runs and answers from its embedded Catalog
+        shell: bash
+        run: |
+          binary="pkg/biopilot-${{ matrix.target }}"
+          test -x "$binary"
+          "$binary" --version
+          "$binary" reinit
+          "$binary" info fastp | head -3
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: biopilot-${{ matrix.target }}
+          path: pkg/biopilot-${{ matrix.target }}
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Compress, checksums
+        working-directory: dist
+        run: |
+          # gzip: a third of the size (install under 30 s on an ordinary connection), available everywhere.
+          gzip -9 biopilot-*
+          sha256sum biopilot-*.gz > SHA256SUMS
+          cp ../install.sh .
+          cat SHA256SUMS
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "BioPilot CLI $GITHUB_REF_NAME" --generate-notes

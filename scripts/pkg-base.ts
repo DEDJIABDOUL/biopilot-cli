@@ -15,11 +15,11 @@ const getVersion = (): string => {
 };
 
 const copyFiles = (): void => {
-  const mdFiles = fs.readdirSync(process.cwd()).filter((file) => file.endsWith(".md"));
-  for (const file of mdFiles) {
+  fs.mkdirSync(PKG_DIR, { recursive: true }); // BIOPILOT: the npm job packs it from a fresh checkout
+  // BIOPILOT: only what users need, never the repository's working documents (CLAUDE.md, the specification).
+  for (const file of ["README.md", "CHANGELOG.md", "LICENSE", "NOTICE"]) {
     fs.copyFileSync(file, path.join(PKG_DIR, file));
   }
-  fs.copyFileSync("LICENSE", path.join(PKG_DIR, "LICENSE"));
   fs.copyFileSync(path.join(SCRIPTS_DIR, "bin.js"), path.join(PKG_DIR, "bin.js"));
 };
 
@@ -42,14 +42,13 @@ const generatePackageJson = (): void => {
     bin: {
       biopilot: "bin.js",
     },
-    files: ["*.md", "LICENSE", "bin.js"],
+    files: ["README.md", "CHANGELOG.md", "LICENSE", "NOTICE", "bin.js"],
     optionalDependencies: {
       "biopilot-cli-darwin-x64": getVersion(),
       "biopilot-cli-darwin-arm64": getVersion(),
       "biopilot-cli-linux-x64": getVersion(),
       "biopilot-cli-linux-arm64": getVersion(),
-      "biopilot-cli-win32-x64": getVersion(),
-      "biopilot-cli-win32-arm64": getVersion(),
+      // BIOPILOT: no native Windows (WSL is Linux).
     },
   };
   fs.writeFileSync(path.join(PKG_DIR, "package.json"), JSON.stringify(packageJson, null, 2), "utf-8");

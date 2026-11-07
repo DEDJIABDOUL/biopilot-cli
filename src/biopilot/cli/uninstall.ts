@@ -5,6 +5,7 @@
 
 import { Command } from "commander";
 import os from "node:os";
+import path from "node:path";
 import readline from "node:readline/promises";
 import sea from "node:sea";
 
@@ -15,7 +16,9 @@ cmd
   .action(async (options: { yes?: boolean }) => {
     const { applyUninstall, describePlan, isEmptyPlan, planUninstall } = await import("./uninstallRunner.js");
     const standalone = sea.isSea();
-    const plan = planUninstall({ home: os.homedir(), binary: standalone ? process.execPath : null });
+    // Installed by npm (a platform package under node_modules): the binary is npm's to remove.
+    const npmManaged = process.execPath.split(path.sep).includes("node_modules");
+    const plan = planUninstall({ home: os.homedir(), binary: standalone && !npmManaged ? process.execPath : null });
     if (isEmptyPlan(plan)) {
       process.stdout.write("biopilot: nothing to remove\n");
     } else {
@@ -38,7 +41,7 @@ cmd
       process.stdout.write("✓ BioPilot was removed; open a new terminal to leave the session for good\n");
     }
     // Installed from npm or run from the sources: the command itself belongs to npm.
-    if (!standalone) process.stdout.write("to remove the `biopilot` command too, run: npm uninstall -g biopilot-cli\n");
+    if (!standalone || npmManaged) process.stdout.write("to remove the `biopilot` command too, run: npm uninstall -g biopilot-cli\n");
   });
 
 export default cmd;

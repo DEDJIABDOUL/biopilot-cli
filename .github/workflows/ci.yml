@@ -84,6 +84,8 @@ jobs:
       - run: npm run build
       - run: npm run package
       - run: scripts/ci/install-test.sh
+      - run: npm run package:base
+      - run: scripts/ci/npm-test.sh  # BIOPILOT: 1.1, npm install -g biopilot-cli
 
   # BIOPILOT: spec §11 targets (ticket #66), with the §14 tolerance: session and memory against the
   # upstream engine (tag 0.0.4) built on the same runner, suggestion budgets, Catalog and binary sizes.

@@ -166,3 +166,29 @@ describe("[bash] the project context (phase 4)", () => {
     expect(counted).toBe(1);
   });
 });
+
+describe("[bash] the status line (M7)", () => {
+  // Only node's folder and the system's: no fastp installed.
+  const noFastp = `${path.dirname(process.execPath)}:/usr/bin:/bin`;
+  const off = tempDir();
+  fs.mkdirSync(path.join(off, "biopilot"));
+  fs.writeFileSync(path.join(off, "biopilot", "rc.toml"), "statusLine = false\n");
+
+  let terminal: TuiTest;
+  afterEach(async () => {
+    await closeSession(terminal);
+  });
+
+  test("under the suggestions, what BioPilot detected for the tool", async () => {
+    terminal = await session({ BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath, PATH: noFastp });
+    await terminal.type("fastp --");
+    await terminal.expectText("not installed: options from the Catalog", { strict: false });
+  });
+
+  test("statusLine = false in rc.toml hides it", async () => {
+    terminal = await session({ BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath, PATH: noFastp, XDG_CONFIG_HOME: off });
+    await terminal.type("fastp --");
+    await terminal.expectText("--in1", { strict: false, bg: accent });
+    await terminal.expectText("not installed", { strict: false, not: true });
+  });
+});

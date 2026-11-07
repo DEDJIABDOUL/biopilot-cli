@@ -11,7 +11,7 @@ import { sessionEnvironment } from "../env/session.js";
 import { withinVersions } from "../env/versionOrder.js";
 import type { Argument, Catalog, Command, Option, ValueSpec } from "../knowledge/catalog.js";
 import { getCatalog, projectAt } from "./catalogAccess.js";
-import { knownVersion } from "../profile/compute.js";
+import { condaMetaVersion, type VersionSource } from "../env/version.js";
 import { requestProfile } from "../profile/detached.js";
 import type { HelpOption } from "../profile/helpParser.js";
 import { openUserStore, versionKey, type UserStore } from "../profile/userStore.js";
@@ -28,6 +28,12 @@ const DEPRECATED_PRIORITY = -1;
  */
 const mapLocal = <T, U>(items: readonly T[], map: (item: T) => U): U[] => Array.from(items, (item) => map(item));
 
+/** What BioPilot last detected for a Tool, for the status line (M7). */
+export type ToolDetection = { installed: boolean; version: string | undefined; versionSource: VersionSource | undefined; profilesPending: boolean };
+const detections = new Map<string, ToolDetection>();
+/** What was detected for a Tool by its last spec, or nothing when no suggestion was made for it yet. */
+export const detectionOf = (toolName: string): ToolDetection | undefined => detections.get(toolName);
+
 /** Built specs, by Tool and what they were built for (binary, version, Profiles found). */
 const specs = new Map<string, { key: string; spec: Fig.Subcommand | null; checkedAt: number }>();
 /** Below this age, a spec built without every Profile is reused as is; older, the User store is asked again. */
@@ -35,7 +41,7 @@ const PROFILE_RECHECK_MS = 500;
 /** Rank of an option the Catalog doesn't know (spec §6.4 scale: the default). */
 const PROFILE_ONLY_RANK = 50;
 /** Versions by Fingerprint: conda-meta is read once per binary. */
-const versions = new Map<string, string | undefined>();
+const versions = new Map<string, { version: string; source: VersionSource } | undefined>();
 let userStore: UserStore | undefined;
 
 /** Every name of each option of a command, by canonical name: how values refer to other options. */
@@ -98,7 +104,7 @@ const toFigArg = (argument: Argument, namesOf: NamesOf): Fig.Arg => {
 };
 
 /** What a spec is built for: the active binary's version and the User store holding its Profiles. */
-type Installed = { tool: string; version: string | undefined; key: string; store: UserStore | undefined };
+type Installed = { tool: string; version: string | undefined; versionSource: VersionSource | undefined; key: string; store: UserStore | undefined };
 
 /** A Profile option the Catalog doesn't know: the help's own description, the default rank. */
 const toProfileOnlyOption = (option: HelpOption): Fig.Option => {
@@ -185,9 +191,17 @@ const installedFor = (current: Catalog, tool: string): { binary: Binary; install
   const query = binary ? current.getToolQuery(tool) : undefined;
   if (!binary || !query) return;
   const store = getUserStore();
-  if (!versions.has(binary.fingerprint) || versions.get(binary.fingerprint) === undefined) versions.set(binary.fingerprint, knownVersion(binary, query, store));
-  const version = versions.get(binary.fingerprint);
-  return { binary, installed: { tool, version, key: versionKey(version, binary.fingerprint), store } };
+  if (versions.get(binary.fingerprint) === undefined) {
+    const fromConda = condaMetaVersion(binary, query.package);
+    const probed = fromConda ? undefined : store?.probedVersion(binary.fingerprint) ?? undefined;
+    versions.set(
+      binary.fingerprint,
+      fromConda ? { version: fromConda, source: "conda-meta" } : probed ? { version: probed, source: "version-command" } : undefined,
+    );
+  }
+  const detected = versions.get(binary.fingerprint);
+  const version = detected?.version;
+  return { binary, installed: { tool, version, versionSource: detected?.source, key: versionKey(version, binary.fingerprint), store } };
 };
 
 /** Priority of a Catalog Tool's name in command-name completion (spec M6): above other specs (40). */
@@ -240,6 +254,12 @@ export const catalogSpec = (toolName: string): Fig.Subcommand | undefined => {
     if (cached && cached.key === key && (cached.checkedAt === Infinity || now - cached.checkedAt < PROFILE_RECHECK_MS)) return cached.spec ?? undefined;
     const built = toFigCommand(current, root, tool.name, tool.description ?? undefined, found?.installed);
     specs.set(toolName, { key, spec: built.spec, checkedAt: built.complete ? Infinity : now });
+    detections.set(toolName, {
+      installed: found !== undefined,
+      version: found?.installed.version,
+      versionSource: found?.installed.versionSource,
+      profilesPending: found !== undefined && !built.complete,
+    });
     // A Profile is missing: computed aside (once per binary per session); a later suggestion picks it up.
     if (found && !built.complete) requestProfile(tool.name, found.binary, sessionEnvironment().PATH);
     return built.spec;

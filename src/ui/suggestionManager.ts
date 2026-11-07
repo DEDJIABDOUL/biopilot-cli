@@ -256,6 +256,11 @@ export class SuggestionManager {
       if (action == null) {
         return false;
       }
+      // BIOPILOT: M12 an accepted suggestion is reported to BioPilot, which counts Catalog options (usage).
+      const acceptedLine = this.#term.getCommandState().commandText;
+      void import("../biopilot/engine/usage.js")
+        .then(({ recordAcceptedSuggestion }) => recordAcceptedSuggestion(acceptedLine ?? "", suggestion))
+        .catch(() => {});
       this.#term.write(applyReplacement(action));
     } else if (name == "return" || (name == "c" && ctrl)) {
       this.#term.clearCommand();

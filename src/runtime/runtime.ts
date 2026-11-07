@@ -62,6 +62,13 @@ const loadSpec = async (cmd: CommandToken[], signal?: AbortSignal): Promise<Fig.
   if (loadedSpecs[rootToken.token]) {
     return loadedSpecs[rootToken.token];
   }
+  // BIOPILOT: M3 a Catalog Tool gets its spec from the Catalog (loaded on demand); otherwise Fig, as before.
+  const { catalogSpec } = await import("../biopilot/engine/catalogSpec.js");
+  const biopilotSpec = catalogSpec(rootToken.token);
+  if (biopilotSpec) {
+    loadedSpecs[rootToken.token] = biopilotSpec;
+    return biopilotSpec;
+  }
   if (specSet[rootToken.token]) {
     signal?.throwIfAborted();
     const specPath = specSet[rootToken.token];

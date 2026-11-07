@@ -10,6 +10,7 @@ import os from "node:os";
 import path from "node:path";
 import url from "node:url";
 import { unpackResources } from "../../../utils/node.js";
+import { compileRepositoryCatalog } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 const dataHome = fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-complete-"));
@@ -50,5 +51,11 @@ describe("biopilot complete", () => {
     const { code, stderr } = complete("git ch", { XDG_CONFIG_HOME: path.join(dataHome, "bad-config") });
     expect(code).not.toBe(0);
     expect(stderr).toContain("invalid toml");
+  });
+
+  test("`fastp --` gives fastp's options from the Catalog, --in1 first", () => {
+    const { code, stdout } = complete("fastp --", { BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath });
+    expect(code).toBe(0);
+    expect(JSON.parse(stdout).suggestions[0]).toMatchObject({ name: "--in1", allNames: ["--in1", "-i"], priority: 95 });
   });
 });

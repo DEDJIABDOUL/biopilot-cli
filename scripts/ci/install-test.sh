@@ -31,6 +31,10 @@ mkdir -p "$release" "$home"
 # The release, as the release workflow publishes it.
 gzip -9 -c "pkg/biopilot-$target" > "$release/biopilot-$target.gz"
 (cd "$release" && { sha256sum "biopilot-$target.gz" 2> /dev/null || shasum -a 256 "biopilot-$target.gz"; } > SHA256SUMS)
+# Signed with a throwaway key, the way release.yml signs with the release key.
+openssl ecparam -name prime256v1 -genkey -noout -out "$work/key.pem"
+openssl ec -in "$work/key.pem" -pubout -out "$work/key.pub.pem" 2> /dev/null
+openssl dgst -sha256 -sign "$work/key.pem" -out "$release/SHA256SUMS.sig" "$release/SHA256SUMS"
 size=$(wc -c < "$release/biopilot-$target.gz" | tr -d ' ')
 echo "download: $size bytes (budget $MAX_DOWNLOAD_BYTES)"
 [ "$size" -lt "$MAX_DOWNLOAD_BYTES" ] || { echo "the download is over budget" >&2; exit 1; }
@@ -39,7 +43,7 @@ echo "download: $size bytes (budget $MAX_DOWNLOAD_BYTES)"
 clean() { env -i HOME="$home" PATH=/usr/bin:/bin:/usr/sbin:/sbin SHELL=/bin/bash "$@"; }
 
 start=$(date +%s)
-clean BIOPILOT_DOWNLOAD_URL="file://$release" sh install.sh
+clean BIOPILOT_DOWNLOAD_URL="file://$release" BIOPILOT_TEST_PUBLIC_KEY_FILE="$work/key.pub.pem" sh install.sh
 seconds=$(($(date +%s) - start))
 echo "installation: ${seconds} s (budget ${MAX_INSTALL_SECONDS} s)"
 [ "$seconds" -lt "$MAX_INSTALL_SECONDS" ] || { echo "the installation is over budget" >&2; exit 1; }

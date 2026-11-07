@@ -7,7 +7,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | sh
 #
 # Downloads the standalone binary of this system (Node embedded, nothing to compile) from the GitHub
-# Release, checks its SHA-256, installs it in ~/.local/bin and its resources (Catalog included) in
+# Release, checks the release's signature and the binary's SHA-256, installs it in ~/.local/bin and its
+# resources (Catalog included) in
 # ~/.local/share/biopilot, then prints the one line to add to your shell. Never uses sudo, never edits
 # your shell files. Rerun it to update.
 #
@@ -19,6 +20,14 @@
 set -eu
 
 REPOSITORY="DEDJIABDOUL/biopilot-cli"
+
+# The release signing key (ECDSA P-256): SHA256SUMS is signed with its private half when a release is
+# built, so a download that did not come from a BioPilot release is refused. Same key as
+# scripts/release-signing-key.pub.pem in the repository.
+RELEASE_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5oSlFneA6+X+oYY4q+O10mGp0wiV
+AfHjzoI4/1EsAc/Q7TU0Y/ZKhDIJXpN7zVmZgvIHZ0m0+vA0XUbNnT8o8w==
+-----END PUBLIC KEY-----"
 
 say() { printf '%s\n' "$*"; }
 fail() {
@@ -77,6 +86,17 @@ trap 'rm -rf "$work"' EXIT INT TERM
 
 download "$base/$asset" "$work/$asset" 2> /dev/null || fail "could not download $base/$asset"
 download "$base/SHA256SUMS" "$work/SHA256SUMS" 2> /dev/null || fail "could not download $base/SHA256SUMS"
+download "$base/SHA256SUMS.sig" "$work/SHA256SUMS.sig" 2> /dev/null || fail "could not download $base/SHA256SUMS.sig (the release signature)"
+
+# The checksums must be signed by BioPilot's release key; then the binary must match them.
+command -v openssl > /dev/null 2>&1 || fail "openssl is needed to check the release signature"
+if [ -n "${BIOPILOT_TEST_PUBLIC_KEY_FILE:-}" ]; then
+  cp "$BIOPILOT_TEST_PUBLIC_KEY_FILE" "$work/release.pub.pem"
+else
+  printf '%s\n' "$RELEASE_PUBLIC_KEY" > "$work/release.pub.pem"
+fi
+openssl dgst -sha256 -verify "$work/release.pub.pem" -signature "$work/SHA256SUMS.sig" "$work/SHA256SUMS" > /dev/null 2>&1 ||
+  fail "the release signature is not valid: nothing was installed"
 expected=$(awk -v file="$asset" '$2 == file || $2 == "*" file { print $1 }' "$work/SHA256SUMS")
 [ -n "$expected" ] || fail "no checksum for $asset in $base/SHA256SUMS"
 actual=$(sha256 "$work/$asset")

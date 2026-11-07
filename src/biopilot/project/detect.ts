@@ -30,7 +30,8 @@ export type Project = {
   /** The walk stopped at the entry cap. */
   truncated: boolean;
   pairs: ReadPair[];
-  paired: boolean;
+  /** Complete read pairs present; `false` with read files but no pair; `null` without any read file (unknown). */
+  paired: boolean | null;
   /** Empty means generic. */
   platforms: Platform[];
   assay: Assay;
@@ -211,7 +212,7 @@ export const detectProject = (cwd: string, formats: FormatRecogniser, now = Date
     folders,
     truncated,
     pairs,
-    paired: pairs.length > 0,
+    paired: pairs.length > 0 ? true : files.some((file) => formats.formatOfFile(file)?.name === "fastq") ? false : null,
     platforms: config?.platforms ?? platformsFrom(root, files, folders, pairs, marker),
     assay: config?.assay ?? assayFrom(files, formats),
     config,

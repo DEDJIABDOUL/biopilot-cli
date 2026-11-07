@@ -95,6 +95,10 @@ describe("project detection", () => {
     expect(detected.paired).toBe(true);
   });
 
+  test("without any read file, whether reads are paired is unknown", () => {
+    expect(detect(project([".git/", "notes.txt"])).paired).toBeNull();
+  });
+
   test("a lone `rep_1.fastq.gz` is not a pair", () => {
     expect(detect(project([".git/", "rep_1.fastq.gz"]))).toMatchObject({ paired: false, pairs: [] });
   });
@@ -157,6 +161,6 @@ describe("project detection", () => {
   });
 
   test("an unreadable folder gives an empty project, never an error", () => {
-    expect(detect(path.join(tempDir(), "missing"))).toMatchObject({ files: [], platforms: [], assay: "unknown", paired: false });
+    expect(detect(path.join(tempDir(), "missing"))).toMatchObject({ files: [], platforms: [], assay: "unknown", paired: null });
   });
 });

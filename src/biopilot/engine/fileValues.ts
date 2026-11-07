@@ -170,8 +170,15 @@ export const fileGenerator = (value: ValueSpec, context: FileValueContext, getCa
       const mateFile = mateValue ? mateOf(path.resolve(shell ?? listing, mateValue)) : undefined;
       // The value's own read role: the one opposite to its mate's, or the one declared.
       const role = mateValue ? (readNumber(mateValue) === 1 ? 2 : readNumber(mateValue) === 2 ? 1 : value.readRole) : value.readRole;
+      // The project's reference (.biopilot.toml) leads wherever it fits the value.
+      const reference = project.config?.reference ? path.resolve(project.root, project.config.reference) : undefined;
       for (const candidate of matching) {
-        const priority = candidate.file === mateFile ? MATE_PRIORITY : role !== null && candidate.readNumber === role ? PREFERRED_PRIORITY : FORMAT_PRIORITY;
+        const priority =
+          candidate.file === mateFile || candidate.file === reference
+            ? MATE_PRIORITY
+            : role !== null && candidate.readNumber === role
+            ? PREFERRED_PRIORITY
+            : FORMAT_PRIORITY;
         suggestions.push({ name: candidate.name, type: candidate.type, priority });
       }
       return [...suggestions, ...dirs.map((candidate) => ({ name: candidate.name, type: "folder" as const, priority: FOLDER_PRIORITY }))];

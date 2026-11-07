@@ -4,9 +4,8 @@
 // What the engine suggests for a typed line when the first word is a Catalog tool (phase 2).
 // Seam: the engine's getSuggestions, with BIOPILOT_CATALOG pointing to the Catalog compiled from knowledge/.
 
-import os from "node:os";
 import { Shell } from "../../../utils/shell.js";
-import { compileRepositoryCatalog, hideInstalledTools } from "../helpers.js";
+import { compileRepositoryCatalog, hideInstalledTools, outsideAnyProject } from "../helpers.js";
 
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
@@ -17,7 +16,7 @@ beforeAll(async () => {
   runtime = await import("../../../runtime/runtime.js");
 });
 
-const suggest = async (line: string) => (await runtime.getSuggestions(line, os.tmpdir(), Shell.Bash))?.suggestions ?? [];
+const suggest = async (line: string) => (await runtime.getSuggestions(line, outsideAnyProject, Shell.Bash))?.suggestions ?? [];
 const names = async (line: string) => (await suggest(line)).map((s) => s.name);
 
 describe("Catalog tools in the engine", () => {

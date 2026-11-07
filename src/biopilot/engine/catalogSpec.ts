@@ -9,7 +9,8 @@
 import { resolveBinary, type Binary } from "../env/resolver.js";
 import { sessionEnvironment } from "../env/session.js";
 import { withinVersions } from "../env/versionOrder.js";
-import { openCatalog, type Argument, type Catalog, type Command, type Option, type ValueSpec } from "../knowledge/catalog.js";
+import type { Argument, Catalog, Command, Option, ValueSpec } from "../knowledge/catalog.js";
+import { getCatalog, projectAt } from "./catalogAccess.js";
 import { knownVersion } from "../profile/compute.js";
 import { requestProfile } from "../profile/detached.js";
 import type { HelpOption } from "../profile/helpParser.js";
@@ -27,8 +28,6 @@ const DEPRECATED_PRIORITY = -1;
  */
 const mapLocal = <T, U>(items: readonly T[], map: (item: T) => U): U[] => Array.from(items, (item) => map(item));
 
-/** The Catalog, opened once per session; `null` when unavailable (the engine then falls back to Fig). */
-let catalog: Catalog | null | undefined;
 /** Built specs, by Tool and what they were built for (binary, version, Profiles found). */
 const specs = new Map<string, { key: string; spec: Fig.Subcommand | null; checkedAt: number }>();
 /** Below this age, a spec built without every Profile is reused as is; older, the User store is asked again. */
@@ -38,14 +37,6 @@ const PROFILE_ONLY_RANK = 50;
 /** Versions by Fingerprint: conda-meta is read once per binary. */
 const versions = new Map<string, string | undefined>();
 let userStore: UserStore | undefined;
-
-const getCatalog = (): Catalog | null => {
-  if (catalog === undefined) {
-    const opened = openCatalog();
-    catalog = opened.available ? opened.catalog : null;
-  }
-  return catalog;
-};
 
 /** Every name of each option of a command, by canonical name: how values refer to other options. */
 type NamesOf = (canonicalName: string) => readonly string[];
@@ -193,18 +184,32 @@ const installedFor = (current: Catalog, tool: string): { binary: Binary; install
   return { binary, installed: { tool, version, key: versionKey(version, binary.fingerprint), store } };
 };
 
-/** The Catalog's Tools (name and description), for command-name completion (spec M6); empty when unavailable. */
-let tools: { name: string; description: string | undefined }[] | undefined;
-export const catalogTools = (): { name: string; description: string | undefined }[] => {
+/** Priority of a Catalog Tool's name in command-name completion (spec M6): above other specs (40). */
+const TOOL_PRIORITY = 90;
+/** M6: fixed bonus of a Tool whose platform is among the project's. */
+const PLATFORM_BONUS = 5;
+
+type ListedTool = { name: string; description: string | undefined; platforms: readonly string[] };
+let tools: ListedTool[] | undefined;
+/**
+ * The Catalog's Tools for command-name completion (spec M6), with their priority in the project around
+ * `cwd`; empty when the Catalog is unavailable.
+ */
+export const catalogTools = (cwd?: string): { name: string; description: string | undefined; priority: number }[] => {
   if (tools === undefined) {
     try {
       const listed = getCatalog()?.listTools() ?? [];
-      tools = mapLocal(listed, (tool) => ({ name: tool.name, description: tool.description ?? undefined }));
+      tools = mapLocal(listed, (tool) => ({ name: tool.name, description: tool.description ?? undefined, platforms: tool.platforms }));
     } catch {
       tools = [];
     }
   }
-  return tools;
+  const platforms = projectAt(cwd)?.platforms ?? [];
+  return mapLocal(tools, ({ name, description, platforms: own }) => ({
+    name,
+    description,
+    priority: TOOL_PRIORITY + (own.some((platform) => (platforms as readonly string[]).includes(platform)) ? PLATFORM_BONUS : 0),
+  }));
 };
 
 /**

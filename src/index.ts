@@ -20,6 +20,7 @@ import info from "./biopilot/cli/info.js";
 import status from "./biopilot/cli/status.js";
 import sync from "./biopilot/cli/sync.js";
 import computeProfile from "./biopilot/cli/computeProfile.js";
+import resetUsage from "./biopilot/cli/resetUsage.js";
 
 const program = new Command();
 
@@ -50,6 +51,7 @@ program.addCommand(uninstall);
 program.addCommand(info); // BIOPILOT: M9
 program.addCommand(status); // BIOPILOT: M9
 program.addCommand(sync); // BIOPILOT: M9
+program.addCommand(resetUsage); // BIOPILOT: M9
 program.addCommand(computeProfile, { hidden: true }); // BIOPILOT: M9, the detached Profile computation
 
 program.parse();

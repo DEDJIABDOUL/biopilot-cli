@@ -69,7 +69,7 @@ const valueName = (value: ValueSpec) => (value.formats.length > 0 ? value.format
 /** Canonical name first, so that the engine shows it and matches it first. */
 const optionNames = (option: Option): string[] => [option.canonicalName, ...option.aliases.filter((alias) => alias !== option.canonicalName)];
 
-const toFigOption = (option: Option, namesOf: NamesOf): Fig.Option => {
+const toFigOption = (option: Option, namesOf: NamesOf, command: Command): Fig.Option => {
   const figOption: Fig.Option = {
     name: optionNames(option),
     description: option.description ?? undefined,
@@ -80,7 +80,13 @@ const toFigOption = (option: Option, namesOf: NamesOf): Fig.Option => {
     ...(option.repeatable ? { isRepeatable: true } : {}),
     ...(option.hidden ? { hidden: true } : {}),
   };
-  optionRanking.set(figOption, { canonicalName: option.canonicalName, rules: option.rules, deprecated: option.deprecated });
+  optionRanking.set(figOption, {
+    canonicalName: option.canonicalName,
+    rules: option.rules,
+    deprecated: option.deprecated,
+    tool: command.tool,
+    command: command.path.join(" "),
+  });
   return figOption;
 };
 
@@ -113,7 +119,7 @@ const toProfileOnlyOption = (option: HelpOption): Fig.Option => {
 const commandOptions = (current: Catalog, command: Command, installed: Installed | undefined): { options: Fig.Option[]; complete: boolean } => {
   const catalogOptions = current.listOptions(command);
   const namesOf = namesOfOptions(catalogOptions);
-  const toOption = (option: Option) => toFigOption(option, namesOf);
+  const toOption = (option: Option) => toFigOption(option, namesOf, command);
   const profile = installed?.store?.getProfile(installed.tool, installed.key, command.path.join(" "));
   if (profile && profile.options.length > 0) {
     const byAlias = new Map(catalogOptions.flatMap((option) => option.aliases.map((alias) => [alias, option] as const)));

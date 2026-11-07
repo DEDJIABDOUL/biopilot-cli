@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/medaka_variant.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: medaka_variant
+package: medaka
+version: 2.2.2
+build: py312h3050eb1_0
+channel: linux-64
+licence: Oxford Nanopore Technologies PLC. Public License Version 1.0
+copyright: Oxford Nanopore Technologies PLC, https://github.com/nanoporetech/medaka
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-medaka
+used_by_catalog: true
+files:
+  root.txt: medaka_variant -h

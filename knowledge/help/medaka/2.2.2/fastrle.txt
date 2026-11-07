@@ -1,0 +1,12 @@
+usage: medaka fastrle [-h] [--debug | --quiet] [--block_size BLOCK_SIZE] input
+
+positional arguments:
+  input                 Input fasta/q. may be gzip compressed.
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+  --block_size BLOCK_SIZE
+                        Block size for hompolymer splitting, e.g. with a value
+                        of blocksize=3, AAAA -> A3 A1. (default: 94)

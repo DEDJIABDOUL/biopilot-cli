@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/quast.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: quast
+package: quast
+version: 5.3.0
+build: py313pl5321h5ca1c30_2
+channel: linux-64
+licence: Custom
+copyright: Alexey Gurevich et al., Center for Algorithmic Biotechnology, https://github.com/ablab/quast
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-3
+used_by_catalog: true
+files:
+  root.txt: quast --help

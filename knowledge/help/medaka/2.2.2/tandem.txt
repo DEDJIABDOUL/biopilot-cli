@@ -1,0 +1,163 @@
+usage: medaka tandem [-h] [--debug | --quiet]
+                     [--model MODEL | --auto_model TYPE INPUT]
+                     [--workers WORKERS] [--process_large_regions]
+                     [--phasing {prephased,hybrid,abpoa,unphased}]
+                     [--min_depth MIN_DEPTH] [--min_mapq MIN_MAPQ]
+                     [--disable_outlier_filter] [--padding PADDING]
+                     [--sex_chrs <X> <Y>]
+                     [--par_regions PAR_REGIONS [PAR_REGIONS ...]]
+                     [--decompose] [--add_read_names]
+                     [--sample_name SAMPLE_NAME]
+                     bam ref_fasta regions {male,female} output
+
+positional arguments:
+  bam                   Read alignments (preferably haplotagged) in BAM/CRAM
+                        format.
+  ref_fasta             Reference genome in FASTA format.
+  regions               Path to a BED or BED.gz file specifying STR regions
+                        for analysis.
+  {male,female}         Specifies sample sex to ensure correct handling of X/Y
+                        chromosomes, including pseudoautosomal regions
+  output                Output directory for results.
+
+options:
+  -h, --help            show this help message and exit
+  --debug               Verbose logging of debug information. (default: 20)
+  --quiet               Minimal logging; warnings only). (default: 20)
+  --model MODEL         Model to use. Can be a medaka model name or a
+                        basecaller model name suffixed with ':consensus' or
+                        ':variant'. For example
+                        'dna_r10.4.1_e8.2_400bps_hac@v4.1.0:variant'.
+                        {r103_fast_g507, r103_fast_snp_g507,
+                        r103_fast_variant_g507, r103_hac_g507,
+                        r103_hac_snp_g507, r103_hac_variant_g507,
+                        r103_sup_g507, r103_sup_snp_g507,
+                        r103_sup_variant_g507, r1041_e82_260bps_fast_g632,
+                        r1041_e82_260bps_fast_variant_g632,
+                        r1041_e82_260bps_hac_g632,
+                        r1041_e82_260bps_hac_v4.0.0,
+                        r1041_e82_260bps_hac_v4.1.0,
+                        r1041_e82_260bps_hac_variant_g632,
+                        r1041_e82_260bps_hac_variant_v4.1.0,
+                        r1041_e82_260bps_joint_apk_ulk_v5.0.0,
+                        r1041_e82_260bps_sup_g632,
+                        r1041_e82_260bps_sup_v4.0.0,
+                        r1041_e82_260bps_sup_v4.1.0,
+                        r1041_e82_260bps_sup_variant_g632,
+                        r1041_e82_260bps_sup_variant_v4.1.0,
+                        r1041_e82_400bps_bacterial_methylation,
+                        r1041_e82_400bps_fast_g615,
+                        r1041_e82_400bps_fast_g632,
+                        r1041_e82_400bps_fast_variant_g615,
+                        r1041_e82_400bps_fast_variant_g632,
+                        r1041_e82_400bps_hac_g615, r1041_e82_400bps_hac_g632,
+                        r1041_e82_400bps_hac_v4.0.0,
+                        r1041_e82_400bps_hac_v4.1.0,
+                        r1041_e82_400bps_hac_v4.2.0,
+                        r1041_e82_400bps_hac_v4.3.0,
+                        r1041_e82_400bps_hac_v5.0.0,
+                        r1041_e82_400bps_hac_v5.0.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_hac_v5.0.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_hac_v5.2.0,
+                        r1041_e82_400bps_hac_v5.2.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_hac_v5.2.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_hac_v6.0.0,
+                        r1041_e82_400bps_hac_v6.0.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_hac_v6.0.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_hac_variant_g615,
+                        r1041_e82_400bps_hac_variant_g632,
+                        r1041_e82_400bps_hac_variant_v4.1.0,
+                        r1041_e82_400bps_hac_variant_v4.2.0,
+                        r1041_e82_400bps_hac_variant_v4.3.0,
+                        r1041_e82_400bps_hac_variant_v5.0.0,
+                        r1041_e82_400bps_sup_g615,
+                        r1041_e82_400bps_sup_v4.0.0,
+                        r1041_e82_400bps_sup_v4.1.0,
+                        r1041_e82_400bps_sup_v4.2.0,
+                        r1041_e82_400bps_sup_v4.3.0,
+                        r1041_e82_400bps_sup_v5.0.0,
+                        r1041_e82_400bps_sup_v5.0.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_sup_v5.0.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_sup_v5.2.0,
+                        r1041_e82_400bps_sup_v5.2.0_rl_lstm384_dwells,
+                        r1041_e82_400bps_sup_v5.2.0_rl_lstm384_no_dwells,
+                        r1041_e82_400bps_sup_variant_g615,
+                        r1041_e82_400bps_sup_variant_v4.1.0,
+                        r1041_e82_400bps_sup_variant_v4.2.0,
+                        r1041_e82_400bps_sup_variant_v4.3.0,
+                        r1041_e82_400bps_sup_variant_v5.0.0,
+                        r104_e81_fast_g5015, r104_e81_fast_variant_g5015,
+                        r104_e81_hac_g5015, r104_e81_hac_variant_g5015,
+                        r104_e81_sup_g5015, r104_e81_sup_g610,
+                        r104_e81_sup_variant_g610, r941_e81_fast_g514,
+                        r941_e81_fast_variant_g514, r941_e81_hac_g514,
+                        r941_e81_hac_variant_g514, r941_e81_sup_g514,
+                        r941_e81_sup_variant_g514, r941_min_fast_g507,
+                        r941_min_fast_snp_g507, r941_min_fast_variant_g507,
+                        r941_min_hac_g507, r941_min_hac_snp_g507,
+                        r941_min_hac_variant_g507, r941_min_sup_g507,
+                        r941_min_sup_snp_g507, r941_min_sup_variant_g507,
+                        r941_prom_fast_g507, r941_prom_fast_snp_g507,
+                        r941_prom_fast_variant_g507, r941_prom_hac_g507,
+                        r941_prom_hac_snp_g507, r941_prom_hac_variant_g507,
+                        r941_prom_sup_g507, r941_prom_sup_snp_g507,
+                        r941_prom_sup_variant_g507, r941_sup_plant_g610,
+                        r941_sup_plant_variant_g610} (default:
+                        r1041_e82_400bps_sup_v5.2.0)
+  --auto_model TYPE INPUT
+                        Automatically choose model according to INPUT. TYPE
+                        should be one of 'consensus' or 'variant'. (default:
+                        None)
+  --workers WORKERS     Number of parallel worker processes to use. (default:
+                        1)
+  --process_large_regions
+                        Process TRs with estimated length (of one or both
+                        alleles) exceeding 10kbp. Processing large regions can
+                        substantially increase RAM usage. With the default
+                        setting, the expected peak RAM consumption on Adotto
+                        repeat catalogue is approximately 14GB when using 8
+                        workers, and 23GB when using 16 workers. Skipped
+                        regions will be output to `skipped_large.bed`.
+                        (default: False)
+  --phasing {prephased,hybrid,abpoa,unphased}
+                        Phasing method to use: 1. prephased: Rely on haplotype
+                        (HP) BAM tags for phasing. 2. abpoa: Use abPOA
+                        clustering feature to identify haplotypes based on STR
+                        sequences in the reads. 3. hybrid: Use haplotag
+                        assignments if both haplotypes have at least
+                        `min_depth` spanning reads assigned, otherwise
+                        fallback to the abPOA clustering. 4. unphased: Assume
+                        the sample is haploid. (default: hybrid)
+  --min_depth MIN_DEPTH
+                        Minimum number of spanning reads required for allele
+                        consensus reconstruction. (default: 3)
+  --min_mapq MIN_MAPQ   Minimum mapping quality (MAPQ) for alignments
+                        filtering. (default: 5)
+  --disable_outlier_filter
+                        Disable exclusion of reads with significantly
+                        divergent spanning region lengths. (default: False)
+  --padding PADDING     Number of bases to pad spanning read regions and
+                        reference sequence. (default: 10)
+  --sex_chrs <X> <Y>    Names of X and Y chromosomes in reference FASTA as two
+                        arguments, e.g. `--sex_chrs chrX chrY`. (default:
+                        ['chrX', 'chrY'])
+  --par_regions PAR_REGIONS [PAR_REGIONS ...]
+                        Coordinates of pseudoautosomal regions (PARs) on the X
+                        chromosome. Will be treated as diploid in male
+                        samples. The analysis assumes that the corresponding
+                        PARs on chromosome Y have been hard-masked (i.e.
+                        replaced with Ns) in the reference to avoid ambiguous
+                        read alignments. Default values assume use of the
+                        GRCh38 analysis set (e.g.
+                        `GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta`).
+                        (default: ['chrX:10000-2781479',
+                        'chrX:155701382-156030895'])
+  --decompose           Align polished sequences back to reference region and
+                        extract a list of (left-aligned) variants. By default,
+                        Medaka Tandem reports entire haplotype-specific tandem
+                        repeats as alternative alleles. (default: False)
+  --add_read_names      Include names of spanning reads in the output VCF
+                        file. (default: False)
+  --sample_name SAMPLE_NAME
+                        Sample name to use in the output VCF file. (default:
+                        SAMPLE)

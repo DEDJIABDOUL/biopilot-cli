@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# hisat2-build 2.2.3 (package hisat2), written from its recorded --help:
+# knowledge/help/hisat2-build/2.2.3/root.txt (GPL-3.0-or-later; attribution in RECORDING.yml next
+# to it) and the HISAT2 manual (https://daehwankimlab.github.io/hisat2/manual/), in our own
+# words (spec decision 31).
+name: hisat2-build
+package: hisat2
+description: Builds the hisat2 index of a reference genome, optionally with splice sites, exons and SNPs
+version: { args: ["--version"], regex: 'version (\d[\w.]*)' }
+help: ["--help"]
+arguments:
+  - name: reference_in
+    description: reference FASTA files, comma-separated
+    value: { type: file, format: fasta }
+  - name: ht2_index_base
+    description: prefix of the index files to write (folder and base name)
+    value: { type: string }
+options:
+  - names: ["-p"]
+    description: threads
+    value: { type: int }
+    rank: 90
+  - names: ["--ss"]
+    description: splice sites, from hisat2_extract_splice_sites.py on a GTF
+    value: { type: file }
+    rank: 60
+  - names: ["--exon"]
+    description: exons, from hisat2_extract_exons.py on a GTF
+    value: { type: file }
+    rank: 60
+    rules:
+      - when: { used: ["--ss"] }
+        boost: 20
+  - names: ["--snp"]
+    description: SNPs to include, from hisat2_extract_snps_haplotypes_*.py
+    value: { type: file }
+    rank: 35
+  - names: ["--haplotype"]
+    description: haplotypes of the SNPs
+    value: { type: file }
+    rank: 30
+    rules:
+      - when: { used: ["--snp"] }
+        boost: 20
+  - names: ["-c"]
+    description: reference sequences are given on the command line
+    rank: 10
+  - names: ["--large-index"]
+    description: build a large (64-bit) index even under 4 billion bases
+    rank: 30
+  - names: ["-a", "--noauto"]
+    description: do not fit -p, --bmax and --dcv to the available memory
+    rank: 10
+  - names: ["--bmax"]
+    description: largest bucket of the suffix-array builder
+    value: { type: int }
+    rank: 10
+  - names: ["--bmaxdivn"]
+    description: largest bucket, as a divisor of the reference length
+    value: { type: int }
+    default: 4
+    rank: 10
+  - names: ["--dcv"]
+    description: difference-cover period
+    value: { type: int }
+    default: 1024
+    rank: 10
+  - names: ["--nodc"]
+    description: no difference cover (quadratic time)
+    rank: 5
+  - names: ["-r", "--noref"]
+    description: do not build the packed reference (.3 and .4 files)
+    rank: 10
+  - names: ["-3", "--justref"]
+    description: build only the packed reference (.3 and .4 files)
+    rank: 10
+  - names: ["-o", "--offrate"]
+    description: sample the suffix array every 2^N characters
+    value: { type: int }
+    default: 5
+    rank: 15
+  - names: ["-t", "--ftabchars"]
+    description: characters of the initial lookup table
+    value: { type: int }
+    default: 10
+    rank: 10
+  - names: ["--localoffrate"]
+    description: sample the local suffix arrays every 2^N characters
+    value: { type: int }
+    default: 3
+    rank: 5
+  - names: ["--localftabchars"]
+    description: characters of the initial lookup of the local indexes
+    value: { type: int }
+    default: 6
+    rank: 5
+  - names: ["--repeat-ref"]
+    description: repeat reference
+    value: { type: file }
+    rank: 5
+  - names: ["--repeat-info"]
+    description: repeat information
+    value: { type: file }
+    rank: 5
+  - names: ["--repeat-snp"]
+    description: SNPs of the repeats
+    value: { type: file }
+    rank: 5
+  - names: ["--repeat-haplotype"]
+    description: haplotypes of the repeats
+    value: { type: file }
+    rank: 5
+  - names: ["--seed"]
+    description: random seed
+    value: { type: int }
+    rank: 10
+  - names: ["-q", "--quiet"]
+    description: print less
+    rank: 25
+  - names: ["--usage"]
+    description: print the short usage
+    rank: 5

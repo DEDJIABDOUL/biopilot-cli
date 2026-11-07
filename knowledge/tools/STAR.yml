@@ -1,0 +1,958 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# STAR 2.7.11b, written from its recorded --help: knowledge/help/STAR/2.7.11b/root.txt
+# (GPL-3.0-or-later; attribution in RECORDING.yml next to it) and its manual
+# (https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf), in our own words
+# (spec decision 31). Every parameter is typed with -- before its name; a parameter given
+# several values takes them one after the other (--readFilesIn R1.fq.gz R2.fq.gz).
+# Ranks follow the shared scale of spec §6.4.
+name: STAR
+package: star
+description: "Spliced aligner for RNA-seq: builds genome indexes, maps reads, counts genes, STARsolo for single cell"
+version: { args: [ --version ], regex: "^(\\d[\\w.]*)" }
+help: [ --help ]
+options:
+  - names: [ --versionGenome ]
+    description: earliest genome index version this STAR accepts; leave unchanged
+    value: { type: string }
+    default: 2.7.4a
+    rank: 5
+  - names: [ --parametersFiles ]
+    description: file of parameters (command line only)
+    value: { type: file }
+    rank: 15
+  - names: [ --sysShell ]
+    description: shell used by STAR, e.g. /bin/bash
+    value: { type: file }
+    rank: 5
+  - names: [ --runMode ]
+    description: "what to run: alignReads (default), genomeGenerate (build an index), …"
+    value: { type: enum, values: [ alignReads, genomeGenerate, inputAlignmentsFromBAM, liftOver ] }
+    default: alignReads
+    rank: 85
+  - names: [ --runThreadN ]
+    description: threads
+    value: { type: int }
+    default: 1
+    rank: 90
+  - names: [ --runDirPerm ]
+    description: permissions of the folders STAR creates
+    value: { type: enum, values: [ User_RWX, All_RWX ] }
+    default: User_RWX
+    rank: 5
+  - names: [ --runRNGseed ]
+    description: random seed
+    value: { type: int }
+    default: 777
+    rank: 10
+  - names: [ --genomeDir ]
+    description: "genome index folder: read when aligning, written by genomeGenerate"
+    value: { type: dir, format: star-index }
+    default: ./GenomeDir/
+    rank: 97
+  - names: [ --genomeLoad ]
+    description: shared-memory use of the genome (alignReads only)
+    value: { type: enum, values: [ LoadAndKeep, LoadAndRemove, LoadAndExit, Remove, NoSharedMemory ] }
+    default: NoSharedMemory
+    rank: 25
+  - names: [ --genomeFastaFiles ]
+    description: genome FASTA files, plain text (genomeGenerate)
+    value: { type: file, format: fasta, multiple: true }
+    rank: 80
+  - names: [ --genomeChainFiles ]
+    description: chain files for --runMode liftOver
+    value: { type: file, format: chain }
+    rank: 10
+  - names: [ --genomeFileSizes ]
+    description: exact sizes of the genome files; normally left unset
+    value: { type: int, multiple: true }
+    rank: 5
+  - names: [ --genomeTransformOutput ]
+    description: outputs converted back to the original genome
+    value: { type: enum, values: [ SAM, SJ, Quant, None ], multiple: true }
+    rank: 5
+  - names: [ --genomeChrSetMitochondrial ]
+    description: names of the mitochondrial chromosomes (STARsolo statistics)
+    value: { type: string, multiple: true }
+    rank: 10
+  - names: [ --genomeChrBinNbits ]
+    description: log2 of the chromosome bin size; lower it for genomes with many small contigs
+    value: { type: int }
+    default: 18
+    rank: 25
+  - names: [ --genomeSAindexNbases ]
+    description: length of the suffix-array pre-index (14; about log2(genome length)/2 - 1 for small genomes)
+    value: { type: int }
+    default: 14
+    rank: 45
+  - names: [ --genomeSAsparseD ]
+    description: suffix-array sparsity; higher uses less RAM, maps slower
+    value: { type: int }
+    default: 1
+    rank: 25
+  - names: [ --genomeSuffixLengthMax ]
+    description: longest suffix (-1 for no limit)
+    value: { type: int }
+    default: -1
+    rank: 5
+  - names: [ --genomeTransformType ]
+    description: genome transformation (haploid or diploid from a VCF)
+    value: { type: enum, values: [ None, Haploid, Diploid ] }
+    default: None
+    rank: 10
+  - names: [ --genomeTransformVCF ]
+    description: VCF of the genome transformation
+    value: { type: file, format: vcf }
+    rank: 10
+  - names: [ --genomeType ]
+    description: type of genome to build
+    value: { type: enum, values: [ Full, Transcriptome, SuperTransriptome ] }
+    default: Full
+    rank: 10
+  - names: [ --sjdbFileChrStartEnd ]
+    description: files of known splice junctions (chr, start, end, strand)
+    value: { type: file, multiple: true }
+    rank: 30
+  - names: [ --sjdbGTFfile ]
+    description: annotation GTF, for splice junctions and gene counts
+    value: { type: file, format: gtf }
+    rank: 80
+  - names: [ --sjdbGTFchrPrefix ]
+    description: prefix added to the GTF chromosome names (e.g. chr)
+    value: { type: string }
+    rank: 20
+  - names: [ --sjdbGTFfeatureExon ]
+    description: GTF feature type taken as exons
+    value: { type: string }
+    default: exon
+    rank: 15
+  - names: [ --sjdbGTFtagExonParentTranscript ]
+    description: GTF attribute holding the transcript ID
+    value: { type: string }
+    default: transcript_id
+    rank: 15
+  - names: [ --sjdbGTFtagExonParentGene ]
+    description: GTF attribute holding the gene ID
+    value: { type: string }
+    default: gene_id
+    rank: 15
+  - names: [ --sjdbGTFtagExonParentGeneName ]
+    description: GTF attribute holding the gene name
+    value: { type: string, multiple: true }
+    rank: 10
+  - names: [ --sjdbGTFtagExonParentGeneType ]
+    description: GTF attribute holding the gene type
+    value: { type: string, multiple: true }
+    rank: 10
+  - names: [ --sjdbOverhang ]
+    description: bases on each side of the junctions; ideally read length - 1
+    value: { type: int }
+    default: 100
+    rank: 65
+  - names: [ --sjdbScore ]
+    description: extra score of alignments crossing known junctions
+    value: { type: int }
+    default: 2
+    rank: 10
+  - names: [ --sjdbInsertSave ]
+    description: files saved when junctions are inserted while mapping
+    value: { type: enum, values: [ Basic, All ] }
+    default: Basic
+    rank: 10
+  - names: [ --varVCFfile ]
+    description: VCF of variants (genotype in the 10th column), for WASP and allele tags
+    value: { type: file, format: vcf }
+    rank: 15
+  - names: [ --inputBAMfile ]
+    description: BAM input of --runMode inputAlignmentsFromBAM
+    value: { type: file, format: bam }
+    rank: 15
+  - names: [ --readFilesType ]
+    description: "format of the read files: Fastx or SAM SE/PE"
+    value: { type: enum, values: [ Fastx ] }
+    default: Fastx
+    rank: 15
+  - names: [ --readFilesSAMattrKeep ]
+    description: with SAM input, the tags kept
+    value: { type: enum, values: [ All, None ], multiple: true }
+    rank: 5
+  - names: [ --readFilesIn ]
+    description: "read files: read 1, then read 2 for pairs; comma-separated for several lanes"
+    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    rank: 95
+  - names: [ --readFilesManifest ]
+    description: tab-separated manifest of the read files (read 1, read 2 or -, read group)
+    value: { type: file }
+    rank: 25
+  - names: [ --readFilesPrefix ]
+    description: prefix added to the names of --readFilesIn
+    value: { type: string }
+    rank: 10
+  - names: [ --readFilesCommand ]
+    description: command that decompresses the read files, e.g. zcat or gunzip -c
+    value: { type: string, multiple: true }
+    rank: 80
+  - names: [ --readMapNumber ]
+    description: map only this many reads from the start (-1 for all)
+    value: { type: int }
+    default: -1
+    rank: 20
+  - names: [ --readMatesLengthsIn ]
+    description: whether both mates have the same lengths
+    value: { type: string }
+    default: NotEqual
+    rank: 5
+  - names: [ --readNameSeparator ]
+    description: characters after which read names are cut
+    value: { type: string, multiple: true }
+    rank: 10
+  - names: [ --readQualityScoreBase ]
+    description: quality offset (33 for Phred+33)
+    value: { type: int }
+    default: 33
+    rank: 10
+  - names: [ --clipAdapterType ]
+    description: "adapter clipping: Hamming, CellRanger4 or None"
+    value: { type: enum, values: [ Hamming, CellRanger4, None ] }
+    default: Hamming
+    rank: 25
+  - names: [ --clip3pNbases ]
+    description: bases clipped from the 3' end of each mate
+    value: { type: int, multiple: true }
+    rank: 30
+  - names: [ --clip3pAdapterSeq ]
+    description: adapters clipped from the 3' end of each mate
+    value: { type: enum, values: [ polyA ], multiple: true }
+    rank: 35
+  - names: [ --clip3pAdapterMMp ]
+    description: largest share of mismatches in 3' adapter clipping
+    value: { type: float, multiple: true }
+    rank: 15
+  - names: [ --clip3pAfterAdapterNbases ]
+    description: bases clipped from the 3' end after adapter clipping
+    value: { type: int, multiple: true }
+    rank: 10
+  - names: [ --clip5pNbases ]
+    description: bases clipped from the 5' end of each mate
+    value: { type: int, multiple: true }
+    rank: 30
+  - names: [ --clip5pAdapterSeq ]
+    description: adapters clipped from the 5' end of each mate
+    value: { type: string, multiple: true }
+    rank: 15
+  - names: [ --clip5pAdapterMMp ]
+    description: largest share of mismatches in 5' adapter clipping
+    value: { type: float, multiple: true }
+    rank: 10
+  - names: [ --clip5pAfterAdapterNbases ]
+    description: bases clipped from the 5' end after adapter clipping
+    value: { type: int, multiple: true }
+    rank: 10
+  - names: [ --limitGenomeGenerateRAM ]
+    description: most RAM for genomeGenerate, in bytes
+    value: { type: int }
+    default: 31000000000
+    rank: 35
+  - names: [ --limitIObufferSize ]
+    description: input and output buffer sizes per thread, in bytes
+    value: { type: int, multiple: true }
+    rank: 10
+  - names: [ --limitOutSAMoneReadBytes ]
+    description: largest SAM record of one read, in bytes
+    value: { type: int }
+    default: 100000
+    rank: 10
+  - names: [ --limitOutSJoneRead ]
+    description: most junctions per read
+    value: { type: int }
+    default: 1000
+    rank: 5
+  - names: [ --limitOutSJcollapsed ]
+    description: most collapsed junctions
+    value: { type: int }
+    default: 1000000
+    rank: 10
+  - names: [ --limitBAMsortRAM ]
+    description: "most RAM for sorting BAM, in bytes (0: the genome index size)"
+    value: { type: int }
+    default: 0
+    rank: 45
+  - names: [ --limitSjdbInsertNsj ]
+    description: most junctions inserted while mapping
+    value: { type: int }
+    default: 1000000
+    rank: 10
+  - names: [ --limitNreadsSoft ]
+    description: soft limit on the number of reads
+    value: { type: int }
+    default: -1
+    rank: 5
+  - names: [ --outFileNamePrefix ]
+    description: prefix of every output file, folder included (end it with / for a folder)
+    value: { type: string }
+    default: ./
+    rank: 92
+  - names: [ --outTmpDir ]
+    description: temporary folder (its content is deleted)
+    value: { type: dir }
+    rank: 30
+  - names: [ --outTmpKeep ]
+    description: keep the temporary files
+    value: { type: enum, values: [ None, All ] }
+    default: None
+    rank: 5
+  - names: [ --outStd ]
+    description: "output sent to standard output: Log, SAM, BAM_Unsorted, BAM_SortedByCoordinate…"
+    value: { type: enum, values: [ Log, SAM, BAM_Unsorted, BAM_SortedByCoordinate, BAM_Quant ] }
+    default: Log
+    rank: 30
+  - names: [ --outReadsUnmapped ]
+    description: write unmapped reads to Unmapped.out.mate1/2 (Fastx)
+    value: { type: enum, values: [ None, Fastx ] }
+    default: None
+    rank: 45
+  - names: [ --outQSconversionAdd ]
+    description: number added to qualities (e.g. -31 from Illumina 1.5)
+    value: { type: int }
+    default: 0
+    rank: 5
+  - names: [ --outMultimapperOrder ]
+    description: order of the alignments of multi-mapped reads
+    value: { type: enum, values: [ Old_2.4, Random ] }
+    default: Old_2.4
+    rank: 10
+  - names: [ --outSAMtype ]
+    description: "output type: BAM, SAM or None, then Unsorted and/or SortedByCoordinate"
+    value: { type: enum, values: [ BAM, SAM, None, Unsorted, SortedByCoordinate ], multiple: true }
+    rank: 90
+  - names: [ --outSAMmode ]
+    description: SAM output mode
+    value: { type: enum, values: [ None, Full, NoQS ] }
+    default: Full
+    rank: 10
+  - names: [ --outSAMstrandField ]
+    description: intronMotif adds the XS strand tag (Cufflinks, StringTie on unstranded data)
+    value: { type: enum, values: [ None, intronMotif ] }
+    default: None
+    rank: 40
+  - names: [ --outSAMattributes ]
+    description: "SAM tags written: Standard, All, None or a list (NH HI AS nM NM MD…)"
+    value: { type: enum, values: [ None, Standard, All, NH, HI, AS, nM, NM, MD, jM, jI, XS, MC, ch, cN, vA, vG, vW, ha, sM, sS, sQ, sF, rB, vR ], multiple: true }
+    rank: 55
+  - names: [ --outSAMattrIHstart ]
+    description: first value of the HI tag (0 for some tools)
+    value: { type: int }
+    default: 1
+    rank: 10
+  - names: [ --outSAMunmapped ]
+    description: Within keeps unmapped reads in the SAM/BAM
+    value: { type: enum, values: [ None, Within, KeepPairs ], multiple: true }
+    rank: 45
+  - names: [ --outSAMorder ]
+    description: order of the SAM records
+    value: { type: string }
+    default: Paired
+    rank: 10
+  - names: [ --outSAMprimaryFlag ]
+    description: which alignments are primary
+    value: { type: enum, values: [ OneBestScore, AllBestScore ] }
+    default: OneBestScore
+    rank: 15
+  - names: [ --outSAMreadID ]
+    description: read name format in SAM
+    value: { type: enum, values: [ Standard, Number ] }
+    default: Standard
+    rank: 10
+  - names: [ --outSAMmapqUnique ]
+    description: MAPQ of unique alignments (60 for GATK)
+    value: { type: int }
+    default: 255
+    rank: 20
+  - names: [ --outSAMflagOR ]
+    description: value ORed into every FLAG
+    value: { type: int }
+    default: 0
+    rank: 5
+  - names: [ --outSAMflagAND ]
+    description: value ANDed with every FLAG
+    value: { type: int }
+    default: 65535
+    rank: 5
+  - names: [ --outSAMattrRGline ]
+    description: read group line, starting with ID:, e.g. ID:s1 SM:sample1 PL:ILLUMINA
+    value: { type: string, multiple: true }
+    rank: 50
+  - names: [ --outSAMheaderHD ]
+    description: "@HD line of the header"
+    value: { type: string, multiple: true }
+    rank: 5
+  - names: [ --outSAMheaderPG ]
+    description: extra @PG line of the header
+    value: { type: string, multiple: true }
+    rank: 5
+  - names: [ --outSAMheaderCommentFile ]
+    description: file of @CO lines for the header
+    value: { type: file }
+    rank: 5
+  - names: [ --outSAMfilter ]
+    description: filters of the SAM/BAM output
+    value: { type: enum, values: [ KeepOnlyAddedReferences, KeepAllAddedReferences ], multiple: true }
+    rank: 10
+  - names: [ --outSAMmultNmax ]
+    description: most alignments written per read (-1 for all)
+    value: { type: enum, values: [ "-1" ] }
+    default: "-1"
+    rank: 25
+  - names: [ --outSAMtlen ]
+    description: how TLEN is computed
+    value: { type: enum, values: [ "1", "2" ] }
+    default: "1"
+    rank: 5
+  - names: [ --outBAMcompression ]
+    description: BAM compression level (-1 to 10)
+    value: { type: int }
+    default: 1
+    rank: 15
+  - names: [ --outBAMsortingThreadN ]
+    description: "threads for sorting BAM (0: min(6, runThreadN))"
+    value: { type: int }
+    default: 0
+    rank: 25
+  - names: [ --outBAMsortingBinsN ]
+    description: genome bins for sorting
+    value: { type: int }
+    default: 50
+    rank: 10
+  - names: [ --bamRemoveDuplicatesType ]
+    description: mark duplicates of a sorted BAM given with inputBAMfile
+    value: { type: enum, values: [ "-", UniqueIdentical, UniqueIdenticalNotMulti ] }
+    rank: 15
+  - names: [ --bamRemoveDuplicatesMate2basesN ]
+    description: 5' bases of mate 2 used to collapse duplicates
+    value: { type: int }
+    default: 0
+    rank: 5
+  - names: [ --outWigType ]
+    description: "signal output: bedGraph or wiggle (needs a sorted BAM)"
+    value: { type: enum, values: [ None, bedGraph, wiggle, read1_5p, read2 ], multiple: true }
+    rank: 25
+  - names: [ --outWigStrand ]
+    description: stranded or unstranded signal
+    value: { type: enum, values: [ Stranded, Unstranded ] }
+    default: Stranded
+    rank: 15
+  - names: [ --outWigReferencesPrefix ]
+    description: prefix of the references included in the signal
+    value: { type: string }
+    rank: 10
+  - names: [ --outWigNorm ]
+    description: "signal normalisation: RPM or None"
+    value: { type: enum, values: [ RPM, None ] }
+    default: RPM
+    rank: 10
+  - names: [ --outFilterType ]
+    description: BySJout keeps reads whose junctions pass the SJ.out.tab filters (ENCODE)
+    value: { type: enum, values: [ Normal, BySJout ] }
+    default: Normal
+    rank: 35
+  - names: [ --outFilterMultimapScoreRange ]
+    description: score range below the best for multi-mapped alignments
+    value: { type: int }
+    default: 1
+    rank: 10
+  - names: [ --outFilterMultimapNmax ]
+    description: most loci a read may map to; more and it counts as unmapped
+    value: { type: int }
+    default: 10
+    rank: 55
+  - names: [ --outFilterMismatchNmax ]
+    description: most mismatches per alignment
+    value: { type: int }
+    default: 10
+    rank: 40
+  - names: [ --outFilterMismatchNoverLmax ]
+    description: most mismatches per mapped length
+    value: { type: float }
+    default: 0.3
+    rank: 25
+  - names: [ --outFilterMismatchNoverReadLmax ]
+    description: most mismatches per read length (0.04 in ENCODE)
+    value: { type: float }
+    default: 1
+    rank: 30
+  - names: [ --outFilterScoreMin ]
+    description: least alignment score
+    value: { type: int }
+    default: 0
+    rank: 15
+  - names: [ --outFilterScoreMinOverLread ]
+    description: least alignment score per read length
+    value: { type: float }
+    default: 0.66
+    rank: 30
+  - names: [ --outFilterMatchNmin ]
+    description: least matched bases
+    value: { type: int }
+    default: 0
+    rank: 15
+  - names: [ --outFilterMatchNminOverLread ]
+    description: least matched bases per read length
+    value: { type: float }
+    default: 0.66
+    rank: 30
+  - names: [ --outFilterIntronMotifs ]
+    description: drop alignments with non-canonical junctions (RemoveNoncanonical, for Cufflinks)
+    value: { type: string }
+    default: None
+    rank: 30
+  - names: [ --outFilterIntronStrands ]
+    description: drop alignments whose junctions disagree on the strand
+    value: { type: string }
+    default: RemoveInconsistentStrands
+    rank: 10
+  - names: [ --outSJtype ]
+    description: "splice junction output: Standard or None"
+    value: { type: enum, values: [ Standard, None ] }
+    default: Standard
+    rank: 15
+  - names: [ --outSJfilterReads ]
+    description: "reads counted in SJ.out.tab: All or Unique"
+    value: { type: enum, values: [ All, Unique ] }
+    default: All
+    rank: 15
+  - names: [ --outSJfilterOverhangMin ]
+    description: least overhang of junctions, per motif type (4 values)
+    value: { type: int, multiple: true }
+    rank: 10
+  - names: [ --outSJfilterCountUniqueMin ]
+    description: least unique reads per junction, per motif type (4 values)
+    value: { type: int, multiple: true }
+    rank: 10
+  - names: [ --outSJfilterCountTotalMin ]
+    description: least reads per junction, per motif type (4 values)
+    value: { type: int, multiple: true }
+    rank: 10
+  - names: [ --outSJfilterDistToOtherSJmin ]
+    description: least distance to other junctions, per motif type (4 values)
+    value: { type: int, multiple: true }
+    rank: 5
+  - names: [ --outSJfilterIntronMaxVsReadN ]
+    description: longest gap allowed for junctions supported by 1, 2, 3… reads
+    value: { type: int, multiple: true }
+    rank: 5
+  - names: [ --scoreGap ]
+    description: penalty of a splice junction
+    value: { type: int }
+    default: 0
+    rank: 10
+  - names: [ --scoreGapNoncan ]
+    description: extra penalty of a non-canonical junction
+    value: { type: int }
+    default: -8
+    rank: 10
+  - names: [ --scoreGapGCAG ]
+    description: extra penalty of a GC/AG junction
+    value: { type: int }
+    default: -4
+    rank: 5
+  - names: [ --scoreGapATAC ]
+    description: extra penalty of an AT/AC junction
+    value: { type: int }
+    default: -8
+    rank: 5
+  - names: [ --scoreGenomicLengthLog2scale ]
+    description: score scaled by log2 of the genomic length of the alignment
+    value: { type: int }
+    default: -0.25
+    rank: 5
+  - names: [ --scoreDelOpen ]
+    description: deletion opening penalty
+    value: { type: int }
+    default: -2
+    rank: 5
+  - names: [ --scoreDelBase ]
+    description: deletion extension penalty per base
+    value: { type: int }
+    default: -2
+    rank: 5
+  - names: [ --scoreInsOpen ]
+    description: insertion opening penalty
+    value: { type: int }
+    default: -2
+    rank: 5
+  - names: [ --scoreInsBase ]
+    description: insertion extension penalty per base
+    value: { type: int }
+    default: -2
+    rank: 5
+  - names: [ --scoreStitchSJshift ]
+    description: largest score loss when looking for junction boundaries
+    value: { type: int }
+    default: 1
+    rank: 5
+  - names: [ --seedSearchStartLmax ]
+    description: longest read piece where seed search starts
+    value: { type: int }
+    default: 50
+    rank: 15
+  - names: [ --seedSearchStartLmaxOverLread ]
+    description: seedSearchStartLmax per read length
+    value: { type: float }
+    default: 1
+    rank: 5
+  - names: [ --seedSearchLmax ]
+    description: longest seed (0 for no limit)
+    value: { type: int }
+    default: 0
+    rank: 5
+  - names: [ --seedMultimapNmax ]
+    description: seeds mapping to more loci are not stitched
+    value: { type: int }
+    default: 10000
+    rank: 10
+  - names: [ --seedPerReadNmax ]
+    description: most seeds per read (raise it for long reads)
+    value: { type: int }
+    default: 1000
+    rank: 15
+  - names: [ --seedPerWindowNmax ]
+    description: most seeds per window
+    value: { type: int }
+    default: 50
+    rank: 10
+  - names: [ --seedNoneLociPerWindow ]
+    description: most one-seed loci per window
+    value: { type: int }
+    default: 10
+    rank: 5
+  - names: [ --seedSplitMin ]
+    description: least length of seeds split by N or the mate gap
+    value: { type: int }
+    default: 12
+    rank: 5
+  - names: [ --seedMapMin ]
+    description: least length of mapped seeds
+    value: { type: int }
+    default: 5
+    rank: 5
+  - names: [ --alignIntronMin ]
+    description: shortest intron; shorter gaps are deletions
+    value: { type: int }
+    default: 21
+    rank: 35
+  - names: [ --alignIntronMax ]
+    description: "longest intron (0: set from the window parameters)"
+    value: { type: int }
+    default: 0
+    rank: 40
+  - names: [ --alignMatesGapMax ]
+    description: "largest gap between mates (0: set from the window parameters)"
+    value: { type: int }
+    default: 0
+    rank: 35
+  - names: [ --alignSJoverhangMin ]
+    description: least overhang of spliced alignments
+    value: { type: int }
+    default: 5
+    rank: 30
+  - names: [ --alignSJstitchMismatchNmax ]
+    description: most mismatches when stitching junctions, per motif type
+    value: { type: int, multiple: true }
+    rank: 10
+  - names: [ --alignSJDBoverhangMin ]
+    description: least overhang of alignments over known junctions
+    value: { type: int }
+    default: 3
+    rank: 30
+  - names: [ --alignSplicedMateMapLmin ]
+    description: least mapped length of a spliced mate
+    value: { type: int }
+    default: 0
+    rank: 5
+  - names: [ --alignSplicedMateMapLminOverLmate ]
+    description: alignSplicedMateMapLmin per mate length
+    value: { type: float }
+    default: 0.66
+    rank: 5
+  - names: [ --alignWindowsPerReadNmax ]
+    description: most windows per read
+    value: { type: int }
+    default: 10000
+    rank: 5
+  - names: [ --alignTranscriptsPerWindowNmax ]
+    description: most transcripts per window
+    value: { type: int }
+    default: 100
+    rank: 5
+  - names: [ --alignTranscriptsPerReadNmax ]
+    description: most alignments considered per read
+    value: { type: int }
+    default: 10000
+    rank: 5
+  - names: [ --alignEndsType ]
+    description: "read ends: Local (soft-clipping), EndToEnd, Extend5pOfRead1…"
+    value: { type: enum, values: [ Local, EndToEnd, Extend5pOfRead1, Extend5pOfReads12 ] }
+    default: Local
+    rank: 30
+  - names: [ --alignEndsProtrude ]
+    description: "allow mates to protrude past each other: most bases, then ConcordantPair or DiscordantPair"
+    value: { type: enum, values: [ ConcordantPair, DiscordantPair ] }
+    rank: 10
+  - names: [ --alignSoftClipAtReferenceEnds ]
+    description: allow soft-clipping past chromosome ends (No for Cufflinks)
+    value: { type: enum, values: [ Yes, No ] }
+    default: Yes
+    rank: 10
+  - names: [ --alignInsertionFlush ]
+    description: where ambiguous insertions are placed
+    value: { type: enum, values: [ None, Right ] }
+    default: None
+    rank: 10
+  - names: [ --peOverlapNbasesMin ]
+    description: "least overlap for mates to be merged and realigned (0: off)"
+    value: { type: int }
+    default: 0
+    rank: 15
+  - names: [ --peOverlapMMp ]
+    description: largest share of mismatches in the mate overlap
+    value: { type: float }
+    default: 0.01
+    rank: 5
+  - names: [ --winAnchorMultimapNmax ]
+    description: most loci of an anchor
+    value: { type: int }
+    default: 50
+    rank: 15
+  - names: [ --winBinNbits ]
+    description: log2 of the window bin size
+    value: { type: int }
+    default: 16
+    rank: 5
+  - names: [ --winAnchorDistNbins ]
+    description: most bins between two anchors of a window
+    value: { type: int }
+    default: 9
+    rank: 5
+  - names: [ --winFlankNbins ]
+    description: log2 of the window flank size
+    value: { type: int }
+    default: 4
+    rank: 5
+  - names: [ --winReadCoverageRelativeMin ]
+    description: least share of the read covered by seeds (STARlong)
+    value: { type: float }
+    default: 0.5
+    rank: 5
+  - names: [ --winReadCoverageBasesMin ]
+    description: least bases covered by seeds (STARlong)
+    value: { type: int }
+    default: 0
+    rank: 5
+  - names: [ --chimOutType ]
+    description: "chimeric output: Junctions, SeparateSAMold, WithinBAM…"
+    value: { type: enum, values: [ Junctions, SeparateSAMold, WithinBAM ], multiple: true }
+    rank: 35
+  - names: [ --chimSegmentMin ]
+    description: "shortest chimeric segment (0: no chimeric detection)"
+    value: { type: int }
+    default: 0
+    rank: 40
+  - names: [ --chimScoreMin ]
+    description: least total score of the chimeric segments
+    value: { type: int }
+    default: 0
+    rank: 10
+  - names: [ --chimScoreDropMax ]
+    description: largest drop of the chimeric score from the read length
+    value: { type: int }
+    default: 20
+    rank: 10
+  - names: [ --chimScoreSeparation ]
+    description: least score gap between the best chimera and the next
+    value: { type: int }
+    default: 10
+    rank: 10
+  - names: [ --chimScoreJunctionNonGTAG ]
+    description: penalty of a non-GT/AG chimeric junction
+    value: { type: int }
+    default: -1
+    rank: 10
+  - names: [ --chimJunctionOverhangMin ]
+    description: least overhang of a chimeric junction
+    value: { type: int }
+    default: 20
+    rank: 20
+  - names: [ --chimSegmentReadGapMax ]
+    description: largest read gap between chimeric segments
+    value: { type: int }
+    default: 0
+    rank: 10
+  - names: [ --chimFilter ]
+    description: filters of chimeric alignments
+    value: { type: enum, values: [ None, banGenomicN ], multiple: true }
+    rank: 5
+  - names: [ --chimMainSegmentMultNmax ]
+    description: most alignments of the main chimeric segment
+    value: { type: int }
+    default: 10
+    rank: 10
+  - names: [ --chimMultimapNmax ]
+    description: "most chimeric multi-alignments (0: old scheme)"
+    value: { type: enum, values: [ "0" ] }
+    default: "0"
+    rank: 15
+  - names: [ --chimMultimapScoreRange ]
+    description: score range of multi-mapped chimeras
+    value: { type: int }
+    default: 1
+    rank: 5
+  - names: [ --chimNonchimScoreDropMin ]
+    description: score drop of the best non-chimeric alignment that triggers detection
+    value: { type: int }
+    default: 20
+    rank: 5
+  - names: [ --chimOutJunctionFormat ]
+    description: format of Chimeric.out.junction (1 adds comments, for STAR-Fusion)
+    value: { type: enum, values: [ "0", "1" ] }
+    default: "0"
+    rank: 10
+  - names: [ --quantMode ]
+    description: "quantification: GeneCounts (reads per gene) and/or TranscriptomeSAM (for RSEM, salmon)"
+    value: { type: enum, values: [ "-", TranscriptomeSAM, GeneCounts ], multiple: true }
+    rank: 75
+  - names: [ --quantTranscriptomeBAMcompression ]
+    description: compression of the transcriptome BAM (-2 to 10)
+    value: { type: enum, values: [ "-2", "-1", "0", "10" ] }
+    rank: 5
+  - names: [ --quantTranscriptomeSAMoutput ]
+    description: filtering of the transcriptome BAM (BanSingleEnd_BanIndels_ExtendSoftclip for RSEM)
+    value: { type: enum, values: [ BanSingleEnd_BanIndels_ExtendSoftclip, BanSingleEnd, BanSingleEnd_ExtendSoftclip ] }
+    default: BanSingleEnd_BanIndels_ExtendSoftclip
+    rank: 15
+  - names: [ --twopassMode ]
+    description: Basic runs two passes, adding the junctions found in the first
+    value: { type: enum, values: [ None, Basic ] }
+    default: None
+    rank: 60
+  - names: [ --twopass1readsN ]
+    description: reads mapped in the first pass (-1 for all)
+    value: { type: int }
+    default: -1
+    rank: 10
+  - names: [ --waspOutputMode ]
+    description: SAMtag adds the WASP vW tag for allele-specific reads (needs varVCFfile)
+    value: { type: enum, values: [ SAMtag ] }
+    rank: 15
+  - names: [ --soloType ]
+    description: "single-cell protocol: CB_UMI_Simple (10x, Drop-seq), CB_UMI_Complex, SmartSeq…"
+    value: { type: enum, values: [ CB_UMI_Simple, CB_UMI_Complex, CB_samTagOut, SmartSeq ], multiple: true }
+    rank: 55
+  - names: [ --soloCBtype ]
+    description: cell barcode type
+    value: { type: string }
+    default: Sequence
+    rank: 10
+  - names: [ --soloCBwhitelist ]
+    description: files of allowed cell barcodes (None for no list)
+    value: { type: file, multiple: true }
+    rank: 50
+  - names: [ --soloCBstart ]
+    description: start of the cell barcode in the barcode read
+    value: { type: int }
+    default: 1
+    rank: 30
+  - names: [ --soloCBlen ]
+    description: cell barcode length
+    value: { type: int }
+    default: 16
+    rank: 30
+  - names: [ --soloUMIstart ]
+    description: start of the UMI in the barcode read
+    value: { type: int }
+    default: 17
+    rank: 30
+  - names: [ --soloUMIlen ]
+    description: UMI length (12 for 10x v3)
+    value: { type: int }
+    default: 10
+    rank: 30
+  - names: [ --soloBarcodeReadLength ]
+    description: barcode read length (0 to skip the check)
+    value: { type: enum, values: [ "1", "0" ] }
+    default: "1"
+    rank: 15
+  - names: [ --soloBarcodeMate ]
+    description: "mate holding the barcode (0: a separate read)"
+    value: { type: enum, values: [ "0", "1", "2" ] }
+    default: "0"
+    rank: 10
+  - names: [ --soloCBposition ]
+    description: positions of the cell barcodes (CB_UMI_Complex)
+    value: { type: string, multiple: true }
+    rank: 10
+  - names: [ --soloUMIposition ]
+    description: position of the UMI (CB_UMI_Complex)
+    value: { type: string }
+    rank: 10
+  - names: [ --soloAdapterSequence ]
+    description: adapter anchoring the barcodes
+    value: { type: string }
+    rank: 10
+  - names: [ --soloAdapterMismatchesNmax ]
+    description: most mismatches in the adapter
+    value: { type: int }
+    default: 1
+    rank: 5
+  - names: [ --soloCBmatchWLtype ]
+    description: how cell barcodes are matched to the list
+    value: { type: enum, values: [ Exact, 1MM, 1MM_multi, 1MM_multi_pseudocounts, 1MM_multi_Nbase_pseudocounts, EditDist_2 ] }
+    default: 1MM_multi
+    rank: 15
+  - names: [ --soloInputSAMattrBarcodeSeq ]
+    description: SAM tags holding the barcode sequence (SAM input)
+    value: { type: string, multiple: true }
+    rank: 5
+  - names: [ --soloInputSAMattrBarcodeQual ]
+    description: SAM tags holding the barcode qualities (SAM input)
+    value: { type: string, multiple: true }
+    rank: 5
+  - names: [ --soloStrand ]
+    description: strandedness of the library
+    value: { type: enum, values: [ Unstranded, Forward, Reverse ] }
+    default: Forward
+    rank: 20
+  - names: [ --soloFeatures ]
+    description: "features counted: Gene, GeneFull, SJ, Velocyto…"
+    value: { type: enum, values: [ Gene, SJ, GeneFull, GeneFull_ExonOverIntron, GeneFull_Ex50pAS ], multiple: true }
+    rank: 35
+  - names: [ --soloMultiMappers ]
+    description: how reads mapping to several genes are counted
+    value: { type: enum, values: [ Unique, Uniform, Rescue, PropUnique, EM ], multiple: true }
+    rank: 15
+  - names: [ --soloUMIdedup ]
+    description: UMI collapsing method
+    value: { type: enum, values: [ 1MM_All, 1MM_Directional_UMItools, 1MM_Directional, Exact, NoDedup, 1MM_CR ], multiple: true }
+    rank: 15
+  - names: [ --soloUMIfiltering ]
+    description: UMI filtering
+    value: { type: enum, values: [ "-", MultiGeneUMI, MultiGeneUMI_All, MultiGeneUMI_CR ], multiple: true }
+    rank: 10
+  - names: [ --soloOutFileNames ]
+    description: folder and file names of the STARsolo output
+    value: { type: string, multiple: true }
+    rank: 10
+  - names: [ --soloCellFilter ]
+    description: cell calling method and parameters
+    value: { type: enum, values: [ None, TopCells, CellRanger2.2, EmptyDrops_CR ], multiple: true }
+    rank: 25
+  - names: [ --soloOutFormatFeaturesGeneField3 ]
+    description: third field of features.tsv
+    value: { type: string, multiple: true }
+    rank: 5
+  - names: [ --soloCellReadStats ]
+    description: Standard writes read statistics per cell barcode
+    value: { type: enum, values: [ Standard ] }
+    rank: 10
+  - names: [ --soloClusterCBfile ]
+    description: cell barcode clusters, for soloFeatures Gene by cluster
+    value: { type: file }
+    rank: 5

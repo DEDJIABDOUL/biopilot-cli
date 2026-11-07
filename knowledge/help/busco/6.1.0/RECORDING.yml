@@ -1,0 +1,17 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/busco.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: busco
+package: busco
+version: 6.1.0
+build: pyhdfd78af_2
+channel: noarch
+licence: MIT
+copyright: Ezlab, University of Geneva (Mosè Manni et al.), https://gitlab.com/ezlab/busco
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-busco
+used_by_catalog: true
+files:
+  root.txt: busco --help

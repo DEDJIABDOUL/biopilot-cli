@@ -54,6 +54,22 @@ formats:
     kind: dir
     # salmon 1.x writes versionInfo.json; 2.x no longer does, both write refseq.bin.
     marker: [versionInfo.json, refseq.bin]
+  - name: bowtie2-index
+    description: bowtie2 index, named by the prefix given to bowtie2-build
+    kind: prefix
+    suffixes: [".1.bt2", ".rev.1.bt2"]
+  - name: hisat2-index
+    description: hisat2 index, named by the prefix given to hisat2-build
+    kind: prefix
+    suffixes: [".1.ht2", ".2.ht2"]
+  - name: bwa-mem2-index
+    description: bwa-mem2 index, named by the reference it was built from
+    kind: prefix
+    suffixes: [".0123", ".bwt.2bit.64"]
+  - name: star-index
+    description: STAR genome index folder
+    kind: dir
+    marker: genomeParameters.txt
 # part A (ticket #11)
   - name: rad
     description: salmon / piscem mapping records (RAD)

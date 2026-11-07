@@ -1,0 +1,185 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# bwa-mem2 2.3, written from its recorded usages: knowledge/help/bwa-mem2/2.3/ (MIT;
+# attribution in RECORDING.yml next to it) and its documentation
+# (https://github.com/bwa-mem2/bwa-mem2), in our own words (spec decision 31).
+# The 2.3 binary prints 2.2.1 for 'bwa-mem2 version': conda-meta, read first, gives 2.3.
+# The '-o  output file name missing' line of the mem usage is a message, not an option.
+# Ranks follow the shared scale of spec §6.4.
+name: bwa-mem2
+package: bwa-mem2
+description: "Faster BWA-MEM: aligns reads of 70 bp and longer to a reference, writing SAM"
+version: { args: [ version ], regex: "^(\\d[\\w.]*)" }
+help: []
+commands:
+  - name: index
+    help: [ index ]
+    description: build the bwa-mem2 index of a reference FASTA (not compatible with bwa's)
+    options:
+      - names: [ -p ]
+        description: prefix of the index files (the FASTA name by default)
+        value: { type: string }
+        rank: 50
+    arguments:
+      - name: in.fasta
+        description: reference to index
+        value: { type: file, format: fasta }
+  - name: mem
+    help: [ mem ]
+    description: align reads with the BWA-MEM algorithm
+    options:
+      - names: [ -t ]
+        description: threads
+        value: { type: int }
+        default: 1
+        rank: 90
+      - names: [ -o ]
+        description: SAM output file (standard output by default)
+        value: { type: file, format: sam }
+        rank: 85
+      - names: [ -R ]
+        description: read group line, e.g. '@RG\tID:s1\tSM:sample1\tPL:ILLUMINA' (needed by GATK)
+        value: { type: string }
+        rank: 80
+      - names: [ -M ]
+        description: mark shorter split hits as secondary (for Picard and older tools)
+        rank: 55
+      - names: [ -p ]
+        description: "smart pairing: the first file holds interleaved pairs"
+        rank: 35
+      - names: [ -k ]
+        description: shortest seed
+        value: { type: int }
+        default: 19
+        rank: 35
+      - names: [ -w ]
+        description: band width of the banded alignment
+        value: { type: int }
+        default: 100
+        rank: 20
+      - names: [ -d ]
+        description: off-diagonal X-dropoff
+        value: { type: int }
+        default: 100
+        rank: 15
+      - names: [ -r ]
+        description: look for internal seeds within seeds longer than -k times this
+        value: { type: float }
+        default: 1.5
+        rank: 15
+      - names: [ -y ]
+        description: seed occurrence of the third seeding round
+        value: { type: int }
+        default: 20
+        rank: 10
+      - names: [ -c ]
+        description: skip seeds with more occurrences than this
+        value: { type: int }
+        default: 500
+        rank: 15
+      - names: [ -D ]
+        description: drop chains shorter than this share of the longest overlapping chain
+        value: { type: float }
+        default: 0.5
+        rank: 10
+      - names: [ -W ]
+        description: drop chains whose seeded bases are fewer than this
+        value: { type: int }
+        default: 0
+        rank: 10
+      - names: [ -m ]
+        description: most rounds of mate rescue per read
+        value: { type: int }
+        default: 50
+        rank: 10
+      - names: [ -S ]
+        description: skip mate rescue
+        rank: 15
+      - names: [ -P ]
+        description: skip pairing (mate rescue still runs unless -S)
+        rank: 15
+      - names: [ -A ]
+        description: match score; scales -T, -d, -B, -O, -E, -L and -U unless they are set
+        value: { type: int }
+        default: 1
+        rank: 15
+      - names: [ -B ]
+        description: mismatch penalty
+        value: { type: int }
+        default: 4
+        rank: 20
+      - names: [ -O ]
+        description: gap open penalties for deletions and insertions, e.g. 6,6
+        value: { type: string }
+        rank: 15
+      - names: [ -E ]
+        description: gap extension penalties, e.g. 1,1
+        value: { type: string }
+        rank: 15
+      - names: [ -L ]
+        description: clipping penalties at the 5' and 3' ends, e.g. 5,5
+        value: { type: string }
+        rank: 15
+      - names: [ -U ]
+        description: penalty of an unpaired read pair
+        value: { type: int }
+        default: 17
+        rank: 10
+      - names: [ -H ]
+        description: "header lines: text starting with @, or a file of lines"
+        value: { type: string }
+        rank: 20
+      - names: [ -j ]
+        description: treat ALT contigs as primary (ignore the .alt file)
+        rank: 15
+      - names: [ "-5" ]
+        description: for split alignments, the one with the smallest coordinate is primary
+        rank: 20
+      - names: [ -q ]
+        description: do not change the MAPQ of supplementary alignments
+        rank: 15
+      - names: [ -K ]
+        description: bases processed per batch whatever the threads (for reproducible output)
+        value: { type: int }
+        rank: 25
+      - names: [ -v ]
+        description: "verbosity: 1 errors, 2 warnings, 3 messages, 4+ debugging"
+        value: { type: int }
+        default: 3
+        rank: 15
+      - names: [ -T ]
+        description: least score of an alignment written
+        value: { type: int }
+        default: 30
+        rank: 25
+      - names: [ -h ]
+        description: if fewer hits than this score above 80% of the best, list them all in XA (e.g. 5,200)
+        value: { type: string }
+        rank: 10
+      - names: [ -a ]
+        description: write every alignment of single or unpaired reads
+        rank: 20
+      - names: [ -C ]
+        description: append the FASTA/FASTQ comment to the SAM record
+        rank: 20
+      - names: [ -V ]
+        description: write the reference FASTA header in the XR tag
+        rank: 10
+      - names: [ -Y ]
+        description: soft-clip supplementary alignments
+        rank: 30
+      - names: [ -I ]
+        description: "insert size: mean, standard deviation, max and min (FR orientation only)"
+        value: { type: string }
+        rank: 15
+    arguments:
+      - name: idxbase
+        description: prefix of the bwa-mem2 index of the reference
+        value: { type: file, format: bwa-mem2-index }
+      - name: in1.fq
+        description: reads, or read 1 of the pairs
+        value: { type: file, format: [ fastq, fasta ], read_role: 1 }
+      - name: in2.fq
+        description: read 2 of the pairs, for paired-end data
+        value: { type: file, format: [ fastq, fasta ], read_role: 2, mate_of: in1.fq, optional: true }
+  - name: version
+    description: print the version

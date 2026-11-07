@@ -1,0 +1,63 @@
+Java memory size is set to 1200M
+Launching application...
+
+QualiMap v.2.3
+Built on 2023-05-19 16:57
+
+Selected tool: bamqc
+
+ERROR: Missing required option: bam
+
+usage: qualimap bamqc -bam <arg> [-c] [-cl <arg>] [-dl <arg>] [-gd <arg>] [-gff
+       <arg>] [-hm <arg>] [-ip] [-nr <arg>] [-nt <arg>] [-nw <arg>] [-oc <arg>]
+       [-os] [-outdir <arg>] [-outfile <arg>] [-outformat <arg>] [-p <arg>]
+       [-sd] [-sdmode <arg>]
+ -bam <arg>                           Input mapping file in BAM format
+ -c,--paint-chromosome-limits         Paint chromosome limits inside charts
+ -cl,--cov-hist-lim <arg>             Upstream limit for targeted per-bin
+                                      coverage histogram (default is 50X)
+ -dl,--dup-rate-lim <arg>             Upstream limit for duplication rate
+                                      historgram (default is 50)
+ -gd,--genome-gc-distr <arg>          Species to compare with genome GC
+                                      distribution. Possible values: HUMAN -
+                                      hg19, hg38; MOUSE - mm9(default), mm10
+ -gff,--feature-file <arg>            Feature file with regions of interest in
+                                      GFF/GTF or BED format
+ -hm <arg>                            Minimum size of a homopolymer to be
+                                      considered in indel analysis (default is
+                                      3)
+ -ip,--collect-overlap-pairs          Activate this option to collect statistics
+                                      of overlapping paired-end reads
+ -nr <arg>                            Number of reads analyzed in a chunk
+                                      (default is 1000)
+ -nt <arg>                            Number of threads (default is 16)
+ -nw <arg>                            Number of windows (default is 400)
+ -oc,--output-genome-coverage <arg>   File to save per base non-zero coverage.
+                                      Warning: large files are expected for
+                                      large genomes
+ -os,--outside-stats                  Report information for the regions outside
+                                      those defined by feature-file  (ignored
+                                      when -gff option is not set)
+ -outdir <arg>                        Output folder for HTML report and raw
+                                      data.
+ -outfile <arg>                       Output file for PDF report (default value
+                                      is report.pdf).
+ -outformat <arg>                     Format of the output report (PDF, HTML or
+                                      both PDF:HTML, default is HTML).
+ -p,--sequencing-protocol <arg>       Sequencing library protocol:
+                                      strand-specific-forward,
+                                      strand-specific-reverse or
+                                      non-strand-specific (default)
+ -sd,--skip-duplicated                Activate this option to skip duplicated
+                                      alignments from the analysis. If the
+                                      duplicates are not flagged in the BAM
+                                      file, then they will be detected by
+                                      Qualimap and can be selected for skipping.
+ -sdmode,--skip-dup-mode <arg>        Specific type of duplicated alignments to
+                                      skip (if this option is activated).
+                                      0 : only flagged duplicates (default)
+                                      1 : only estimated by Qualimap
+                                      2 : both flagged and estimated
+
+
+

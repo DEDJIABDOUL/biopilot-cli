@@ -1,0 +1,2510 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Picard 3.5.0, written from its recorded helps: knowledge/help/picard/3.5.0/ (MIT;
+# attribution in RECORDING.yml next to it) and its documentation
+# (https://broadinstitute.github.io/picard), in our own words (spec decision 31).
+# Only the most used of Picard's tools are described: the 20 recorded. Arguments use the
+# --NAME value form (the legacy NAME=value form is not completed); a Boolean takes true or false.
+# Ranks follow the shared scale of spec §6.4.
+name: picard
+package: picard
+description: "Broad Institute tools for SAM/BAM/CRAM and VCF files: sorting, duplicates, read groups, QC metrics"
+version: { args: [ SortSam, --version ], regex: "Version:\\s*(\\d[\\w.]*)" }
+help: [ -h ]
+commands:
+  - name: SortSam
+    help: [ SortSam, -h ]
+    description: sort a SAM, BAM or CRAM file by coordinate, read name or duplicate order
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments to sort
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: sorted alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --SORT_ORDER, -SO ]
+        description: "order: coordinate (for indexing and most tools), queryname (pairs together) or duplicate"
+        value: { type: enum, values: [ coordinate, queryname, duplicate ] }
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: MarkDuplicates
+    help: [ MarkDuplicates, -h ]
+    description: mark (or remove) duplicate reads in coordinate-sorted alignments
+    options:
+      - names: [ --INPUT, -I ]
+        description: coordinate-sorted alignments (repeatable)
+        value: { type: file, format: [ bam, sam, cram ] }
+        repeatable: true
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: alignments with duplicates flagged
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --METRICS_FILE, -M ]
+        description: file for the duplication metrics
+        value: { type: file }
+        rank: 85
+      - names: [ --REMOVE_DUPLICATES ]
+        description: leave duplicates out of the output instead of flagging them
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 60
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --OPTICAL_DUPLICATE_PIXEL_DISTANCE ]
+        description: largest distance between optical duplicate clusters (2500 for patterned flow cells)
+        value: { type: int }
+        default: 100
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --REMOVE_SEQUENCING_DUPLICATES ]
+        description: leave out optical and other sequencing duplicates only
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 35
+      - names: [ --TAGGING_POLICY ]
+        description: duplicate types recorded in the DT tag
+        value: { type: enum, values: [ DontTag, OpticalOnly, All ] }
+        default: DontTag
+        rank: 35
+      - names: [ --ASSUME_SORT_ORDER, -ASO ]
+        description: take the input as having this order, whatever its header says
+        value: { type: enum, values: [ unsorted, queryname, coordinate, duplicate, unknown ] }
+        rank: 30
+      - names: [ --BARCODE_TAG ]
+        description: SAM tag of the molecule barcode (e.g. BC for 10X)
+        value: { type: string }
+        rank: 30
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --DUPLICATE_SCORING_STRATEGY, -DS ]
+        description: how the read kept among duplicates is chosen
+        value: { type: enum, values: [ SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM ] }
+        default: SUM_OF_BASE_QUALITIES
+        rank: 25
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --READ_NAME_REGEX ]
+        description: regular expression extracting tile and cluster position from read names (null disables optical detection)
+        value: { type: string }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --ASSUME_SORTED, -AS ]
+        description: "take the input as coordinate-sorted (deprecated: ASSUME_SORT_ORDER)"
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --DUPLEX_UMI ]
+        description: "UMIs are duplex: two halves joined by a hyphen"
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --FLOW_MODE ]
+        description: behaviour for flow-based reads (Ultima)
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --MOLECULAR_IDENTIFIER_TAG ]
+        description: SAM tag identifying each molecule (needs BARCODE_TAG)
+        value: { type: string }
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --READ_ONE_BARCODE_TAG ]
+        description: SAM tag of the read 1 barcode
+        value: { type: string }
+        rank: 15
+      - names: [ --READ_TWO_BARCODE_TAG ]
+        description: SAM tag of the read 2 barcode
+        value: { type: string }
+        rank: 15
+      - names: [ --TAG_DUPLICATE_SET_MEMBERS ]
+        description: add the duplicate set size (DS) and index (DI) tags
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --ADD_PG_TAG_TO_READS ]
+        description: add the PG tag to each read
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 10
+      - names: [ --CLEAR_DT ]
+        description: clear existing DT tags
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 10
+      - names: [ --COMMENT, -CO ]
+        description: comment lines added to the header (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 10
+      - names: [ --MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, -MAX_FILE_HANDLES ]
+        description: most files kept open when spilling to disk (keep under ulimit -n)
+        value: { type: int }
+        default: 8000
+        rank: 10
+      - names: [ --MAX_OPTICAL_DUPLICATE_SET_SIZE ]
+        description: largest duplicate set checked for optical duplicates
+        value: { type: int }
+        default: 300000
+        rank: 10
+      - names: [ --PROGRAM_RECORD_ID, -PG ]
+        description: ID of the @PG record added (null adds none)
+        value: { type: string }
+        default: MarkDuplicates
+        rank: 10
+      - names: [ --SORTING_COLLECTION_SIZE_RATIO ]
+        description: share of the memory given to sorting collections; lower it on memory errors
+        value: { type: float }
+        default: 0.25
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --FLOW_DUP_STRATEGY ]
+        description: with FLOW_MODE, how the read kept is chosen
+        value: { type: enum, values: [ FLOW_QUALITY_SUM_STRATEGY, FLOW_END_QUALITY_STRATEGY ] }
+        default: FLOW_QUALITY_SUM_STRATEGY
+        rank: 5
+      - names: [ --FLOW_EFFECTIVE_QUALITY_THRESHOLD ]
+        description: with FLOW_MODE, quality counted as high
+        value: { type: int }
+        default: 15
+        rank: 5
+      - names: [ --FLOW_Q_IS_KNOWN_END ]
+        description: with FLOW_MODE, a quality-trimmed end counts as known
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+      - names: [ --FLOW_SKIP_FIRST_N_FLOWS ]
+        description: with FLOW_MODE, flows ignored at the read start
+        value: { type: int }
+        default: 0
+        rank: 5
+      - names: [ --FLOW_UNPAIRED_END_UNCERTAINTY ]
+        description: with FLOW_MODE, end positions this close count as equal
+        value: { type: int }
+        default: 0
+        rank: 5
+      - names: [ --FLOW_UNPAIRED_START_UNCERTAINTY ]
+        description: with FLOW_MODE, start positions this close count as equal
+        value: { type: int }
+        default: 0
+        rank: 5
+      - names: [ --FLOW_USE_END_IN_UNPAIRED_READS ]
+        description: with FLOW_MODE, single reads also compare their end
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+      - names: [ --FLOW_USE_UNPAIRED_CLIPPED_END ]
+        description: with FLOW_MODE, use the clipped end position
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+      - names: [ --MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP, -MAX_SEQS ]
+        description: obsolete, ignored
+        value: { type: int }
+        default: 50000
+        rank: 5
+      - names: [ --PROGRAM_GROUP_COMMAND_LINE, -PG_COMMAND ]
+        description: CL of the @PG record
+        value: { type: string }
+        rank: 5
+      - names: [ --PROGRAM_GROUP_NAME, -PG_NAME ]
+        description: PN of the @PG record
+        value: { type: string }
+        default: MarkDuplicates
+        rank: 5
+      - names: [ --PROGRAM_GROUP_VERSION, -PG_VERSION ]
+        description: VN of the @PG record
+        value: { type: string }
+        rank: 5
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: CollectAlignmentSummaryMetrics
+    help: [ CollectAlignmentSummaryMetrics, -h ]
+    description: "alignment summary metrics: reads aligned, mismatch rate, read length, chimeras"
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: metrics file
+        value: { type: file }
+        rank: 90
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --HISTOGRAM_FILE, -H ]
+        description: PDF of the read length histogram
+        value: { type: file }
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --IS_BISULFITE_SEQUENCED, -BS ]
+        description: bisulfite-sequenced reads
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 25
+      - names: [ --METRIC_ACCUMULATION_LEVEL, -LEVEL ]
+        description: levels the metrics are computed at (repeatable)
+        value: { type: enum, values: [ ALL_READS, SAMPLE, LIBRARY, READ_GROUP ] }
+        repeatable: true
+        rank: 25
+      - names: [ --ASSUME_SORTED, -AS ]
+        description: ignore the sort order of the header
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --EXPECTED_PAIR_ORIENTATIONS ]
+        description: orientations of normal pairs; others count as chimeras
+        value: { type: enum, values: [ FR, RF, TANDEM ] }
+        repeatable: true
+        rank: 20
+      - names: [ --MAX_INSERT_SIZE ]
+        description: pairs above this insert size count as chimeras
+        value: { type: int }
+        default: 100000
+        rank: 20
+      - names: [ --ADAPTER_SEQUENCE ]
+        description: adapter sequences (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 15
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --COLLECT_ALIGNMENT_INFORMATION ]
+        description: false counts reads only
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 10
+      - names: [ --STOP_AFTER ]
+        description: stop after this many reads (for tests)
+        value: { type: int }
+        default: 0
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: CollectInsertSizeMetrics
+    help: [ CollectInsertSizeMetrics, -h ]
+    description: insert size distribution of read pairs, with a histogram
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: metrics file
+        value: { type: file }
+        rank: 90
+      - names: [ --Histogram_FILE, -H ]
+        description: PDF of the insert size histogram
+        value: { type: file }
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --INCLUDE_DUPLICATES ]
+        description: include reads flagged as duplicates
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 25
+      - names: [ --METRIC_ACCUMULATION_LEVEL, -LEVEL ]
+        description: levels the metrics are computed at (repeatable)
+        value: { type: enum, values: [ ALL_READS, SAMPLE, LIBRARY, READ_GROUP ] }
+        repeatable: true
+        rank: 25
+      - names: [ --MINIMUM_PCT, -M ]
+        description: leave out pair orientations below this share of the reads
+        value: { type: float }
+        default: 0.05
+        rank: 25
+      - names: [ --ASSUME_SORTED, -AS ]
+        description: ignore the sort order of the header
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --HISTOGRAM_WIDTH, -W ]
+        description: width of the histogram, instead of the automatic one
+        value: { type: int }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --DEVIATIONS ]
+        description: trim the data at median + this many median absolute deviations
+        value: { type: float }
+        default: 10
+        rank: 15
+      - names: [ --MIN_HISTOGRAM_WIDTH, -MW ]
+        description: least width of the histogram
+        value: { type: int }
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --STOP_AFTER ]
+        description: stop after this many reads (for tests)
+        value: { type: int }
+        default: 0
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: CollectWgsMetrics
+    help: [ CollectWgsMetrics, -h ]
+    description: coverage and quality metrics of whole-genome sequencing
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: metrics file
+        value: { type: file }
+        rank: 90
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --MINIMUM_BASE_QUALITY, -Q ]
+        description: lowest base quality counted
+        value: { type: int }
+        default: 20
+        rank: 45
+      - names: [ --MINIMUM_MAPPING_QUALITY, -MQ ]
+        description: lowest mapping quality counted
+        value: { type: int }
+        default: 20
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --INTERVALS ]
+        description: restrict the metrics to these intervals
+        value: { type: file, format: [ interval-list, bed ] }
+        rank: 40
+      - names: [ --COVERAGE_CAP, -CAP ]
+        description: coverage above this counts as this
+        value: { type: int }
+        default: 250
+        rank: 30
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --USE_FAST_ALGORITHM ]
+        description: faster algorithm
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 30
+      - names: [ --COUNT_UNPAIRED ]
+        description: count unpaired reads and pairs with one end unmapped
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 25
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --INCLUDE_BQ_HISTOGRAM ]
+        description: add the base quality histogram
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --READ_LENGTH ]
+        description: mean read length
+        value: { type: int }
+        default: 150
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --ALLELE_FRACTION ]
+        description: allele fractions of the theoretical sensitivity (repeatable)
+        value: { type: float }
+        repeatable: true
+        rank: 10
+      - names: [ --LOCUS_ACCUMULATION_CAP ]
+        description: reads beyond this coverage are ignored entirely
+        value: { type: int }
+        default: 100000
+        rank: 10
+      - names: [ --SAMPLE_SIZE ]
+        description: sample size of the theoretical sensitivity
+        value: { type: int }
+        default: 10000
+        rank: 10
+      - names: [ --STOP_AFTER ]
+        description: stop after this many genomic bases (for tests)
+        value: { type: int }
+        default: -1
+        rank: 10
+      - names: [ --THEORETICAL_SENSITIVITY_OUTPUT ]
+        description: file for the theoretical sensitivity metrics
+        value: { type: file }
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: CollectMultipleMetrics
+    help: [ CollectMultipleMetrics, -h ]
+    description: several metrics programs in one pass over the alignments
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: base name of the metrics files
+        value: { type: string }
+        rank: 90
+      - names: [ --PROGRAM ]
+        description: metrics programs to run (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 70
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --DO_NOT_CREATE_PLOTS ]
+        description: write no plots
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 25
+      - names: [ --INTERVALS ]
+        description: restrict the programs that support it to these intervals
+        value: { type: file, format: [ interval-list, bed ] }
+        rank: 25
+      - names: [ --METRIC_ACCUMULATION_LEVEL, -LEVEL ]
+        description: levels the metrics are computed at (repeatable)
+        value: { type: enum, values: [ ALL_READS, SAMPLE, LIBRARY, READ_GROUP ] }
+        repeatable: true
+        rank: 25
+      - names: [ --REF_FLAT ]
+        description: gene annotations, refFlat format (for RNA-seq metrics)
+        value: { type: file }
+        rank: 25
+      - names: [ --ASSUME_SORTED, -AS ]
+        description: ignore the sort order of the header
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --DB_SNP ]
+        description: known variants, VCF, left out by some programs
+        value: { type: file, format: [ vcf, bcf ] }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --EXTRA_ARGUMENT ]
+        description: argument for one program, as PROGRAM::ARGUMENT=VALUE (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 15
+      - names: [ --FILE_EXTENSION, -EXT ]
+        description: extension added to every metrics file name
+        value: { type: string }
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --IGNORE_SEQUENCE ]
+        description: reads on these sequences count as ignored (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 10
+      - names: [ --INCLUDE_UNPAIRED, -UNPAIRED ]
+        description: include unpaired reads in the sequencing artifact metrics
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --STOP_AFTER ]
+        description: stop after this many reads (for tests)
+        value: { type: int }
+        default: 0
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: CollectHsMetrics
+    help: [ CollectHsMetrics, -h ]
+    description: "hybrid-selection (exome, panel) metrics: on-target rate, coverage of targets"
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: metrics file
+        value: { type: file }
+        rank: 90
+      - names: [ --BAIT_INTERVALS, -BI ]
+        description: intervals of the baits (repeatable)
+        value: { type: file, format: interval-list }
+        repeatable: true
+        rank: 85
+      - names: [ --TARGET_INTERVALS, -TI ]
+        description: intervals of the targets (repeatable)
+        value: { type: file, format: interval-list }
+        repeatable: true
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --MINIMUM_BASE_QUALITY, -Q ]
+        description: lowest base quality counted
+        value: { type: int }
+        default: 20
+        rank: 40
+      - names: [ --MINIMUM_MAPPING_QUALITY, -MQ ]
+        description: lowest mapping quality counted
+        value: { type: int }
+        default: 20
+        rank: 40
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --PER_TARGET_COVERAGE ]
+        description: file for the coverage of each target
+        value: { type: file }
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --METRIC_ACCUMULATION_LEVEL, -LEVEL ]
+        description: levels the metrics are computed at (repeatable)
+        value: { type: enum, values: [ ALL_READS, SAMPLE, LIBRARY, READ_GROUP ] }
+        repeatable: true
+        rank: 25
+      - names: [ --BAIT_SET_NAME, -N ]
+        description: name of the bait set (from the file name by default)
+        value: { type: string }
+        rank: 20
+      - names: [ --CLIP_OVERLAPPING_READS ]
+        description: clip the overlap of read pairs
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --COVERAGE_CAP, -covMax ]
+        description: coverage cap of the theoretical sensitivity
+        value: { type: int }
+        default: 200
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --INCLUDE_INDELS ]
+        description: count inserted and deleted bases
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --NEAR_DISTANCE ]
+        description: largest distance to a bait for a read to count as near it
+        value: { type: int }
+        default: 250
+        rank: 15
+      - names: [ --PER_BASE_COVERAGE ]
+        description: file for the coverage of each target base (large)
+        value: { type: file }
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --ALLELE_FRACTION ]
+        description: allele fractions of the theoretical sensitivity (repeatable)
+        value: { type: float }
+        repeatable: true
+        rank: 10
+      - names: [ --SAMPLE_SIZE ]
+        description: sample size of the theoretical sensitivity
+        value: { type: int }
+        default: 10000
+        rank: 10
+      - names: [ --THEORETICAL_SENSITIVITY_OUTPUT ]
+        description: file for the theoretical sensitivity metrics
+        value: { type: file }
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: CollectRnaSeqMetrics
+    help: [ CollectRnaSeqMetrics, -h ]
+    description: "RNA-seq metrics: bases in exons, introns, intergenic, rRNA; coverage along transcripts"
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: metrics file
+        value: { type: file }
+        rank: 90
+      - names: [ --REF_FLAT ]
+        description: gene annotations, refFlat format
+        value: { type: file }
+        rank: 85
+      - names: [ --STRAND_SPECIFICITY, -STRAND ]
+        description: strandedness of the library (SECOND_READ for dUTP / TruSeq stranded)
+        value: { type: enum, values: [ NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND ] }
+        rank: 80
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --RIBOSOMAL_INTERVALS ]
+        description: intervals of the rRNA genes
+        value: { type: file, format: interval-list }
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --CHART_OUTPUT, -CHART ]
+        description: PDF of the coverage along transcripts
+        value: { type: file }
+        rank: 40
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --METRIC_ACCUMULATION_LEVEL, -LEVEL ]
+        description: levels the metrics are computed at (repeatable)
+        value: { type: enum, values: [ ALL_READS, SAMPLE, LIBRARY, READ_GROUP ] }
+        repeatable: true
+        rank: 25
+      - names: [ --ASSUME_SORTED, -AS ]
+        description: ignore the sort order of the header
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --END_BIAS_BASES ]
+        description: bases at each transcript end used for the 5' and 3' bias
+        value: { type: int }
+        default: 100
+        rank: 15
+      - names: [ --MINIMUM_LENGTH ]
+        description: shortest transcript used for coverage values
+        value: { type: int }
+        default: 500
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --IGNORE_SEQUENCE ]
+        description: reads on these sequences count as ignored (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 10
+      - names: [ --RRNA_FRAGMENT_PERCENTAGE ]
+        description: share of a fragment overlapping rRNA for it to count as rRNA
+        value: { type: float }
+        default: 0.8
+        rank: 10
+      - names: [ --STOP_AFTER ]
+        description: stop after this many reads (for tests)
+        value: { type: int }
+        default: 0
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: AddOrReplaceReadGroups
+    help: [ AddOrReplaceReadGroups, -h ]
+    description: set the read group of every read (needed by GATK)
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: alignments with the new read group
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --RGSM, -SM ]
+        description: sample name
+        value: { type: string }
+        rank: 85
+      - names: [ --RGLB, -LB ]
+        description: library
+        value: { type: string }
+        rank: 80
+      - names: [ --RGPL, -PL ]
+        description: platform, e.g. ILLUMINA
+        value: { type: string }
+        rank: 80
+      - names: [ --RGPU, -PU ]
+        description: platform unit, e.g. flowcell.lane.barcode
+        value: { type: string }
+        rank: 75
+      - names: [ --RGID, -ID ]
+        description: read group ID
+        value: { type: string }
+        default: "1"
+        rank: 70
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --SORT_ORDER, -SO ]
+        description: sort order of the output (that of the input by default)
+        value: { type: enum, values: [ unsorted, queryname, coordinate, duplicate, unknown ] }
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --RGCN, -CN ]
+        description: sequencing centre
+        value: { type: string }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --RGDS, -DS ]
+        description: description
+        value: { type: string }
+        rank: 15
+      - names: [ --RGDT, -DT ]
+        description: run date (ISO 8601)
+        value: { type: string }
+        rank: 15
+      - names: [ --RGPI, -PI ]
+        description: predicted insert size
+        value: { type: int }
+        rank: 15
+      - names: [ --RGPM, -PM ]
+        description: platform model
+        value: { type: string }
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --RGPG, -PG ]
+        description: program group
+        value: { type: string }
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --RGFO, -FO ]
+        description: flow order
+        value: { type: string }
+        rank: 5
+      - names: [ --RGKS, -KS ]
+        description: key sequence
+        value: { type: string }
+        rank: 5
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: CreateSequenceDictionary
+    help: [ CreateSequenceDictionary, -h ]
+    description: write the sequence dictionary (.dict) of a reference FASTA
+    options:
+      - names: [ --REFERENCE, -R ]
+        description: reference FASTA, plain or gzipped
+        value: { type: file, format: fasta }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: dictionary file (reference name with .dict by default)
+        value: { type: file, format: dict }
+        rank: 70
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --GENOME_ASSEMBLY, -AS ]
+        description: assembly name written in the AS field
+        value: { type: string }
+        rank: 25
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --SPECIES, -SP ]
+        description: species written in the SP field
+        value: { type: string }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --TRUNCATE_NAMES_AT_WHITESPACE ]
+        description: name each sequence by the first word of its header
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 15
+      - names: [ --URI, -UR ]
+        description: URI written in the UR field (the reference by default)
+        value: { type: string }
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --ALT_NAMES, -AN ]
+        description: file of alternative contig names
+        value: { type: file }
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --NUM_SEQUENCES ]
+        description: stop after this many sequences (for tests)
+        value: { type: int }
+        default: 2147483647
+        rank: 5
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: MergeSamFiles
+    help: [ MergeSamFiles, -h ]
+    description: merge several SAM, BAM or CRAM files into one
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments to merge (repeatable)
+        value: { type: file, format: [ bam, sam, cram ] }
+        repeatable: true
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: merged alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --SORT_ORDER, -SO ]
+        description: sort order of the output
+        value: { type: enum, values: [ unsorted, queryname, coordinate, duplicate, unknown ] }
+        default: coordinate
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --USE_THREADING ]
+        description: compress and write in a background thread (faster, more CPU)
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --MERGE_SEQUENCE_DICTIONARIES, -MSD ]
+        description: merge the sequence dictionaries of the inputs
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --ASSUME_SORTED, -AS ]
+        description: take the inputs as already in the output order
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 25
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --INTERVALS, -RGN ]
+        description: merge only the reads of these intervals (indexed inputs)
+        value: { type: file, format: [ interval-list, bed ] }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --COMMENT, -CO ]
+        description: comment lines added to the header (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: ValidateSamFile
+    help: [ ValidateSamFile, -h ]
+    description: check a SAM, BAM or CRAM file against the SAM specification
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments to check
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --MODE, -M ]
+        description: VERBOSE lists each problem, SUMMARY counts them
+        value: { type: enum, values: [ VERBOSE, SUMMARY ] }
+        default: VERBOSE
+        rank: 75
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --IGNORE ]
+        description: error types to ignore (repeatable)
+        value: { type: enum, values: [ INVALID_QUALITY_FORMAT, INVALID_FLAG_PROPER_PAIR, INVALID_FLAG_MATE_UNMAPPED, MISMATCH_FLAG_MATE_UNMAPPED, INVALID_FLAG_MATE_NEG_STRAND, MISMATCH_FLAG_MATE_NEG_STRAND, INVALID_FLAG_FIRST_OF_PAIR, INVALID_FLAG_SECOND_OF_PAIR, PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND, INVALID_FLAG_NOT_PRIM_ALIGNMENT, INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT, INVALID_FLAG_READ_UNMAPPED, INVALID_INSERT_SIZE, INVALID_MAPPING_QUALITY, INVALID_CIGAR, ADJACENT_INDEL_IN_CIGAR, INVALID_MATE_REF_INDEX, MISMATCH_MATE_REF_INDEX, INVALID_REFERENCE_INDEX, INVALID_ALIGNMENT_START, MISMATCH_MATE_ALIGNMENT_START, MATE_FIELD_MISMATCH, INVALID_TAG_NM, MISSING_TAG_NM, MISSING_HEADER, MISSING_SEQUENCE_DICTIONARY, MISSING_READ_GROUP, RECORD_OUT_OF_ORDER, READ_GROUP_NOT_FOUND, RECORD_MISSING_READ_GROUP, INVALID_INDEXING_BIN, MISSING_VERSION_NUMBER, INVALID_VERSION_NUMBER, TRUNCATED_FILE, MISMATCH_READ_LENGTH_AND_QUALS_LENGTH, EMPTY_READ, CIGAR_MAPS_OFF_REFERENCE, MISMATCH_READ_LENGTH_AND_E2_LENGTH, MISMATCH_READ_LENGTH_AND_U2_LENGTH, E2_BASE_EQUALS_PRIMARY_BASE, BAM_FILE_MISSING_TERMINATOR_BLOCK, UNRECOGNIZED_HEADER_TYPE, POORLY_FORMATTED_HEADER_TAG, HEADER_TAG_MULTIPLY_DEFINED, HEADER_RECORD_MISSING_REQUIRED_TAG, HEADER_TAG_NON_CONFORMING_VALUE, INVALID_DATE_STRING, TAG_VALUE_TOO_LARGE, INVALID_INDEX_FILE_POINTER, INVALID_PREDICTED_MEDIAN_INSERT_SIZE, DUPLICATE_READ_GROUP_ID, MISSING_PLATFORM_VALUE, INVALID_PLATFORM_VALUE, DUPLICATE_PROGRAM_GROUP_ID, MATE_NOT_FOUND, MATES_ARE_SAME_END, MISMATCH_MATE_CIGAR_STRING, MATE_CIGAR_STRING_INVALID_PRESENCE, INVALID_UNPAIRED_MATE_REFERENCE, INVALID_UNALIGNED_MATE_START, MISMATCH_CIGAR_SEQ_LENGTH, MISMATCH_SEQ_QUAL_LENGTH, MISMATCH_FILE_SEQ_DICT, QUALITY_NOT_STORED, DUPLICATE_SAM_TAG, CG_TAG_FOUND_IN_ATTRIBUTES, REF_SEQ_TOO_LONG_FOR_BAI, HEADER_TAG_INVALID_KEY ] }
+        repeatable: true
+        rank: 40
+      - names: [ --IGNORE_WARNINGS ]
+        description: report errors only
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 40
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --OUTPUT, -O ]
+        description: report file (standard output by default)
+        value: { type: file }
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --INDEX_VALIDATION_STRINGENCY ]
+        description: how thoroughly the BAM index is checked
+        value: { type: enum, values: [ EXHAUSTIVE, LESS_EXHAUSTIVE, NONE ] }
+        default: EXHAUSTIVE
+        rank: 20
+      - names: [ --MAX_OUTPUT, -MO ]
+        description: most lines printed in verbose mode
+        value: { type: int }
+        default: 100
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --IS_BISULFITE_SEQUENCED, -BISULFITE ]
+        description: "bisulfite reads: C to T is not a mismatch for NM"
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --MAX_OPEN_TEMP_FILES ]
+        description: most temporary files kept open
+        value: { type: int }
+        default: 8000
+        rank: 10
+      - names: [ --SKIP_MATE_VALIDATION, -SMV ]
+        description: do not check mate information
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --VALIDATE_INDEX ]
+        description: "check the BAM index (deprecated: INDEX_VALIDATION_STRINGENCY)"
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 5
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: BuildBamIndex
+    help: [ BuildBamIndex, -h ]
+    description: index a coordinate-sorted BAM file (.bai)
+    options:
+      - names: [ --INPUT, -I ]
+        description: coordinate-sorted BAM
+        value: { type: file, format: bam }
+        rank: 95
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --OUTPUT, -O ]
+        description: index file (input name with .bai by default)
+        value: { type: file, format: bai }
+        rank: 40
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: FastqToSam
+    help: [ FastqToSam, -h ]
+    description: turn FASTQ reads into an unaligned BAM, with a read group
+    options:
+      - names: [ --FASTQ, -F1 ]
+        description: reads, or read 1 of the pairs (plain or gzipped)
+        value: { type: file, format: fastq }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: unaligned BAM, SAM or CRAM
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --SAMPLE_NAME, -SM ]
+        description: sample name of the read group
+        value: { type: string }
+        rank: 85
+      - names: [ --FASTQ2, -F2 ]
+        description: read 2 of the pairs
+        value: { type: file, format: fastq }
+        rank: 85
+      - names: [ --LIBRARY_NAME, -LB ]
+        description: library name
+        value: { type: string }
+        rank: 50
+      - names: [ --PLATFORM, -PL ]
+        description: platform, e.g. ILLUMINA
+        value: { type: string }
+        rank: 50
+      - names: [ --READ_GROUP_NAME, -RG ]
+        description: read group name
+        value: { type: string }
+        default: A
+        rank: 50
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --PLATFORM_UNIT, -PU ]
+        description: platform unit, e.g. run_barcode.lane
+        value: { type: string }
+        rank: 40
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --SORT_ORDER, -SO ]
+        description: sort order of the output
+        value: { type: enum, values: [ unsorted, queryname, coordinate, duplicate, unknown ] }
+        default: queryname
+        rank: 25
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --QUALITY_FORMAT, -V ]
+        description: quality encoding of the input (guessed by default)
+        value: { type: enum, values: [ Solexa, Illumina, Standard ] }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --PLATFORM_MODEL, -PM ]
+        description: platform model
+        value: { type: string }
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --SEQUENCING_CENTER, -CN ]
+        description: sequencing centre
+        value: { type: string }
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --DESCRIPTION, -DS ]
+        description: read group description
+        value: { type: string }
+        rank: 10
+      - names: [ --PREDICTED_INSERT_SIZE, -PI ]
+        description: predicted median insert size
+        value: { type: int }
+        rank: 10
+      - names: [ --RUN_DATE, -DT ]
+        description: run date (ISO 8601)
+        value: { type: string }
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_SEQUENTIAL_FASTQS ]
+        description: read numbered files prefix_001, prefix_002…
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --ALLOW_AND_IGNORE_EMPTY_LINES ]
+        description: skip empty lines
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+      - names: [ --ALLOW_EMPTY_FASTQ ]
+        description: accept an empty input
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+      - names: [ --COMMENT, -CO ]
+        description: comment lines added to the header (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 5
+      - names: [ --MAX_Q ]
+        description: highest quality accepted
+        value: { type: int }
+        default: 93
+        rank: 5
+      - names: [ --MIN_Q ]
+        description: lowest quality accepted
+        value: { type: int }
+        default: 0
+        rank: 5
+      - names: [ --PROGRAM_GROUP, -PG ]
+        description: program group
+        value: { type: string }
+        rank: 5
+      - names: [ --STRIP_UNPAIRED_MATE_NUMBER ]
+        description: deprecated, ignored
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: SamToFastq
+    help: [ SamToFastq, -h ]
+    description: write the reads of a SAM, BAM or CRAM file back to FASTQ
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --FASTQ, -F ]
+        description: reads, or read 1 of the pairs
+        value: { type: file, format: fastq }
+        rank: 90
+      - names: [ --SECOND_END_FASTQ, -F2 ]
+        description: read 2 of the pairs
+        value: { type: file, format: fastq }
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --UNPAIRED_FASTQ, -FU ]
+        description: reads whose mate is missing (paired mode)
+        value: { type: file, format: fastq }
+        rank: 40
+      - names: [ --INTERLEAVE, -INTER ]
+        description: both reads in one interleaved file
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --OUTPUT_PER_RG, -OPRG ]
+        description: one file (or pair of files) per read group
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --OUTPUT_DIR, -ODIR ]
+        description: folder of the OUTPUT_PER_RG files
+        value: { type: dir }
+        rank: 25
+      - names: [ --COMPRESS_OUTPUTS_PER_RG, -GZOPRG ]
+        description: gzip the OUTPUT_PER_RG files
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --INCLUDE_NON_PF_READS, -NON_PF ]
+        description: include reads that failed the platform filter
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 20
+      - names: [ --QUALITY, -Q ]
+        description: trim read ends at this quality
+        value: { type: int }
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --INCLUDE_NON_PRIMARY_ALIGNMENTS ]
+        description: include secondary and supplementary alignments
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --RE_REVERSE, -RC ]
+        description: restore reverse-strand reads to their sequenced orientation
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 15
+      - names: [ --READ1_TRIM, -R1_TRIM ]
+        description: bases removed from the start of read 1
+        value: { type: int }
+        default: 0
+        rank: 15
+      - names: [ --READ2_TRIM, -R2_TRIM ]
+        description: bases removed from the start of read 2
+        value: { type: int }
+        default: 0
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --CLIPPING_ACTION, -CLIP_ACT ]
+        description: "clipping: X trims, N masks with N, a number sets the qualities"
+        value: { type: string }
+        rank: 10
+      - names: [ --CLIPPING_ATTRIBUTE, -CLIP_ATTR ]
+        description: tag holding the clipping position
+        value: { type: string }
+        rank: 10
+      - names: [ --READ1_MAX_BASES_TO_WRITE, -R1_MAX_BASES ]
+        description: most bases written for read 1
+        value: { type: int }
+        rank: 10
+      - names: [ --READ2_MAX_BASES_TO_WRITE, -R2_MAX_BASES ]
+        description: most bases written for read 2
+        value: { type: int }
+        rank: 10
+      - names: [ --RG_TAG, -RGT ]
+        description: read group tag naming the OUTPUT_PER_RG files
+        value: { type: string }
+        default: PU
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --CLIPPING_MIN_LENGTH, -CLIP_MIN ]
+        description: shortest read after clipping
+        value: { type: int }
+        default: 0
+        rank: 5
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: ReorderSam
+    help: [ ReorderSam, -h ]
+    description: reorder the reads to match the contig order of another dictionary
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: reordered alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --SEQUENCE_DICTIONARY, -SD ]
+        description: dictionary to follow (.dict, FASTA, SAM, VCF, interval list…)
+        value: { type: file, format: [ dict, fasta ] }
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --ALLOW_INCOMPLETE_DICT_CONCORDANCE, -S ]
+        description: accept a partial overlap of the contigs
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --ALLOW_CONTIG_LENGTH_DISCORDANCE, -U ]
+        description: accept contigs of the same name but another length (risky)
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: FilterSamReads
+    help: [ FilterSamReads, -h ]
+    description: keep or drop reads by name list, tag, interval or script
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: filtered alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --FILTER ]
+        description: filter to apply
+        value: { type: enum, values: [ includeAligned, excludeAligned, includeReadList, excludeReadList, includeJavascript, includePairedIntervals, includeTagValues, excludeTagValues ] }
+        rank: 85
+      - names: [ --READ_LIST_FILE, -RLF ]
+        description: read names to keep or drop (includeReadList, excludeReadList)
+        value: { type: file }
+        rank: 55
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --INTERVAL_LIST, -IL ]
+        description: intervals to keep (includePairedIntervals)
+        value: { type: file, format: interval-list }
+        rank: 40
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --TAG, -T ]
+        description: tag to filter on (includeTagValues, excludeTagValues)
+        value: { type: string }
+        rank: 35
+      - names: [ --TAG_VALUE, -TV ]
+        description: tag values to filter on (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --SORT_ORDER, -SO ]
+        description: sort order of the output (that of the input by default)
+        value: { type: enum, values: [ unsorted, queryname, coordinate, duplicate, unknown ] }
+        rank: 25
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --JAVASCRIPT_FILE, -JS ]
+        description: JavaScript filter (includeJavascript)
+        value: { type: file }
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --WRITE_READS_FILES ]
+        description: write the read names of input and output (for debugging)
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: LiftoverVcf
+    help: [ LiftoverVcf, -h ]
+    description: move variants of a VCF to another assembly with a chain file
+    options:
+      - names: [ --INPUT, -I ]
+        description: variants to lift
+        value: { type: file, format: [ vcf, bcf ] }
+        rank: 95
+      - names: [ --CHAIN, -C ]
+        description: chain file from the source to the target assembly
+        value: { type: file, format: chain }
+        rank: 90
+      - names: [ --OUTPUT, -O ]
+        description: lifted variants
+        value: { type: file, format: [ vcf, bcf ] }
+        rank: 90
+      - names: [ --REJECT ]
+        description: file for the variants that could not be lifted
+        value: { type: file, format: [ vcf, bcf ] }
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --RECOVER_SWAPPED_REF_ALT ]
+        description: rescue biallelic SNPs whose REF and ALT are swapped in the target
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --WARN_ON_MISSING_CONTIG, -WMC ]
+        description: warn instead of failing on contigs missing from the target
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 25
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --LIFTOVER_MIN_MATCH ]
+        description: least share of matching bases for a variant to be lifted
+        value: { type: float }
+        default: 1
+        rank: 20
+      - names: [ --WRITE_ORIGINAL_POSITION ]
+        description: record the original contig and position in INFO
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 20
+      - names: [ --ALLOW_MISSING_FIELDS_IN_HEADER ]
+        description: accept INFO and FORMAT fields absent from the header
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --DISABLE_SORT ]
+        description: write on the fly, unsorted and unindexed
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --WRITE_ORIGINAL_ALLELES ]
+        description: record the original alleles in INFO
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --LOG_FAILED_INTERVALS, -LFI ]
+        description: warn about intervals below LIFTOVER_MIN_MATCH
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 10
+      - names: [ --TAGS_TO_DROP ]
+        description: INFO fields removed when REF and ALT swap (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 10
+      - names: [ --TAGS_TO_REVERSE ]
+        description: INFO fields turned into 1 - x when REF and ALT swap (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 10
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: FixMateInformation
+    help: [ FixMateInformation, -h ]
+    description: make mate information of read pairs consistent
+    options:
+      - names: [ --INPUT, -I ]
+        description: "alignments to fix (repeatable: merged and sorted)"
+        value: { type: file, format: [ bam, sam, cram ] }
+        repeatable: true
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: fixed alignments (overwrites a single input when absent)
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE, -R ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --SORT_ORDER, -SO ]
+        description: sort order of the output (that of the input by default)
+        value: { type: enum, values: [ unsorted, queryname, coordinate, duplicate, unknown ] }
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --ADD_MATE_CIGAR, -MC ]
+        description: add the mate CIGAR (MC) tag
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 20
+      - names: [ --ASSUME_SORTED, -AS ]
+        description: take the input as sorted by read name
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 20
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --IGNORE_MISSING_MATES ]
+        description: ignore missing mates instead of failing
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "true"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5
+  - name: DownsampleSam
+    help: [ DownsampleSam, -h ]
+    description: keep a random fraction of the reads (pairs kept together)
+    options:
+      - names: [ --INPUT, -I ]
+        description: alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 95
+      - names: [ --OUTPUT, -O ]
+        description: downsampled alignments
+        value: { type: file, format: [ bam, sam, cram ] }
+        rank: 90
+      - names: [ --PROBABILITY, -P ]
+        description: chance of keeping each read (0 to 1)
+        value: { type: float }
+        default: 1
+        rank: 85
+      - names: [ --CREATE_INDEX ]
+        description: write an index of coordinate-sorted BAM or VCF output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 45
+      - names: [ --VALIDATION_STRINGENCY ]
+        description: how strictly SAM records are checked; SILENT or LENIENT tolerate faulty input
+        value: { type: enum, values: [ STRICT, LENIENT, SILENT ] }
+        default: STRICT
+        rank: 45
+      - names: [ --REFERENCE_SEQUENCE ]
+        description: reference FASTA (needed for CRAM)
+        value: { type: file, format: fasta }
+        rank: 40
+      - names: [ --RANDOM_SEED, -R ]
+        description: random seed (null for a new result each run)
+        value: { type: int }
+        default: 1
+        rank: 35
+      - names: [ --STRATEGY, -S ]
+        description: HighAccuracy, ConstantMemory or Chained
+        value: { type: enum, values: [ HighAccuracy, ConstantMemory, Chained ] }
+        default: ConstantMemory
+        rank: 35
+      - names: [ --MAX_RECORDS_IN_RAM ]
+        description: records held in memory before spilling to disk; more uses more RAM and fewer files
+        value: { type: int }
+        default: 500000
+        rank: 30
+      - names: [ --TMP_DIR ]
+        description: folders for temporary files (repeatable)
+        value: { type: dir }
+        repeatable: true
+        rank: 30
+      - names: [ --COMPRESSION_LEVEL ]
+        description: compression level of BAM and VCF output
+        value: { type: int }
+        default: 5
+        rank: 20
+      - names: [ --METRICS_FILE, -M ]
+        description: file for the quality yield metrics of the output
+        value: { type: file }
+        rank: 20
+      - names: [ --ACCURACY, -A ]
+        description: accuracy aimed at by the strategies that support it
+        value: { type: float }
+        default: 0.0001
+        rank: 15
+      - names: [ --arguments_file ]
+        description: file of arguments added to the command line
+        value: { type: file }
+        repeatable: true
+        rank: 15
+      - names: [ --CREATE_MD5_FILE ]
+        description: write an MD5 digest of BAM or FASTQ output
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --QUIET ]
+        description: no job summary on standard error
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 15
+      - names: [ --VERBOSITY ]
+        description: log level
+        value: { type: enum, values: [ ERROR, WARNING, INFO, DEBUG ] }
+        default: INFO
+        rank: 15
+      - names: [ --USE_JDK_DEFLATER, -use_jdk_deflater ]
+        description: JDK compressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --USE_JDK_INFLATER, -use_jdk_inflater ]
+        description: JDK decompressor instead of Intel's
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 10
+      - names: [ --showHidden ]
+        description: also show hidden arguments in the help
+        value: { type: enum, values: [ "true", "false" ] }
+        default: "false"
+        rank: 5

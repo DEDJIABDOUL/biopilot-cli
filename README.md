@@ -7,7 +7,7 @@ Terminal autocompletion for bioinformatics. While you type a command, BioPilot s
 - **Project-aware:** files of the expected format first, R1/R2 mates paired, output names derived from inputs.
 - **Keeps general completion:** git, cd, ls and other commands still complete as usual; bioinformatics tools come first.
 
-Version 1.1. Ten tools are built in: bcftools, blastn, bwa, fastp, fastqc, minimap2, multiqc, porechop, salmon and samtools. Any other installed tool can be added with `biopilot learn`.
+Version 1.1. Twenty tools are built in: bcftools, blastn, bwa, chopper, cutadapt, fastp, fastqc, filtlong, minimap2, mosdepth, multiqc, NanoPlot, picard, porechop, qualimap, salmon, samtools, seqkit, seqtk and trimmomatic. Any other installed tool can be added with `biopilot learn`.
 
 ## Contents
 

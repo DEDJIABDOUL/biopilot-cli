@@ -1,0 +1,3 @@
+Usage:  seqtk comp [-u] [-r in.bed] <in.fa>
+
+Output format: chr, length, #A, #C, #G, #T, #2, #3, #4, #CpG, #tv, #ts, #CpG-ts

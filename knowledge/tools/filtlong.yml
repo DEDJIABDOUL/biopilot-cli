@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Filtlong 0.3.1, written from its recorded --help: knowledge/help/filtlong/0.3.1/root.txt
+# (GPL-3.0; attribution in RECORDING.yml next to it) and its documentation
+# (https://github.com/rrwick/Filtlong), in our own words (spec decision 31).
+# Lengths and base counts accept the suffixes k, kb, m, mb, g and gb.
+name: filtlong
+package: filtlong
+description: Keeps the best long reads (Nanopore, PacBio) by length and quality, optionally judged against a reference
+platforms: [nanopore]
+version: { args: ["--version"], regex: 'Filtlong v(\d[\w.]*)' }
+help: ["--help"]
+arguments:
+  - name: input_reads
+    description: long reads to filter (FASTQ, compressed or not); the result goes to standard output
+    value: { type: file, format: fastq }
+options:
+  - names: ["-t", "--target_bases"]
+    description: keep the best reads up to this many bases in total
+    value: { type: string }
+    rank: 80
+  - names: ["-p", "--keep_percent"]
+    description: keep this percentage of the best reads, counted in bases
+    value: { type: float }
+    rank: 85
+  - names: ["-l", "--min_length"]
+    description: drop reads shorter than this
+    value: { type: string }
+    rank: 88
+  - names: ["-L", "--max_length"]
+    description: drop reads longer than this
+    value: { type: string }
+    rank: 35
+  - names: ["-q", "--min_mean_q"]
+    description: drop reads whose mean quality is below this
+    value: { type: float }
+    rank: 60
+  - names: ["--min_window_q"]
+    description: drop reads with a window whose mean quality is below this
+    value: { type: float }
+    rank: 40
+  - names: ["-a", "--assembly"]
+    description: reference assembly (FASTA) to judge read quality by, instead of the Phred scores
+    value: { type: file, format: fasta }
+    rank: 45
+  - names: ["-1", "--short_1"]
+    description: read 1 of short reads (FASTQ) to judge read quality by
+    value: { type: file, format: fastq, read_role: 1 }
+    rank: 45
+  - names: ["-2", "--short_2"]
+    description: read 2 of those short reads
+    value: { type: file, format: fastq, read_role: 2, mate_of: "-1" }
+    rank: 40
+    rules:
+      - when: { used: ["-1"] }
+        boost: 35
+  - names: ["--length_weight"]
+    description: weight of the length in the read score
+    value: { type: float }
+    default: 1
+    rank: 25
+  - names: ["--mean_q_weight"]
+    description: weight of the mean quality in the read score
+    value: { type: float }
+    default: 1
+    rank: 25
+  - names: ["--window_q_weight"]
+    description: weight of the worst window quality in the read score
+    value: { type: float }
+    default: 1
+    rank: 20
+  - names: ["--trim"]
+    description: with a reference, trim read ends that match none of its k-mers
+    rank: 30
+  - names: ["--split"]
+    description: with a reference, split reads at this many consecutive unmatched bases
+    value: { type: string }
+    rank: 25
+  - names: ["--window_size"]
+    description: size of the window used for window quality
+    value: { type: int }
+    default: 250
+    rank: 20
+  - names: ["--verbose"]
+    description: report every read on standard error
+    rank: 15

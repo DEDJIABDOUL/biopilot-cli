@@ -1,0 +1,9 @@
+
+Usage: seqtk mergefa [options] <in1.fa> <in2.fa>
+
+Options: -q INT   quality threshold [0]
+         -i       take intersection
+         -m       convert to lowercase when one of the input base is N
+         -r       pick a random allele from het
+         -h       suppress hets in the input
+

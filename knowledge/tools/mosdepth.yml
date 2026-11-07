@@ -1,0 +1,87 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# mosdepth 0.3.14, written from its recorded --help: knowledge/help/mosdepth/0.3.14/root.txt
+# (MIT; attribution in RECORDING.yml next to it) and its documentation
+# (https://github.com/brentp/mosdepth), in our own words (spec decision 31).
+name: mosdepth
+package: mosdepth
+description: Fast sequencing depth (coverage) of BAM or CRAM files, per base, per region or by thresholds
+version: { args: ["--version"], regex: 'mosdepth (\d[\w.]*)' }
+help: ["--help"]
+arguments:
+  - name: prefix
+    description: prefix of the output files ({prefix}.mosdepth.summary.txt, {prefix}.per-base.bed.gz…)
+    value: { type: string }
+  - name: BAM-or-CRAM
+    description: alignments to compute the depth of (indexed)
+    value: { type: file, format: [bam, cram] }
+options:
+  - names: ["-t", "--threads"]
+    description: extra threads for BAM decompression
+    value: { type: int }
+    default: 0
+    rank: 70
+  - names: ["-b", "--by"]
+    description: regions to report the depth of, as a BED file or a window size in bases
+    value: { type: file, format: bed }
+    rank: 85
+  - names: ["-n", "--no-per-base"]
+    description: skip the per-base output, much faster
+    rank: 80
+  - names: ["-x", "--fast-mode"]
+    description: ignore the inside of CIGARs and mate overlaps; recommended in most cases
+    rank: 75
+  - names: ["-c", "--chrom"]
+    description: compute the depth of this chromosome only
+    value: { type: string }
+    rank: 40
+  - names: ["-f", "--fasta"]
+    description: reference FASTA, needed for CRAM files
+    value: { type: file, format: fasta }
+    rank: 50
+  - names: ["--d4"]
+    description: write the per-base depth in the d4 format
+    rank: 20
+  - names: ["-T", "--thresholds"]
+    description: for each region of --by, count the bases covered at least this deep; several comma-separated values
+    value: { type: string }
+    rank: 55
+    rules:
+      - when: { used: ["--by"] }
+        boost: 15
+  - names: ["-q", "--quantize"]
+    description: merge adjacent bases into depth bins given as cut points (e.g. 0:1:10:50:)
+    value: { type: string }
+    rank: 40
+  - names: ["-Q", "--mapq"]
+    description: ignore reads whose mapping quality is below this
+    value: { type: int }
+    default: 0
+    rank: 60
+  - names: ["-F", "--flag"]
+    description: ignore reads with any of these SAM flag bits set
+    value: { type: int }
+    default: 1796
+    rank: 40
+  - names: ["-i", "--include-flag"]
+    description: count only reads with any of these SAM flag bits set
+    value: { type: int }
+    default: 0
+    rank: 25
+  - names: ["-a", "--fragment-mode"]
+    description: count the whole fragment, insert included (proper pairs only)
+    rank: 30
+  - names: ["-l", "--min-frag-len"]
+    description: ignore reads whose insert is shorter than this
+    value: { type: int }
+    rank: 20
+  - names: ["-u", "--max-frag-len"]
+    description: ignore reads whose insert is longer than this
+    value: { type: int }
+    rank: 20
+  - names: ["-m", "--use-median"]
+    description: report the median depth of each region instead of the mean
+    rank: 35
+  - names: ["-R", "--read-groups"]
+    description: count only these read groups (comma-separated IDs)
+    value: { type: string }
+    rank: 25

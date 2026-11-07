@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# chopper 0.15.0, written from its recorded --help: knowledge/help/chopper/0.15.0/root.txt
+# (MIT; attribution in RECORDING.yml next to it) and its documentation
+# (https://github.com/wdecoster/chopper), in our own words (spec decision 31).
+# chopper reads standard input and writes standard output unless -i is given.
+name: chopper
+package: chopper
+description: Filters and trims long reads (FASTQ or unaligned BAM) by quality, length, GC content or contaminants
+platforms: [nanopore]
+version: { args: ["--version"], regex: 'chopper (\d[\w.]*)' }
+help: ["--help"]
+options:
+  - names: ["-i", "--input"]
+    description: reads to filter, FASTQ (compressed or not) or unaligned BAM; standard input by default
+    value: { type: file, format: [fastq, bam] }
+    rank: 90
+  - names: ["-q", "--quality"]
+    description: drop reads whose mean Phred quality is below this
+    value: { type: int }
+    default: 0
+    rank: 88
+  - names: ["-l", "--minlength"]
+    description: drop reads shorter than this
+    value: { type: int }
+    default: 1
+    rank: 85
+  - names: ["--maxlength"]
+    description: drop reads longer than this
+    value: { type: int }
+    rank: 50
+  - names: ["--maxqual"]
+    description: drop reads whose mean Phred quality is above this
+    value: { type: int }
+    default: 1000
+    rank: 25
+  - names: ["--mingc"]
+    description: drop reads whose GC content (0 to 1) is below this
+    value: { type: float }
+    rank: 30
+  - names: ["--maxgc"]
+    description: drop reads whose GC content (0 to 1) is above this
+    value: { type: float }
+    rank: 30
+  - names: ["-c", "--contam"]
+    description: drop reads matching the sequences of this FASTA (contaminants, controls such as lambda)
+    value: { type: file, format: fasta }
+    rank: 55
+  - names: ["--trim-approach"]
+    description: how to trim the reads
+    value:
+      type: enum
+      values:
+        - { value: fixed-crop, description: "remove a fixed number of bases (--headcrop, --tailcrop)" }
+        - { value: trim-by-quality, description: "remove low-quality ends, down to --cutoff" }
+        - { value: best-read-segment, description: "keep the best stretch of the read, by --cutoff" }
+        - { value: split-by-low-quality, description: "split reads at low-quality stretches, keeping the good parts" }
+    rank: 60
+  - names: ["--cutoff"]
+    description: quality threshold of the trim-by-quality, best-read-segment and split-by-low-quality approaches
+    value: { type: int }
+    rank: 45
+    rules:
+      - when: { used: ["--trim-approach"] }
+        boost: 25
+  - names: ["--split-window"]
+    description: with split-by-low-quality, run of low-quality bases needed to split a read
+    value: { type: int }
+    default: 1
+    rank: 20
+  - names: ["--headcrop"]
+    description: with fixed-crop, bases to remove from the start of each read
+    value: { type: int }
+    default: 0
+    rank: 45
+  - names: ["--tailcrop"]
+    description: with fixed-crop, bases to remove from the end of each read
+    value: { type: int }
+    default: 0
+    rank: 40
+  - names: ["--update-mods"]
+    description: recompute the base-modification tags (MM, ML, MN) of trimmed reads
+    rank: 20
+  - names: ["--trim-poly-tails"]
+    description: remove poly-T heads and poly-A tails, optionally only from this length up
+    value: { type: int, optional: true }
+    rank: 30
+  - names: ["-t", "--threads"]
+    description: parallel threads
+    value: { type: int }
+    default: 4
+    rank: 70
+  - names: ["--output-format"]
+    description: format of the output (the input's by default)
+    value:
+      type: enum
+      values:
+        - fastq
+        - { value: bam, description: "unaligned BAM" }
+    rank: 30
+  - names: ["--inverse"]
+    description: write the reads that fail the filters instead of those that pass
+    rank: 25

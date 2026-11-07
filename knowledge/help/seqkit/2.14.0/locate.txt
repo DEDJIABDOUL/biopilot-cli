@@ -1,0 +1,63 @@
+locate subsequences/motifs, mismatch allowed
+
+Attention:
+
+  1. Motifs could be EITHER plain sequence containing "ACTGN" OR regular
+     expression like "A[TU]G(?:.{3})+?[TU](?:AG|AA|GA)" for ORFs.     
+  2. Degenerate bases/residues like "RYMM.." are also supported by flag -d.
+     But do not use degenerate bases/residues in regular expression, you need
+     convert them to regular expression, e.g., change "N" or "X"  to ".".
+  3. When providing search patterns (motifs) via flag '-p',
+     please use double quotation marks for patterns containing comma, 
+     e.g., -p '"A{2,}"' or -p "\"A{2,}\"". Because the command line argument
+     parser accepts comma-separated-values (CSV) for multiple values (motifs).
+     Patterns in file do not follow this rule.     
+  4. Mismatch is allowed using flag "-m/--max-mismatch",
+     you can increase the value of "-j/--threads" to accelerate processing.
+  5. When using flag --circular, end position of matched subsequence that 
+     crossing genome sequence end would be greater than sequence length.
+
+Usage:
+  seqkit locate [flags] 
+
+Flags:
+      --bed                    output in BED6 format
+  -c, --circular               circular genome. type "seqkit locate -h" for details
+  -d, --degenerate             pattern/motif contains degenerate base
+      --gtf                    output in GTF format
+  -h, --help                   help for locate
+  -M, --hide-matched           do not show matched sequences
+  -i, --ignore-case            ignore case
+  -I, --immediate-output       print output immediately, do not use write buffer
+  -s, --max-len-to-show int    show at most X characters for the search pattern or matched sequences
+  -m, --max-mismatch int       max mismatch when matching by seq. For large genomes like human genome,
+                               using mapping/alignment tools would be faster
+  -G, --non-greedy             non-greedy mode, faster but may miss motifs overlapping with others
+  -P, --only-positive-strand   only search on positive strand
+  -p, --pattern strings        pattern/motif. Multiple values supported: comma-separated (e.g., -p
+                               "p1,p2") OR use -p multiple times (e.g., -p p1 -p p2). Make sure to quote
+                               literal commas, e.g. in regex patterns '"A{2,}"'
+  -f, --pattern-file string    pattern/motif file (FASTA format)
+  -F, --use-fmi                use FM-index for much faster search of lots of sequence patterns
+  -r, --use-regexp             patterns/motifs are regular expression
+
+Global Flags:
+      --alphabet-guess-seq-length int   length of sequence prefix of the first FASTA record based on
+                                        which seqkit guesses the sequence type (0 for whole seq)
+                                        (default 10000)
+      --compress-level int              compression level for gzip, zstd, xz and bzip2. type "seqkit -h"
+                                        for the range and default value for each format (default -1)
+      --id-ncbi                         FASTA head is NCBI-style, e.g. >gi|110645304|ref|NC_002516.2|
+                                        Pseud...
+      --id-regexp string                regular expression for parsing ID (default "^(\\S+)\\s?")
+  -X, --infile-list string              file of input files list (one file per line), if given, they are
+                                        appended to files from cli arguments
+  -w, --line-width int                  line width when outputting FASTA format (0 for no wrap) (default 60)
+  -o, --out-file string                 out file ("-" for stdout, suffix .gz for gzipped out) (default "-")
+      --quiet                           be quiet and do not show extra information
+  -t, --seq-type string                 sequence type (dna|rna|protein|unlimit|auto) (for auto, it
+                                        automatically detect by the first sequence) (default "auto")
+      --skip-file-check                 skip input file checking when given a file list if you believe
+                                        these files do exist
+  -j, --threads int                     number of CPUs. can also set with environment variable
+                                        SEQKIT_THREADS) (default 4)

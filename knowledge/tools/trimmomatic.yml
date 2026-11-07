@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Trimmomatic 0.41, written from its recorded usage (knowledge/help/trimmomatic/0.41/root.txt,
+# GPL-3.0; attribution in RECORDING.yml next to it) and its official manual
+# (https://github.com/usadellab/Trimmomatic), in our own words (spec decision 31).
+# The usage lists only the options; the trimming steps (ILLUMINACLIP:…, SLIDINGWINDOW:…)
+# come from the manual. Options the manual names but this version's usage does not
+# (-compressLevel, -verbose) are left out. Ranks follow the shared scale of spec §6.4.
+name: trimmomatic
+package: trimmomatic
+description: Trims and filters Illumina reads, single or paired, with a chain of trimming steps
+platforms: [illumina]
+version: { args: ["-version"], regex: '^(\d[\w.]*)' }
+help: []
+commands:
+  - name: PE
+    help: []
+    description: paired-end reads, two inputs and four outputs (paired and unpaired of each read)
+    options:
+      - names: ["-threads"]
+        description: worker threads; 0 detects them
+        value: { type: int }
+        rank: 80
+      - names: ["-phred33"]
+        description: qualities are Phred+33 (modern Illumina data)
+        rank: 65
+      - names: ["-phred64"]
+        description: qualities are Phred+64 (old Illumina data)
+        rank: 25
+      - names: ["-trimlog"]
+        description: file with a detailed log of every read trimmed
+        value: { type: file }
+        rank: 35
+      - names: ["-summary"]
+        description: file with a summary of the trimming
+        value: { type: file }
+        rank: 50
+      - names: ["-quiet"]
+        description: print no progress
+        rank: 30
+      - names: ["-validatePairs"]
+        description: check that the reads of each pair match after trimming
+        rank: 30
+      - names: ["-basein"]
+        description: one input of the pair; the other is found from its name
+        value: { type: file, format: fastq, read_role: 1 }
+        rank: 45
+      - names: ["-baseout"]
+        description: base name for the four outputs, suffixed _1P, _1U, _2P and _2U
+        value: { type: string }
+        rank: 45
+    arguments:
+      - name: in1.fq
+        description: read 1 of the pairs
+        value: { type: file, format: fastq, read_role: 1 }
+      - name: in2.fq
+        description: read 2 of the pairs
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq }
+      - name: out1P.fq
+        description: read 1 of pairs kept whole
+        value: { type: file, format: fastq }
+      - name: out1U.fq
+        description: read 1 whose mate was dropped
+        value: { type: file, format: fastq }
+      - name: out2P.fq
+        description: read 2 of pairs kept whole
+        value: { type: file, format: fastq }
+      - name: out2U.fq
+        description: read 2 whose mate was dropped
+        value: { type: file, format: fastq }
+      - name: steps
+        description: trimming steps, applied in the order given
+        variadic: true
+        value:
+          type: string
+          values:
+            - { value: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10", description: "remove adapters: FASTA:seed mismatches:palindrome score:simple score[:min length:keep both reads]" }
+            - { value: "SLIDINGWINDOW:4:20", description: "cut once the mean quality of a window of 4 bases falls below 20" }
+            - { value: "LEADING:3", description: "remove bases of quality below 3 from the start" }
+            - { value: "TRAILING:3", description: "remove bases of quality below 3 from the end" }
+            - { value: "MINLEN:36", description: "drop reads shorter than 36 bases" }
+            - { value: "HEADCROP:", description: "remove this many bases from the start" }
+            - { value: "TAILCROP:", description: "remove this many bases from the end" }
+            - { value: "CROP:", description: "keep only the first bases, up to this length" }
+            - { value: "MAXINFO:", description: "target length:strictness (0 to 1), balancing length and quality" }
+            - { value: "MAXLEN:", description: "drop reads longer than this" }
+            - { value: "AVGQUAL:", description: "drop reads whose mean quality is below this" }
+            - { value: "BASECOUNT:", description: "bases[:min count[:max count]]: drop reads outside these counts" }
+            - { value: "TOPHRED33", description: "rewrite qualities as Phred+33" }
+            - { value: "TOPHRED64", description: "rewrite qualities as Phred+64" }
+  - name: SE
+    help: []
+    description: single-end reads, one input and one output
+    options:
+      - names: ["-threads"]
+        description: worker threads; 0 detects them
+        value: { type: int }
+        rank: 80
+      - names: ["-phred33"]
+        description: qualities are Phred+33 (modern Illumina data)
+        rank: 65
+      - names: ["-phred64"]
+        description: qualities are Phred+64 (old Illumina data)
+        rank: 25
+      - names: ["-trimlog"]
+        description: file with a detailed log of every read trimmed
+        value: { type: file }
+        rank: 35
+      - names: ["-summary"]
+        description: file with a summary of the trimming
+        value: { type: file }
+        rank: 50
+      - names: ["-quiet"]
+        description: print no progress
+        rank: 30
+    arguments:
+      - name: in.fq
+        description: reads to trim
+        value: { type: file, format: fastq }
+      - name: out.fq
+        description: trimmed reads
+        value: { type: file, format: fastq }
+      - name: steps
+        description: trimming steps, applied in the order given
+        variadic: true
+        value:
+          type: string
+          values:
+            - { value: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10", description: "remove adapters: FASTA:seed mismatches:palindrome score:simple score[:min length:keep both reads]" }
+            - { value: "SLIDINGWINDOW:4:20", description: "cut once the mean quality of a window of 4 bases falls below 20" }
+            - { value: "LEADING:3", description: "remove bases of quality below 3 from the start" }
+            - { value: "TRAILING:3", description: "remove bases of quality below 3 from the end" }
+            - { value: "MINLEN:36", description: "drop reads shorter than 36 bases" }
+            - { value: "HEADCROP:", description: "remove this many bases from the start" }
+            - { value: "TAILCROP:", description: "remove this many bases from the end" }
+            - { value: "CROP:", description: "keep only the first bases, up to this length" }
+            - { value: "MAXINFO:", description: "target length:strictness (0 to 1), balancing length and quality" }
+            - { value: "MAXLEN:", description: "drop reads longer than this" }
+            - { value: "AVGQUAL:", description: "drop reads whose mean quality is below this" }
+            - { value: "BASECOUNT:", description: "bases[:min count[:max count]]: drop reads outside these counts" }
+            - { value: "TOPHRED33", description: "rewrite qualities as Phred+33" }
+            - { value: "TOPHRED64", description: "rewrite qualities as Phred+64" }

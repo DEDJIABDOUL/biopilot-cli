@@ -1,0 +1,133 @@
+/home/abdoul/miniconda3/envs/biopilot-tools-2/bin/picard: line 5: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+USAGE: CollectRnaSeqMetrics [arguments]
+
+Produces RNA alignment metrics for a SAM or BAM file.  <p>This tool takes a SAM/BAM file containing the aligned reads
+from an RNAseq experiment and produces metrics describing the distribution of the bases within the transcripts.  It
+calculates the total numbers and the fractions of nucleotides within specific genomic regions including untranslated
+regions (UTRs), introns, intergenic sequences (between discrete genes), and peptide-coding sequences (exons). This tool
+also determines the numbers of bases that pass quality filters that are specific to Illumina data (PF_BASES).  For more
+information please see the corresponding GATK <a
+href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>Dictionary</a> entry.</p><p>Other metrics include the
+median coverage (depth), the ratios of 5 prime /3 prime-biases, and the numbers of reads with the correct/incorrect
+strand designation. The 5 prime /3 prime-bias results from errors introduced by reverse transcriptase enzymes during
+library construction, ultimately leading to the over-representation of either the 5 prime or 3 prime ends of
+transcripts.  Please see the CollectRnaSeqMetrics <a
+href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> for details
+on how these biases are calculated. </p><p>The sequence input must be a valid SAM/BAM file containing RNAseq data
+aligned by an RNAseq-aware genome aligner such a <a href='http://github.com/alexdobin/STAR'>STAR</a> or <a
+href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. The tool also requires a REF_FLAT file, a
+tab-delimited file containing information about the location of RNA transcripts, exon start and stop sites, etc. For an
+example refFlat file for GRCh38, see refFlat.txt.gz at <a
+href='http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database'>http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database</a>.
+The first five lines of the tab-limited text file appear as
+follows.</p><pre>DDX11L1	NR_046018	chr1	+	11873	14409	14409	14409	3	11873,12612,13220,	12227,12721,14409,WASH7P	NR_024540	chr1	-	14361	29370	29370	29370	11	14361,14969,15795,16606,16857,17232,17605,17914,18267,24737,29320,	14829,15038,15947,16765,17055,17368,17742,18061,18366,24891,29370,DLGAP2-AS1	NR_103863	chr8_KI270926v1_alt	-	33083	35050	35050	35050	3	33083,33761,35028,	33281,33899,35050,MIR570	NR_030296	chr3	+	195699400	195699497	195699497	195699497	1	195699400,	195699497,MIR548A3	NR_030330	chr8	-	104484368	104484465	104484465	104484465	1	104484368,	104484465,</pre><p>Note:
+Metrics labeled as percentages are actually expressed as fractions!</p><h4>Usage example:</h4><pre>java -jar picard.jar
+CollectRnaSeqMetrics \<br />      I=input.bam \<br />      O=output.RNA_Metrics \<br />      REF_FLAT=ref_flat.txt \<br
+/>      STRAND=SECOND_READ_TRANSCRIPTION_STRAND \<br />      RIBOSOMAL_INTERVALS=ribosomal.interval_list</pre>Please see
+the CollectRnaSeqMetrics <a
+href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> for a
+complete description of the metrics produced by this tool.<hr />
+Version:3.5.0
+
+
+Required Arguments:
+
+--INPUT,-I <File>             Input SAM/BAM/CRAM file.  Required. 
+
+--OUTPUT,-O <File>            The file to write the output to.  Required. 
+
+--REF_FLAT <File>             Gene annotations in refFlat form.  Format described here:
+                              http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat  Required. 
+
+--STRAND_SPECIFICITY,-STRAND <StrandSpecificity>
+                              For strand-specific library prep. For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND
+                              if the reads are expected to be on the transcription strand.  Required. Possible values:
+                              {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND} 
+
+
+Optional Arguments:
+
+--arguments_file <File>       read one or more arguments files and add them to the command line  This argument may be
+                              specified 0 or more times. Default value: null. 
+
+--ASSUME_SORTED,-AS <Boolean> If true (default), then the sort order in the header file will be ignored.  Default value:
+                              true. Possible values: {true, false} 
+
+--CHART_OUTPUT,-CHART <File>  The PDF file to write out a plot of normalized position vs. coverage.  Default value:
+                              null. 
+
+--COMPRESSION_LEVEL <Integer> Compression level for all compressed files created (e.g. BAM and VCF).  Default value: 5. 
+
+--CREATE_INDEX <Boolean>      Whether to create an index when writing VCF or coordinate sorted BAM output.  Default
+                              value: false. Possible values: {true, false} 
+
+--CREATE_MD5_FILE <Boolean>   Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value:
+                              false. Possible values: {true, false} 
+
+--END_BIAS_BASES <Integer>    The distance into a transcript over which 5' and 3' bias is calculated.  Default value:
+                              100. 
+
+--help,-h <Boolean>           display the help message  Default value: false. Possible values: {true, false} 
+
+--IGNORE_SEQUENCE <String>    If a read maps to a sequence specified with this option, all the bases in the read are
+                              counted as ignored bases. These reads are not counted towards any metrics, except for the
+                              PF_BASES field.  This argument may be specified 0 or more times. Default value: null. 
+
+--MAX_RECORDS_IN_RAM <Integer>When writing files that need to be sorted, this will specify the number of records stored
+                              in RAM before spilling to disk. Increasing this number reduces the number of file handles
+                              needed to sort the file, and increases the amount of RAM needed.  Default value: 500000. 
+
+--METRIC_ACCUMULATION_LEVEL,-LEVEL <MetricAccumulationLevel>
+                              The level(s) at which to accumulate metrics.    This argument may be specified 0 or more
+                              times. Default value: [ALL_READS]. Possible values: {ALL_READS, SAMPLE, LIBRARY,
+                              READ_GROUP} 
+
+--MINIMUM_LENGTH <Integer>    When calculating coverage based values (e.g. CV of coverage) only use transcripts of this
+                              length or greater.  Default value: 500. 
+
+--QUIET <Boolean>             Whether to suppress job-summary info on System.err.  Default value: false. Possible
+                              values: {true, false} 
+
+--REFERENCE_SEQUENCE,-R <PicardHtsPath>
+                              Reference sequence file.  Default value: null. 
+
+--RIBOSOMAL_INTERVALS <File>  Location of rRNA sequences in genome, in interval_list format.  If not specified no bases
+                              will be identified as being ribosomal.  Format described <a
+                              href="http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html">here</a>:
+                              Default value: null. 
+
+--RRNA_FRAGMENT_PERCENTAGE <Double>
+                              This percentage of the length of a fragment must overlap one of the ribosomal intervals
+                              for a read or read pair to be considered rRNA.  Default value: 0.8. 
+
+--STOP_AFTER <Long>           Stop after processing N reads, mainly for debugging.  Default value: 0. 
+
+--TMP_DIR <File>              One or more directories with space available to be used by this program for temporary
+                              storage of working files  This argument may be specified 0 or more times. Default value:
+                              null. 
+
+--USE_JDK_DEFLATER,-use_jdk_deflater <Boolean>
+                              Use the JDK Deflater instead of the Intel Deflater for writing compressed output  Default
+                              value: false. Possible values: {true, false} 
+
+--USE_JDK_INFLATER,-use_jdk_inflater <Boolean>
+                              Use the JDK Inflater instead of the Intel Inflater for reading compressed input  Default
+                              value: false. Possible values: {true, false} 
+
+--VALIDATION_STRINGENCY <ValidationStringency>
+                              Validation stringency for all SAM files read by this program.  Setting stringency to
+                              SILENT can improve performance when processing a BAM file in which variable-length data
+                              (read, qualities, tags) do not otherwise need to be decoded.  Default value: STRICT.
+                              Possible values: {STRICT, LENIENT, SILENT} 
+
+--VERBOSITY <LogLevel>        Control verbosity of logging.  Default value: INFO. Possible values: {ERROR, WARNING,
+                              INFO, DEBUG} 
+
+--version <Boolean>           display the version number for this tool  Default value: false. Possible values: {true,
+                              false} 
+
+
+Advanced Arguments:
+
+--showHidden <Boolean>        display hidden arguments  Default value: false. Possible values: {true, false} 
+

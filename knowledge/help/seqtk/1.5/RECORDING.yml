@@ -1,0 +1,39 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/seqtk.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: seqtk
+package: seqtk
+version: 1.5
+build: h577a1d6_1
+channel: linux-64
+licence: MIT
+copyright: Heng Li, https://github.com/lh3/seqtk
+recorded_on: 2026-11-07
+platform: linux-64
+conda_env: biopilot-tools-2
+used_by_catalog: true
+files:
+  root.txt: seqtk
+  seq.txt: seqtk seq (in a terminal: without one it reads standard input)
+  size.txt: seqtk size (in a terminal: without one it reads standard input)
+  comp.txt: seqtk comp (in a terminal: without one it reads standard input)
+  sample.txt: seqtk sample
+  subseq.txt: seqtk subseq
+  fqchk.txt: seqtk fqchk
+  mergepe.txt: seqtk mergepe
+  split.txt: seqtk split
+  trimfq.txt: seqtk trimfq
+  hety.txt: seqtk hety
+  gc.txt: seqtk gc
+  mutfa.txt: seqtk mutfa
+  mergefa.txt: seqtk mergefa
+  famask.txt: seqtk famask
+  dropse.txt: seqtk dropse (in a terminal: without one it reads standard input)
+  rename.txt: seqtk rename (in a terminal: without one it reads standard input)
+  randbase.txt: seqtk randbase
+  cutN.txt: seqtk cutN
+  gap.txt: seqtk gap
+  listhet.txt: seqtk listhet
+  hpc.txt: seqtk hpc (in a terminal: without one it reads standard input)
+  telo.txt: seqtk telo (in a terminal: without one it reads standard input)

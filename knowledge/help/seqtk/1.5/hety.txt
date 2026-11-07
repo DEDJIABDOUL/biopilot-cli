@@ -1,0 +1,7 @@
+
+Usage:   seqtk hety [options] <in.fa>
+
+Options: -w INT   window size [50000]
+         -t INT   # start positions in a window [5]
+         -m       treat lowercases as masked
+

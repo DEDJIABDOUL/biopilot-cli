@@ -18,7 +18,14 @@ const perfCatalog = (env: Record<string, string>) => {
     env: { ...process.env, ...env },
     encoding: "utf-8",
   });
-  return { code: run.status, report: JSON.parse(run.stdout) as { scenarios: { name: string }[]; failures: string[] } };
+  return {
+    code: run.status,
+    report: JSON.parse(run.stdout) as {
+      scenarios: { name: string }[];
+      suggestions: { cold: { medianMs: number }; warm: { name: string }[] };
+      failures: string[];
+    },
+  };
 };
 
 jest.setTimeout(120_000);
@@ -39,5 +46,23 @@ describe("npm run perf:catalog", () => {
     const { code, report } = perfCatalog({ BIOPILOT_SIZE_BUDGET_BYTES: "1" });
     expect(code).toBe(1);
     expect(report.failures).toEqual(expect.arrayContaining([expect.stringMatching(/^repository: size \d+ B is over the budget of 1 B$/)]));
+  });
+
+  test("measures the cold first suggestion and warm suggestions of Catalog tools", () => {
+    const { report } = perfCatalog({ BIOPILOT_LOOKUP_BUDGET_MS: "1e-9" });
+    expect(report.suggestions.cold.medianMs).toBeGreaterThan(0);
+    expect(report.suggestions.warm.map((timing) => timing.name)).toEqual(["fastp --", "fastp -i r1.fq --", "samtools sort -"]);
+  });
+
+  test("exits 1 and names the line when the cold first suggestion is over budget", () => {
+    const { code, report } = perfCatalog({ BIOPILOT_COLD_SUGGESTION_BUDGET_MS: "1e-9" });
+    expect(code).toBe(1);
+    expect(report.failures).toEqual(expect.arrayContaining([expect.stringMatching(/^suggestions: cold `fastp --` median .* over 1e-9 ms$/)]));
+  });
+
+  test("exits 1 and names the line when a warm suggestion is over budget", () => {
+    const { code, report } = perfCatalog({ BIOPILOT_WARM_SUGGESTION_BUDGET_MS: "1e-9" });
+    expect(code).toBe(1);
+    expect(report.failures).toEqual(expect.arrayContaining([expect.stringMatching(/^suggestions: warm `samtools sort -` median .* over 1e-9 ms$/)]));
   });
 });

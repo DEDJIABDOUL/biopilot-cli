@@ -341,9 +341,8 @@ export const getSubcommandDrivenRecommendation = async (
   signal?: AbortSignal,
 ): Promise<SuggestionBlob | undefined> => {
   log.debug({ msg: "suggestion point", subcommand, persistentOptions, partialToken, argsDepleted, argsFromSubcommand, acceptedTokens, cwd });
-  if (argsDepleted && argsFromSubcommand) {
-    return;
-  }
+  // BIOPILOT: M11 once the positional arguments are all typed, options still follow them (as in Fig), nothing else.
+  const argsDone = argsDepleted && argsFromSubcommand;
   let partialCmd = partialToken?.token;
   if (partialToken?.isPath) {
     partialCmd = partialToken.isPathComplete ? "" : path.basename(partialCmd ?? "");
@@ -356,9 +355,11 @@ export const getSubcommandDrivenRecommendation = async (
 
   if (!argsFromSubcommand) {
     suggestions.push(...subcommandSuggestions(subcommand.subcommands, subcommand.filterStrategy, partialCmd));
+  }
+  if (!argsFromSubcommand || argsDone) {
     suggestions.push(...optionSuggestions(allOptions, acceptedTokens, subcommand.filterStrategy, partialCmd));
   }
-  if (argLength != 0) {
+  if (argLength != 0 && !argsDone) {
     const activeArg = subcommand.args instanceof Array ? subcommand.args[0] : subcommand.args;
     const debounce = activeArg?.debounce === true;
     suggestions.push(...(await generatorSuggestions(activeArg?.generators, allTokens, activeArg?.filterStrategy, partialCmd, cwd, debounce, signal)));

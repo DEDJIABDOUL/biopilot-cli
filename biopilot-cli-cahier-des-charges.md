@@ -118,6 +118,7 @@ La liste est fermée. Toute modification supplémentaire doit être justifiée d
 | M8 | Correction de `complete` : chargement de la configuration, sortie vide sans plantage *(avancée de la phase 6 à la phase 2, ticket #29)* | `commands/complete.ts` | Permettre des tests automatisés sans terminal. |
 | M9 | Enregistrement des commandes BioPilot (`info`, puis les suivantes) et contrôle du catalogue dans `doctor` ; le code vit dans `src/biopilot/cli/`, chargé à la demande | `index.ts`, `ui/ui-doctor.ts` | Exposer les commandes de la section 9 sans toucher au démarrage de session. |
 | M10 | Catalogue et addon natif de `better-sqlite3` embarqués dans le binaire autonome : l'addon rejoint les natifs de `node-pty`, le catalogue est écrasé à chaque décompression ; `reinit` le remplace et conserve le magasin utilisateur (`user.db`), y compris en quittant l'ancien dossier `~/.biopilot` | `scripts/pkg.ts`, `utils/node.ts`, `ui/ui-reinit.ts` | Le binaire autonome doit répondre depuis le catalogue comme l'installation npm (ADR-0001, décision 33). |
+| M11 | Les options restent proposées une fois tous les arguments positionnels saisis (rien d'autre : ni sous-commandes, ni fichiers) *(ajoutée après la phase 2)* | `runtime/suggestion.ts` | Le moteur d'origine ne propose plus rien après le dernier argument, alors que les outils bio acceptent leurs options après (`samtools sort in.bam -o out.bam`), comme Fig le prévoit. |
 
 Chaque modification est isolée dans un commit distinct et marquée `BIOPILOT:` dans le code.
 

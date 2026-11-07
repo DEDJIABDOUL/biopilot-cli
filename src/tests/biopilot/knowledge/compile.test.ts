@@ -37,6 +37,18 @@ describe("Catalog compiler", () => {
     opened.catalog.close();
   });
 
+  test("a Catalog that cannot be written is reported as an error, and leaves no temporary file", () => {
+    const outputDir = tempDir();
+    const outputPath = path.join(outputDir, "knowledge.db");
+    fs.mkdirSync(outputPath); // a folder where the Catalog file should go
+    const result = compileCatalog({ sourcesDir: writeSources({ "fastp.yml": FASTP }), outputPath, biopilotVersion: "test" });
+    expect(result).toEqual({
+      ok: false,
+      errors: [expect.objectContaining({ file: outputPath, message: expect.stringContaining("cannot write the Catalog") })],
+    });
+    expect(fs.readdirSync(outputDir)).toEqual(["knowledge.db"]);
+  });
+
   test("the repository's own tool sources compile", () => {
     const knowledge = path.resolve(path.dirname(TOOL_SCHEMA_PATH), "..", "knowledge");
     const result = compileCatalog({
@@ -224,6 +236,12 @@ describe("Catalog compiler", () => {
         "  - name: a\n    value: { type: file, read_role: 1 }\n  - name: b\n    value: { type: file, read_role: 2, mate_of: a }\n  - name: c\n    value: { type: file, read_role: 2, mate_of: a }",
         "arguments[2].value.mate_of",
         "already the mate",
+      ],
+      [
+        "two arguments with the same name",
+        "  - name: in.fq\n    value: { type: file }\n  - name: in.fq\n    value: { type: file }",
+        "arguments[1].name",
+        "already described at arguments[0]",
       ],
       [
         "a derived output on an argument",

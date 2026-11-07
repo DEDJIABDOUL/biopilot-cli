@@ -102,6 +102,17 @@ export type Format = {
   markers: string[];
 };
 
+/** How to query an installed Tool: only with its declared version and help commands (spec §12). */
+export type ToolQuery = {
+  /** Package name in conda (`conda-meta/`); the Tool's name when none is declared. */
+  package: string;
+  versionArgs: string[];
+  /** Regular expression with one capture group, the version number. */
+  versionRegex: string;
+  /** Every Command that declares how to get its own help, root first, in Catalog order. */
+  helps: { path: string[]; args: string[] }[];
+};
+
 /** An option found by `searchOptions`, with the command it belongs to. */
 export type SearchResult = { command: Command; option: Option };
 
@@ -116,6 +127,8 @@ export interface Catalog {
   readonly builtBy: string;
   listTools(): Tool[];
   getTool(name: string): Tool | undefined;
+  /** How to query a Tool installed on the machine. */
+  getToolQuery(name: string): ToolQuery | undefined;
   /** Resolves a Command from a tool name and a subcommand path (empty path = root Command). */
   getCommand(tool: string, path?: readonly string[]): Command | undefined;
   /** Direct subcommands of a Command, in Catalog order. */
@@ -282,6 +295,12 @@ class SqliteCatalog implements Catalog {
       }
     });
     this.#statements = {
+      toolQuery: db.prepare<[string], { id: number; name: string; package: string | null; version_args: string; version_regex: string }>(
+        "SELECT id, name, package, version_args, version_regex FROM tools WHERE name = ?",
+      ),
+      toolHelps: db.prepare<[number], { id: number; parent_id: number | null; name: string; help_args: string | null }>(
+        "SELECT id, parent_id, name, help_args FROM commands WHERE tool_id = ? ORDER BY id",
+      ),
       listTools: db.prepare<[], ToolRow>("SELECT id, name, package, description, platforms FROM tools ORDER BY name"),
       getTool: db.prepare<[string], ToolRow>("SELECT id, name, package, description, platforms FROM tools WHERE name = ?"),
       rootCommand: db.prepare<[string], { id: number; description: string | null }>(
@@ -341,6 +360,25 @@ class SqliteCatalog implements Catalog {
   getTool(name: string): Tool | undefined {
     const row = this.#statements.getTool.get(name);
     return row ? toTool(row) : undefined;
+  }
+
+  getToolQuery(name: string): ToolQuery | undefined {
+    const row = this.#statements.toolQuery.get(name);
+    if (!row) return;
+    // Ids follow the tree depth-first (a command's id after its parent's): paths build in one pass.
+    const pathOf = new Map<number, string[]>();
+    const helps: ToolQuery["helps"] = [];
+    for (const command of this.#statements.toolHelps.all(row.id)) {
+      const path = command.parent_id === null ? [] : [...(pathOf.get(command.parent_id) ?? []), command.name];
+      pathOf.set(command.id, path);
+      if (command.help_args !== null) helps.push({ path, args: JSON.parse(command.help_args) as string[] });
+    }
+    return {
+      package: row.package ?? row.name,
+      versionArgs: JSON.parse(row.version_args) as string[],
+      versionRegex: row.version_regex,
+      helps,
+    };
   }
 
   getCommand(tool: string, path: readonly string[] = []): Command | undefined {

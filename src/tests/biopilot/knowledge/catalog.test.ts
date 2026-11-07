@@ -7,7 +7,7 @@ import Database from "better-sqlite3";
 import { openCatalog, type Catalog } from "../../../biopilot/knowledge/catalog.js";
 import { catalogCandidates, sqliteAddonPath } from "../../../biopilot/knowledge/location.js";
 import { CATALOG_SCHEMA_VERSION } from "../../../biopilot/knowledge/schema.js";
-import { FASTP, MULTIQC, compileValid, prebuiltSqliteAddon, tempDir } from "../helpers.js";
+import { FASTP, MULTIQC, SAMTOOLS, compileValid, prebuiltSqliteAddon, tempDir } from "../helpers.js";
 
 describe("Catalog reader", () => {
   let catalog: Catalog;
@@ -75,6 +75,27 @@ describe("Catalog reader", () => {
     const start = performance.now();
     for (let i = 0; i < 200; i++) catalog.findOption(fastp, "-i");
     expect((performance.now() - start) / 200).toBeLessThan(2);
+  });
+});
+
+describe("how to query an installed Tool", () => {
+  test("package, version command and the help command of each Command that declares one, root first", () => {
+    const opened = openCatalog(compileValid({ "samtools.yml": SAMTOOLS, "fastp.yml": FASTP }));
+    if (!opened.available) throw new Error(opened.detail);
+    try {
+      expect(opened.catalog.getToolQuery("fastp")).toEqual({
+        package: "fastp",
+        versionArgs: ["--version"],
+        versionRegex: "fastp (\\d[\\w.]*)",
+        helps: [{ path: [], args: ["--help"] }],
+      });
+      const samtools = opened.catalog.getToolQuery("samtools");
+      expect(samtools?.package).toBe("samtools"); // none declared: the Tool's name
+      expect(samtools?.helps).toEqual([{ path: ["sort"], args: ["sort"] }]);
+      expect(opened.catalog.getToolQuery("nope")).toBeUndefined();
+    } finally {
+      opened.catalog.close();
+    }
   });
 });
 

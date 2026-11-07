@@ -7,7 +7,7 @@ Terminal autocompletion for bioinformatics. While you type a command, BioPilot s
 - **Project-aware:** files of the expected format first, R1/R2 mates paired, output names derived from inputs.
 - **Keeps general completion:** git, cd, ls and other commands still complete as usual; bioinformatics tools come first.
 
-Version 1.0. Ten tools are covered today: bcftools, blastn, bwa, fastp, fastqc, minimap2, multiqc, porechop, salmon and samtools.
+Version 1.1. Ten tools are built in: bcftools, blastn, bwa, fastp, fastqc, minimap2, multiqc, porechop, salmon and samtools. Any other installed tool can be added with `biopilot learn`.
 
 ## Contents
 
@@ -15,6 +15,7 @@ Version 1.0. Ten tools are covered today: bcftools, blastn, bwa, fastp, fastqc, 
 - [Install on Ubuntu and other Linux distributions](#install-on-ubuntu-and-other-linux-distributions)
 - [Install on macOS](#install-on-macos)
 - [Install on Windows (WSL)](#install-on-windows-wsl)
+- [Install with npm](#install-with-npm)
 - [Start BioPilot](#start-biopilot)
 - [Use BioPilot](#use-biopilot)
 - [Stop BioPilot](#stop-biopilot)
@@ -111,6 +112,22 @@ BioPilot runs in the Windows Subsystem for Linux (WSL), which provides a real Li
 
 Windows Terminal, available from the Microsoft Store, gives the best display of the suggestions.
 
+## Install with npm
+
+If you already use Node.js (version 18 or later), you can install BioPilot with npm instead of the script, on Linux, macOS or WSL:
+
+```shell
+npm install -g biopilot-cli
+```
+
+npm installs the same standalone program as the script, for your system. Then make BioPilot start in every new terminal, for bash:
+
+```shell
+biopilot init bash | tail -n 1 >> ~/.bashrc
+```
+
+For zsh, use `init zsh` and `~/.zshrc`; for fish, `init fish` and `~/.config/fish/config.fish`. Open a new terminal and continue with [Start BioPilot](#start-biopilot).
+
 ## Start BioPilot
 
 Once installed, BioPilot starts by itself in every new terminal. To check that it is running, type:
@@ -152,6 +169,24 @@ Under the suggestions for a bioinformatics tool, a status line shows what BioPil
 
 To read the real options of the tools in your active conda environment ahead of time, run `biopilot sync` once in that environment. Otherwise BioPilot reads them in the background the first time you use each tool.
 
+### Tools outside the built-in list
+
+To get suggestions for another installed tool, import it once:
+
+```shell
+biopilot learn STAR
+```
+
+BioPilot reads the tool's own help, finds its subcommands and how to get its version, and completes it from then on like a built-in tool. BioPilot only runs an unknown tool when you ask it to with this command; typing a command never runs it. `biopilot learn --list` shows the imported tools and `biopilot learn --forget STAR` removes one.
+
+### Find an option by what it does
+
+```shell
+biopilot search "adapter"
+```
+
+lists the options of the built-in and imported tools whose name or description contains every word. Add `--tool fastp` to search one tool, or `--json` for a machine-readable answer.
+
 ## Stop BioPilot
 
 - **Hide the suggestions for a moment:** press Escape.
@@ -169,6 +204,7 @@ Run these commands in a terminal:
 | `biopilot doctor` | whether the installation is complete: shell start lines, the tool database (Catalog), the user data, the `PATH` and the active environment |
 | `biopilot status` | the active conda environment, the detected project and, for each supported tool, the program found, its version and whether its real options are known |
 | `biopilot info fastp` | what BioPilot knows about a tool; also works for a subcommand or an option, for example `biopilot info samtools sort -o` |
+| `biopilot learn --list` | the tools you imported with `biopilot learn` |
 
 `biopilot doctor` names each problem it finds and what to do about it. Common fixes:
 
@@ -191,10 +227,12 @@ curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/insta
 
 Then open a new terminal. Your settings and data are kept. If a terminal reports `biopilot resources out of date`, run `biopilot reinit`.
 
+If you installed with npm, run `npm update -g biopilot-cli` instead.
+
 To install a specific version, set `BIOPILOT_VERSION` for the script, for example:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.0.1 sh
+curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.0 sh
 ```
 
 ## Uninstall
@@ -204,6 +242,8 @@ biopilot uninstall
 ```
 
 BioPilot lists everything it will remove and asks for confirmation: the program, its settings, its data, and the start line in your shell's startup file. The rest of your files are not touched. To skip the confirmation, run `biopilot uninstall --yes`.
+
+If you installed with npm, `biopilot uninstall` removes the settings, data and start line; then remove the program itself with `npm uninstall -g biopilot-cli`.
 
 ## Documentation
 

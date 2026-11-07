@@ -65,6 +65,8 @@ General completion (git, cd, ls…) works as before; bio tools simply come first
 3. **The project** — from the first parent folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml`, BioPilot reads file names (never contents): files of the expected format, read pairs, the platform (illumina, nanopore) and the assay, which adjust the ranking.
 4. **Your habits** — options you accept often rise a little (+15 at most). `biopilot reset-usage` forgets them.
 
+**Tools outside the Catalog:** `biopilot learn <tool>` reads the tool's root help (`--help`, `-h`, or no argument), discovers its subcommands (one level, 50 at most) and how to print its version (`--version`, `-V` or `version`), and computes its Profiles. From then on it is completed like a Catalog tool, from its own help only: its options rank by your usage, and values are completed as files. BioPilot never runs a tool you merely type: only `learn` runs an unknown one.
+
 ## The status line
 
 Under the suggestions of a Catalog tool, a dim line tells what BioPilot detected:
@@ -88,6 +90,8 @@ Turn it off with `statusLine = false` in [`rc.toml`](#configuration-rctoml).
 | `biopilot status [--json]` | show the environment, the project and, per Catalog tool, the binary, version and Profile |
 | `biopilot sync` | compute the Profiles of the Catalog tools of the active environment |
 | `biopilot info [--json] [tool] [command…] [option]` | what the Catalog knows about a tool, a subcommand or an option (`biopilot info samtools sort -o`) |
+| `biopilot learn <tool>` | import an installed tool that is not in the Catalog, from its own help; `--list`, `--forget <tool>` |
+| `biopilot search [--json] [--tool <tool>] "<text>"` | find options of the Catalog and of learned tools by their names and descriptions |
 | `biopilot reset-usage` | erase the usage statistics |
 | `biopilot uninstall [--yes]` | remove BioPilot entirely |
 | `biopilot -c` | tell whether this terminal runs in a BioPilot session |
@@ -132,7 +136,7 @@ key = "escape"
 
 - **No network, no telemetry, ever.** Everything happens on your machine.
 - **Reads:** file and folder *names* of the current project (depth 3, 2 000 entries at most, hidden folders, `node_modules`, `work/` and `.snakemake/` skipped); the content of `environment.yml` (64 KB at most) and `.biopilot.toml` only. Never the content of your data files.
-- **Runs:** only the tools of the Catalog found in your `PATH`, and only with their declared version and help commands (`fastp --version`, `fastp --help`): standard input closed, 2.5 s at most, stopped together with anything they started. Relative `PATH` entries are ignored, so the current folder never decides what runs. The prompt itself runs no command.
+- **Runs:** only the tools of the Catalog and the tools you imported with `biopilot learn` found in your `PATH`, and only with their declared version and help commands (`fastp --version`, `fastp --help`): standard input closed, 2.5 s at most, stopped together with anything they started. Relative `PATH` entries are ignored, so the current folder never decides what runs. The prompt itself runs no command.
 - **Stores** in `~/.local/share/biopilot/user.db` (readable by you only): the Profiles (the options of each tool version), the versions found, and how often you accepted each option. `biopilot reset-usage` erases the usage; `biopilot uninstall` erases everything.
 
 ## Troubleshooting

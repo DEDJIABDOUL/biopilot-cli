@@ -1,7 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
+- **`biopilot learn <tool>`:** imports an installed tool that is not in the Catalog from its own help: its subcommands (one level), its version command and its real options per version. It is then completed like a built-in tool, in the session where it was learned too. `--list`, `--forget <tool>`. BioPilot never runs a tool you merely type.
+- **`biopilot search "<text>"`:** finds options of the Catalog and of learned tools by their names and descriptions; `--tool`, `--json`.
+- **npm:** `npm install -g biopilot-cli` installs the same standalone program as the install script.
 - **Signed releases:** each release's `SHA256SUMS` is signed (ECDSA P-256) by the BioPilot release key; `install.sh` checks the signature with `openssl` before trusting any checksum, and refuses an unsigned or tampered release. Releases 0.1.0 to 1.0.1 were signed after the fact.
 
 ## 1.0.1

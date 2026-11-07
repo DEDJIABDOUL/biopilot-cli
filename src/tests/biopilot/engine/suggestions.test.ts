@@ -6,12 +6,13 @@
 
 import os from "node:os";
 import { Shell } from "../../../utils/shell.js";
-import { compileRepositoryCatalog } from "../helpers.js";
+import { compileRepositoryCatalog, hideInstalledTools } from "../helpers.js";
 
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
 
 beforeAll(async () => {
+  hideInstalledTools();
   process.env.BIOPILOT_CATALOG = compileRepositoryCatalog().catalogPath;
   runtime = await import("../../../runtime/runtime.js");
 });

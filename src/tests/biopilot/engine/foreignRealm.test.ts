@@ -11,7 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
 import { Shell } from "../../../utils/shell.js";
-import { SAMTOOLS, TRIMMER, compileValid } from "../helpers.js";
+import { SAMTOOLS, TRIMMER, compileValid, hideInstalledTools } from "../helpers.js";
 
 const ForeignArray = vm.runInNewContext("Array") as ArrayConstructor;
 
@@ -42,6 +42,7 @@ let runtime: Runtime;
 let cwd: string;
 
 beforeAll(async () => {
+  hideInstalledTools();
   process.env.BIOPILOT_CATALOG = compileValid({ "samtools.yml": SAMTOOLS, "trimmer.yml": TRIMMER });
   cwd = fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-project-"));
   fs.writeFileSync(path.join(cwd, "reads.fq"), "");

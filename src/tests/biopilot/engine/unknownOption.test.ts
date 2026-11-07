@@ -5,12 +5,13 @@
 
 import os from "node:os";
 import { Shell } from "../../../utils/shell.js";
-import { SAMTOOLS, TRIMMER, compileValid } from "../helpers.js";
+import { SAMTOOLS, TRIMMER, compileValid, hideInstalledTools } from "../helpers.js";
 
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
 
 beforeAll(async () => {
+  hideInstalledTools();
   process.env.BIOPILOT_CATALOG = compileValid({ "trimmer.yml": TRIMMER, "samtools.yml": SAMTOOLS });
   runtime = await import("../../../runtime/runtime.js");
 });

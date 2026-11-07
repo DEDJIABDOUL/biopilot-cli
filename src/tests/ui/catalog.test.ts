@@ -120,3 +120,47 @@ describe("[bash] an unknown Profile is computed in the background (ADR-0002)", (
     await terminal.expectText("--dedup", { strict: false, not: true });
   });
 });
+
+describe("[bash] the project context (phase 4)", () => {
+  const project = tempDir();
+  for (const file of ["data/ctrl_R1.fastq.gz", "data/ctrl_R2.fastq.gz", "data/treat_R1.fastq.gz", "data/treat_R2.fastq.gz"]) {
+    fs.mkdirSync(path.dirname(path.join(project, file)), { recursive: true });
+    fs.writeFileSync(path.join(project, file), "");
+  }
+  fs.mkdirSync(path.join(project, ".git"));
+  fs.mkdirSync(path.join(project, "results"));
+  const store = path.join(tempDir(), "user.db");
+
+  let terminal: TuiTest;
+  beforeEach(async () => {
+    terminal = await session({ BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath, BIOPILOT_USER_STORE: store });
+    // Typing must wait for the prompt that follows `cd`: clear the screen and wait for it to be empty.
+    await terminal.write(`cd ${project}; clear\r`);
+    await terminal.expectText("cd ", { strict: false, not: true });
+    await expectPrompt(terminal);
+  });
+  afterEach(async () => {
+    await closeSession(terminal);
+  });
+
+  test("annex C 3: after an R1, `--in2` shows its mate first", async () => {
+    await terminal.type("fastp --in1 data/treat_R1.fastq.gz --in2 ");
+    await terminal.expectText("data/treat_R2.fastq.gz", { strict: false, bg: accent });
+  });
+
+  test("M12: an option accepted with Tab is counted in the User store", async () => {
+    await terminal.type("fastp --fix_m"); // Tab completes it to --fix_mgi_id
+    await terminal.expectText("┘", { strict: false }); // the suggestion list is shown
+    await terminal.waitIdle();
+    await terminal.press("Tab");
+    // Recorded asynchronously, without ever blocking the keystroke.
+    let counted: number | undefined;
+    for (let attempt = 0; attempt < 25 && counted === undefined; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const opened = openUserStore({ create: false, file: store });
+      counted = opened?.usageCounts("fastp", "").get("--fix_mgi_id");
+      opened?.close();
+    }
+    expect(counted).toBe(1);
+  });
+});

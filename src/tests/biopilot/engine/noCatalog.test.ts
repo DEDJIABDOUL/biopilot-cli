@@ -7,11 +7,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { Shell } from "../../../utils/shell.js";
+import { hideInstalledTools } from "../helpers.js";
 
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
 
 beforeAll(async () => {
+  hideInstalledTools();
   const corrupt = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-")), "knowledge.db");
   fs.writeFileSync(corrupt, "not a database");
   process.env.BIOPILOT_CATALOG = corrupt;

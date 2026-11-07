@@ -66,12 +66,18 @@ __is_update_cwd() {
 	builtin printf '\e]6973;CWD;%s\a' "$(__is_escape_value "$PWD")"
 }
 
+# BIOPILOT: M2 report the environment BioPilot needs to find the binaries the shell would run.
+__is_update_env() {
+	builtin printf '\e]6973;ENV;%s;%s\a' "$(__is_escape_value "$PATH")" "$(__is_escape_value "${CONDA_PREFIX:-}")"
+}
+
 if [[ -n "${bash_preexec_imported:-}" ]]; then
     precmd_functions+=(__is_precmd)
 fi
 
 __is_precmd() {
 	__is_update_cwd
+	__is_update_env
 	__is_update_prompt
 }
 

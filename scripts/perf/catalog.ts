@@ -76,7 +76,8 @@ const timeSuggestions = (catalogPath: string) => {
   const probe = path.resolve("scripts", "perf", "suggestionProbe.ts");
   const runs = Array.from({ length: COLD_RUNS }, () => {
     const run = spawnSync(process.execPath, ["--import", "tsx", probe, String(samples), ...SUGGESTION_LINES], {
-      env: { ...process.env, BIOPILOT_CATALOG: catalogPath },
+      // Its own User store: Profiles computed for tools really installed never reach the user's.
+      env: { ...process.env, BIOPILOT_CATALOG: catalogPath, BIOPILOT_USER_STORE: path.join(workDir, "user.db") },
       encoding: "utf-8",
     });
     if (run.status !== 0) throw new Error(`suggestion probe failed: ${run.stderr}`);

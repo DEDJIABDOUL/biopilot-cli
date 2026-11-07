@@ -6,7 +6,7 @@
 import { jest } from "@jest/globals";
 import os from "node:os";
 import { Shell } from "../../../utils/shell.js";
-import { compileRepositoryCatalog } from "../helpers.js";
+import { compileRepositoryCatalog, hideInstalledTools } from "../helpers.js";
 
 // The user's shell aliases are outside BioPilot: stand in for them.
 jest.unstable_mockModule("../../../runtime/alias.js", () => ({
@@ -19,6 +19,7 @@ type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
 
 beforeAll(async () => {
+  hideInstalledTools();
   process.env.BIOPILOT_CATALOG = compileRepositoryCatalog().catalogPath;
   runtime = await import("../../../runtime/runtime.js");
 });

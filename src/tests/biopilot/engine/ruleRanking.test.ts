@@ -5,7 +5,7 @@
 
 import os from "node:os";
 import { Shell } from "../../../utils/shell.js";
-import { compileValid } from "../helpers.js";
+import { compileValid, hideInstalledTools } from "../helpers.js";
 
 const BOOSTED = `
 name: boosted
@@ -61,6 +61,7 @@ type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
 
 beforeAll(async () => {
+  hideInstalledTools();
   process.env.BIOPILOT_CATALOG = compileValid({ "boosted.yml": BOOSTED, "floor.yml": FLOOR });
   runtime = await import("../../../runtime/runtime.js");
 });

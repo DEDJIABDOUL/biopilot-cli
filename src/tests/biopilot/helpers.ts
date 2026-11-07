@@ -5,6 +5,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import { setSessionEnvironment } from "../../biopilot/env/session.js";
 import { compileCatalog, type CompileResult } from "../../biopilot/knowledge/compile.js";
 import { SCHEMAS_DIR } from "../../biopilot/knowledge/yamlSource.js";
 
@@ -271,3 +272,42 @@ commands:
       - name: in2
         value: { type: file, format: fastq, read_role: 2, mate_of: in1 }
 `;
+
+/** `cat` by absolute path: a fake tool runs with whatever PATH the test gives, maybe only fake folders. */
+const CAT = ["/bin/cat", "/usr/bin/cat"].find((file) => fs.existsSync(file)) ?? "cat";
+
+/**
+ * A fake executable `name` in `binDir`: a shell script printing `responses[args joined by spaces]` (stdout),
+ * or nothing with exit 1 for any other arguments. Stands in for a real installed tool.
+ */
+export const writeFakeTool = (binDir: string, name: string, responses: Record<string, string>, callLog?: string): string => {
+  fs.mkdirSync(binDir, { recursive: true });
+  const outputs = path.join(binDir, `.${name}-outputs`);
+  fs.mkdirSync(outputs, { recursive: true });
+  const cases = Object.entries(responses).map(([args, text], i) => {
+    fs.writeFileSync(path.join(outputs, `${i}.txt`), text);
+    return `  "${args}") ${CAT} '${path.join(outputs, `${i}.txt`)}' ;;`;
+  });
+  const script = path.join(binDir, name);
+  // `callLog`: every call's arguments are appended to it, so a test can count how often the tool ran.
+  const log = callLog ? `printf '%s\\n' "$*" >> '${callLog}'\n` : "";
+  fs.writeFileSync(script, `#!/bin/sh\n${log}case "$*" in\n${cases.join("\n")}\n  *) exit 1 ;;\nesac\n`, { mode: 0o755 });
+  return script;
+};
+
+/** A fake conda environment `name` under `root`: its `bin/` and a `conda-meta/` record of `pkg` at `version`. */
+export const writeFakeCondaEnv = (root: string, name: string, pkg: string, version: string): { prefix: string; bin: string } => {
+  const prefix = path.join(root, "envs", name);
+  const meta = path.join(prefix, "conda-meta");
+  fs.mkdirSync(meta, { recursive: true });
+  fs.writeFileSync(path.join(meta, `${pkg}-${version}-h0_1.json`), JSON.stringify({ name: pkg, version, build: "h0_1" }));
+  // A package whose name starts the same must not be taken for it.
+  fs.writeFileSync(path.join(meta, `${pkg}-extra-9.9-h0_1.json`), JSON.stringify({ name: `${pkg}-extra`, version: "9.9" }));
+  return { prefix, bin: path.join(prefix, "bin") };
+};
+
+/**
+ * Engine tests see no installed tool unless they say so: tools really installed on the machine running the
+ * tests (a samtools in /usr/bin) must not change what they check, nor get Profiles computed for them.
+ */
+export const hideInstalledTools = (): void => setSessionEnvironment({ PATH: "" });

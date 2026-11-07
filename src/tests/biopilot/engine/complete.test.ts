@@ -18,7 +18,8 @@ const dataHome = fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-complete-"));
 const complete = (line: string, env: Record<string, string> = {}) => {
   const run = spawnSync(process.execPath, ["--import", "tsx", path.join(repoRoot, "src", "index.ts"), "complete", line], {
     cwd: repoRoot,
-    env: { ...process.env, XDG_DATA_HOME: dataHome, XDG_CONFIG_HOME: path.join(dataHome, "config"), ...env },
+    // PATH: no tool really installed on the machine may change what is checked (node runs by its full path).
+    env: { ...process.env, PATH: "", XDG_DATA_HOME: dataHome, XDG_CONFIG_HOME: path.join(dataHome, "config"), ...env },
     encoding: "utf-8",
   });
   return { code: run.status, stdout: run.stdout, stderr: run.stderr };

@@ -7,7 +7,7 @@ Terminal autocompletion for bioinformatics. While you type, BioPilot suggests th
 - **Project-aware:** suggests files of the expected format, pairs R1/R2 mates, and derives output names.
 - **Keeps general completion:** git, cd, ls… still work; bio tools come first.
 
-> **Status: pre-alpha (phase 0).** BioPilot currently behaves like the Inshellisense engine it is built on, renamed. Bio features land in the next phases; see the [specification](./biopilot-cli-cahier-des-charges.md) (French).
+> **Status: pre-alpha (phase 3).** Options, subcommands and values of 10 bio tools come from the Catalog, filtered by the version really installed in the active environment (followed across `conda activate`). Project awareness (file formats, R1/R2 mates, derived outputs) lands in phase 4; installation is from source for now. See the [specification](./biopilot-cli-cahier-des-charges.md) (French).
 
 ## Supported platforms
 

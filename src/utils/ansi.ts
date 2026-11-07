@@ -15,6 +15,7 @@ export enum IstermOscPt {
   PromptStarted = "PS",
   PromptEnded = "PE",
   CurrentWorkingDirectory = "CWD",
+  Environment = "ENV", // BIOPILOT: M2
 }
 
 export const IstermPromptStart = IS_OSC + IstermOscPt.PromptStarted + BEL;

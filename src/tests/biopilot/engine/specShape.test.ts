@@ -7,7 +7,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { Shell } from "../../../utils/shell.js";
-import { SAMTOOLS, TRIMMER, compileValid } from "../helpers.js";
+import { SAMTOOLS, TRIMMER, compileValid, hideInstalledTools } from "../helpers.js";
 
 const DEPRECATED = `
 name: legacy
@@ -25,6 +25,7 @@ let runtime: Runtime;
 let cwd: string;
 
 beforeAll(async () => {
+  hideInstalledTools();
   process.env.BIOPILOT_CATALOG = compileValid({ "samtools.yml": SAMTOOLS, "trimmer.yml": TRIMMER, "legacy.yml": DEPRECATED });
   cwd = fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-project-"));
   fs.writeFileSync(path.join(cwd, "reads.fq"), "");

@@ -52,4 +52,9 @@ describe("Catalog tools in the engine", () => {
   test("`minimap2 -x ` suggests the presets", async () => {
     expect(await names("minimap2 -x ")).toEqual(expect.arrayContaining(["map-ont", "sr", "asm5"]));
   });
+
+  test("fastp --out1 rises once --in1 is on the line (rule +20)", async () => {
+    expect((await names("fastp --"))[0]).toBe("--in1");
+    expect((await names("fastp -i reads_R1.fq --"))[0]).toBe("--out1");
+  });
 });

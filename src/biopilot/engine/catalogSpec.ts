@@ -5,6 +5,7 @@
 // The engine keeps parsing the line and rendering; BioPilot only says what a Tool accepts.
 
 import { openCatalog, type Argument, type Catalog, type Command, type Option, type ValueSpec } from "../knowledge/catalog.js";
+import { optionRanking } from "./ranking.js";
 
 /** Below every Rank (0–100): deprecated options come last, whatever their Rank. */
 const DEPRECATED_PRIORITY = -1;
@@ -36,14 +37,18 @@ const valueName = (value: ValueSpec) => (value.formats.length > 0 ? value.format
 /** Canonical name first, so that the engine shows it and matches it first. */
 const optionNames = (option: Option): string[] => [option.canonicalName, ...option.aliases.filter((alias) => alias !== option.canonicalName)];
 
-const toFigOption = (option: Option): Fig.Option => ({
-  name: optionNames(option),
-  description: option.description ?? undefined,
-  priority: option.deprecated ? DEPRECATED_PRIORITY : option.rank,
-  ...(option.value ? { args: valueArg(option.value, valueName(option.value)) } : {}),
-  ...(option.repeatable ? { isRepeatable: true } : {}),
-  ...(option.hidden ? { hidden: true } : {}),
-});
+const toFigOption = (option: Option): Fig.Option => {
+  const figOption: Fig.Option = {
+    name: optionNames(option),
+    description: option.description ?? undefined,
+    priority: option.deprecated ? DEPRECATED_PRIORITY : option.rank,
+    ...(option.value ? { args: valueArg(option.value, valueName(option.value)) } : {}),
+    ...(option.repeatable ? { isRepeatable: true } : {}),
+    ...(option.hidden ? { hidden: true } : {}),
+  };
+  optionRanking.set(figOption, { canonicalName: option.canonicalName, rules: option.rules, deprecated: option.deprecated });
+  return figOption;
+};
 
 const toFigArg = (argument: Argument): Fig.Arg => {
   const base = argument.value

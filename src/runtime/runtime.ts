@@ -119,7 +119,7 @@ export const getSuggestions = async (cmd: string, cwd: string, shell: Shell, sig
       return;
     }
     if (rootToken != null && !rootToken.complete) {
-      return runCommand(rootToken);
+      return runCommand(rootToken, cwd); // BIOPILOT: M6 the project's platforms rank Catalog Tools
     }
 
     activeCmd = aliasExpand(activeCmd);
@@ -466,11 +466,14 @@ const runSubcommand = async (
   return runSubcommand(tokens.slice(1), allTokens, subcommand, cwd, shell, persistentOptions, acceptedTokens.concat(activeToken), undefined, undefined, signal);
 };
 
-const runCommand = async (token: CommandToken): Promise<SuggestionBlob | undefined> => {
-  // BIOPILOT: M6 Catalog Tools are completed ahead of other specs, below shell aliases (an alias of the same name wins).
+const runCommand = async (token: CommandToken, cwd?: string): Promise<SuggestionBlob | undefined> => {
+  // BIOPILOT: M6 Catalog Tools are completed ahead of other specs, below shell aliases (an alias of the same name
+  // wins), with a bonus for those of the project's platforms.
   const { catalogTools } = await import("../biopilot/engine/catalogSpec.js");
   const aliases = prefixMatches(getAliasNames(), token.token);
-  const bioTools = catalogTools().filter((tool) => tool.name.startsWith(token.token) && !aliases.includes(tool.name));
+  const bioTools = catalogTools(cwd)
+    .filter((tool) => tool.name.startsWith(token.token) && !aliases.includes(tool.name))
+    .sort((a, b) => b.priority - a.priority); // stable: Catalog order among equals
   const bioToolNames = new Set(bioTools.map((tool) => tool.name));
   const specs = prefixMatches(specNames, token.token).filter((spec) => !bioToolNames.has(spec) && !aliases.includes(spec));
   return {
@@ -493,7 +496,7 @@ const runCommand = async (token: CommandToken): Promise<SuggestionBlob | undefin
             type: "subcommand",
             allNames: [tool.name],
             icon: SuggestionIcons.Subcommand,
-            priority: 90,
+            priority: tool.priority,
           }) as Suggestion,
       ),
       ...specs.map(

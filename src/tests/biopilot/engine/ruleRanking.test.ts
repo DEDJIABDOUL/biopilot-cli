@@ -40,11 +40,28 @@ options:
     rank: 10
 `;
 
+/** A low-ranked option pushed down by a negative boost must still stay above the deprecated ones. */
+const FLOOR = `
+name: floor
+version: { args: ["--version"], regex: 'v(\\S+)' }
+options:
+  - names: ["--low"]
+    rank: 5
+    rules:
+      - when: { used: ["--x"] }
+        boost: -50
+  - names: ["--x"]
+    rank: 50
+  - names: ["--old"]
+    rank: 90
+    deprecated: true
+`;
+
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
 
 beforeAll(async () => {
-  process.env.BIOPILOT_CATALOG = compileValid({ "boosted.yml": BOOSTED });
+  process.env.BIOPILOT_CATALOG = compileValid({ "boosted.yml": BOOSTED, "floor.yml": FLOOR });
   runtime = await import("../../../runtime/runtime.js");
 });
 
@@ -65,4 +82,8 @@ test("rules on the project (platform, paired, assay) don't fire in phase 2", asy
 
 test("a deprecated option stays last, even when its rules hold", async () => {
   expect((await names("boosted --c --")).at(-1)).toBe("--f");
+});
+
+test("a negative boost never takes an option below the deprecated ones", async () => {
+  expect(await names("floor --x --")).toEqual(["--low", "--old"]);
 });

@@ -36,6 +36,7 @@ export const boostOptionSuggestions = <S extends Ranked>(suggestions: S[], optio
     const ranking = option ? optionRanking.get(option) : undefined;
     if (!ranking || ranking.deprecated || ranking.rules.length === 0) return suggestion;
     const boost = ranking.rules.reduce((sum, rule) => (ruleHolds(rule.when, context) ? sum + rule.boost : sum), 0);
-    return boost === 0 ? suggestion : { ...suggestion, priority: suggestion.priority + boost };
+    // Floor at 0: below that sit only the deprecated options, which must stay last.
+    return boost === 0 ? suggestion : { ...suggestion, priority: Math.max(0, suggestion.priority + boost) };
   });
 };

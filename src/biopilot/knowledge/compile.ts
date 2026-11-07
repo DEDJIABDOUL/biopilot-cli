@@ -341,7 +341,12 @@ const readToolSource = (sourcesDir: string, file: string, formats: Map<string, F
     const argumentAt = new Map<string, number>();
     args.forEach((argument: unknown, i: number) => {
       const name = (argument as Partial<YamlArgument> | null)?.name;
-      if (typeof name === "string") argumentAt.set(name, i);
+      if (typeof name !== "string") return;
+      const previous = argumentAt.get(name);
+      // A mate is named: two arguments of the same name would make `mate_of` ambiguous.
+      if (previous !== undefined)
+        fail([...at, "arguments", i, "name"], `argument "${name}" is already described at ${formatLocation([...at, "arguments", previous])}`);
+      else argumentAt.set(name, i);
     });
     const argumentMateClaimedBy = new Map<number, number>();
     args.forEach((argument: unknown, i: number) => {
@@ -391,6 +396,15 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   const tempPath = `${outputPath}.tmp-${process.pid}`;
   fs.rmSync(tempPath, { force: true });
+  try {
+    writeCatalogFile(tools, formats, tempPath, biopilotVersion);
+    fs.renameSync(tempPath, outputPath);
+  } finally {
+    fs.rmSync(tempPath, { force: true }); // nothing left on failure; already gone after the rename
+  }
+};
+
+const writeCatalogFile = (tools: ToolSource[], formats: FormatSource[], tempPath: string, biopilotVersion: string) => {
   const db = new Database(tempPath);
   try {
     db.exec(CATALOG_DDL);
@@ -520,7 +534,6 @@ const writeCatalog = (tools: ToolSource[], formats: FormatSource[], outputPath: 
   } finally {
     db.close();
   }
-  fs.renameSync(tempPath, outputPath);
 };
 
 /** Validates every tool YAML in `sourcesDir` (and the formats file) and, if all are valid, writes the Catalog. */
@@ -553,6 +566,10 @@ export const compileCatalog = ({ sourcesDir, formatsPath, outputPath, biopilotVe
   }
 
   if (errors.length > 0 || !formats) return { ok: false, errors };
-  writeCatalog(tools, formats, outputPath, biopilotVersion);
+  try {
+    writeCatalog(tools, formats, outputPath, biopilotVersion);
+  } catch (error) {
+    return { ok: false, errors: [{ file: outputPath, location: "document", message: `cannot write the Catalog: ${(error as Error).message}` }] };
+  }
   return { ok: true, toolCount: tools.length };
 };

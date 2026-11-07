@@ -160,6 +160,12 @@ describe("project detection", () => {
     expect(detected).toMatchObject({ assay: "rna-seq", platforms: [], config: { resultsDir: null, reference: null } });
   });
 
+  test("a hostile .biopilot.toml (a cloned repository) cannot pollute BioPilot's objects", () => {
+    const hostile = '[__proto__]\npolluted = "yes"\n[a.__proto__]\npolluted = "yes"\n';
+    detect(project([".biopilot.toml"], { ".biopilot.toml": hostile }));
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
   test("an unreadable folder gives an empty project, never an error", () => {
     expect(detect(path.join(tempDir(), "missing"))).toMatchObject({ files: [], platforms: [], assay: "unknown", paired: null });
   });

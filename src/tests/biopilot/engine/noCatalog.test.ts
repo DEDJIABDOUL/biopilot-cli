@@ -21,3 +21,8 @@ beforeAll(async () => {
 test("a Catalog tool gets no BioPilot suggestions, and nothing throws", async () => {
   await expect(runtime.getSuggestions("fastp --", os.tmpdir(), Shell.Bash)).resolves.toBeUndefined();
 });
+
+test("command names are completed as before", async () => {
+  const suggestions = (await runtime.getSuggestions("sam", os.tmpdir(), Shell.Bash))?.suggestions ?? [];
+  expect(suggestions.map((s) => s.name)).not.toContain("samtools");
+});

@@ -57,4 +57,21 @@ describe("Catalog tools in the engine", () => {
     expect((await names("fastp --"))[0]).toBe("--in1");
     expect((await names("fastp -i reads_R1.fq --"))[0]).toBe("--out1");
   });
+
+  test("`sam` suggests samtools first (annex C, scenario 11)", async () => {
+    expect((await names("sam"))[0]).toBe("samtools");
+  });
+
+  test("`fas` suggests the Catalog tools fastp and fastqc first", async () => {
+    expect((await names("fas")).slice(0, 2).sort()).toEqual(["fastp", "fastqc"]);
+  });
+
+  test("general completion doesn't regress: `git ch` suggests checkout (annex C, scenario 10)", async () => {
+    expect(await names("git ch")).toEqual(expect.arrayContaining(["checkout"]));
+  });
+
+  test("a Catalog tool proposed as a command name carries its Catalog description", async () => {
+    const [samtools] = await suggest("sam");
+    expect(samtools).toMatchObject({ name: "samtools", description: "Toolkit to view, convert, sort, index and summarise SAM, BAM and CRAM alignments" });
+  });
 });

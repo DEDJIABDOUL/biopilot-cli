@@ -69,6 +69,22 @@ const toFigCommand = (current: Catalog, command: Command, name: string, descript
   };
 };
 
+/** The Catalog's Tools (name and description), for command-name completion (spec M6); empty when unavailable. */
+let tools: { name: string; description: string | undefined }[] | undefined;
+export const catalogTools = (): { name: string; description: string | undefined }[] => {
+  if (tools === undefined) {
+    try {
+      tools =
+        getCatalog()
+          ?.listTools()
+          .map((tool) => ({ name: tool.name, description: tool.description ?? undefined })) ?? [];
+    } catch {
+      tools = [];
+    }
+  }
+  return tools;
+};
+
 /**
  * The spec of a Catalog Tool, or nothing when the Tool isn't in the Catalog or the Catalog is unavailable.
  * Never throws; built once per Tool per session.

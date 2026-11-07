@@ -10,6 +10,13 @@ import { optionRanking } from "./ranking.js";
 /** Below every Rank (0–100): deprecated options come last, whatever their Rank. */
 const DEPRECATED_PRIORITY = -1;
 
+/**
+ * The engine tells arrays apart with `instanceof Array`, so every array of a spec must be of the engine's realm.
+ * The Catalog's rows can be arrays of another realm (under Jest, the SQLite addon is loaded once per worker, #36);
+ * `Array.from` rebuilds them in this one.
+ */
+const mapLocal = <T, U>(items: readonly T[], map: (item: T) => U): U[] => Array.from(items, (item) => map(item));
+
 /** The Catalog, opened once per session; `null` when unavailable (the engine then falls back to Fig). */
 let catalog: Catalog | null | undefined;
 const specs = new Map<string, Fig.Subcommand | null>();
@@ -29,7 +36,7 @@ const valueArg = (value: ValueSpec, name: string, description?: string): Fig.Arg
   isOptional: value.optional,
   isVariadic: value.multiple,
   ...(value.type === "file" ? { template: "filepaths" as const } : value.type === "dir" ? { template: "folders" as const } : {}),
-  ...(value.values.length > 0 ? { suggestions: value.values.map((v) => ({ name: v.value, description: v.description ?? undefined })) } : {}),
+  ...(value.values.length > 0 ? { suggestions: mapLocal(value.values, (v) => ({ name: v.value, description: v.description ?? undefined })) } : {}),
 });
 
 const valueName = (value: ValueSpec) => (value.formats.length > 0 ? value.formats.join("|") : value.type);
@@ -58,12 +65,14 @@ const toFigArg = (argument: Argument): Fig.Arg => {
 };
 
 const toFigCommand = (current: Catalog, command: Command, name: string, description: string | undefined): Fig.Subcommand => {
-  const args = current.listArguments(command).map(toFigArg);
-  const subcommands = current.listSubcommands(command).map((sub) => toFigCommand(current, sub, sub.path[sub.path.length - 1], sub.description ?? undefined));
+  const args = mapLocal(current.listArguments(command), toFigArg);
+  const subcommands = mapLocal(current.listSubcommands(command), (sub) =>
+    toFigCommand(current, sub, sub.path[sub.path.length - 1], sub.description ?? undefined),
+  );
   return {
     name,
     ...(description ? { description } : {}),
-    options: current.listOptions(command).map(toFigOption),
+    options: mapLocal(current.listOptions(command), toFigOption),
     ...(args.length > 0 ? { args } : {}),
     ...(subcommands.length > 0 ? { subcommands } : {}),
   };
@@ -74,10 +83,8 @@ let tools: { name: string; description: string | undefined }[] | undefined;
 export const catalogTools = (): { name: string; description: string | undefined }[] => {
   if (tools === undefined) {
     try {
-      tools =
-        getCatalog()
-          ?.listTools()
-          .map((tool) => ({ name: tool.name, description: tool.description ?? undefined })) ?? [];
+      const listed = getCatalog()?.listTools() ?? [];
+      tools = mapLocal(listed, (tool) => ({ name: tool.name, description: tool.description ?? undefined }));
     } catch {
       tools = [];
     }

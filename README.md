@@ -28,6 +28,11 @@ Available from the first release (before it, install from the sources). No admin
 
 From the sources: see Development below, then `biopilot init bash` (or zsh, fish) prints the line to add.
 
+## Documentation
+
+- [User guide](./docs/guide.md): using BioPilot, what the suggestions are based on, the status line, every command, `.biopilot.toml`, configuration, privacy, troubleshooting.
+- [Adding a tool to the Catalog](./docs/contributing-tools.md): the YAML format, ranks, rules, formats, help recordings and tests.
+
 ## Development
 
 ```shell

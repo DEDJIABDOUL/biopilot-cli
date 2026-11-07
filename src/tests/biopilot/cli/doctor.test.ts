@@ -6,7 +6,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { installationChecks } from "../../../biopilot/cli/doctor.js";
+import { installationChecks } from "../../../biopilot/cli/doctorChecks.js";
 import { openUserStore } from "../../../biopilot/profile/userStore.js";
 import { FASTP, SAMTOOLS, compileValid, tempDir, writeFakeCondaEnv, writeFakeTool } from "../helpers.js";
 

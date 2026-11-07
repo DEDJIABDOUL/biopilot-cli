@@ -6,20 +6,27 @@
 
 import { jest } from "@jest/globals";
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
 import { FASTP, SAMTOOLS, compileValid, tempDir, writeFakeCondaEnv, writeFakeTool } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
-const catalogPath = compileValid({ "fastp.yml": FASTP, "samtools.yml": SAMTOOLS });
+// The repository's formats: the project section recognises annotations, read files, indexes.
+const catalogPath = compileValid({ "fastp.yml": FASTP, "samtools.yml": SAMTOOLS }, fs.readFileSync(path.join(repoRoot, "knowledge", "formats.yml"), "utf-8"));
 const userStore = path.join(tempDir(), "user.db"); // never created: status only reads it
 
-const status = (env: Record<string, string>, ...args: string[]) => {
-  const result = spawnSync(process.execPath, ["--import", "tsx", path.join(repoRoot, "src", "index.ts"), "status", ...args], {
-    cwd: repoRoot,
-    env: { HOME: process.env.HOME ?? "", BIOPILOT_CATALOG: catalogPath, BIOPILOT_USER_STORE: userStore, FORCE_COLOR: "0", ...env },
-    encoding: "utf-8",
-  });
+const status = (env: Record<string, string>, ...args: string[]) => statusIn(repoRoot, env, ...args);
+const statusIn = (cwd: string, env: Record<string, string>, ...args: string[]) => {
+  const result = spawnSync(
+    process.execPath,
+    ["--import", path.join(repoRoot, "node_modules", "tsx", "dist", "esm", "index.mjs"), path.join(repoRoot, "src", "index.ts"), "status", ...args],
+    {
+      cwd,
+      env: { HOME: process.env.HOME ?? "", BIOPILOT_CATALOG: catalogPath, BIOPILOT_USER_STORE: userStore, FORCE_COLOR: "0", ...env },
+      encoding: "utf-8",
+    },
+  );
   return { code: result.status, stdout: result.stdout, stderr: result.stderr };
 };
 
@@ -91,5 +98,25 @@ describe("biopilot status", () => {
     const { code, stderr } = status({ PATH: systemBin, BIOPILOT_CATALOG: path.join(root, "missing.db") });
     expect(code).toBe(1);
     expect(stderr).toContain("the Catalog is unavailable");
+  });
+
+  test("the project around the current folder: root, platforms, assay, read pairs, config", () => {
+    const project = tempDir();
+    for (const file of ["Snakefile", "data/s_R1.fq", "data/s_R2.fq", "genes.gtf"]) {
+      fs.mkdirSync(path.dirname(path.join(project, file)), { recursive: true });
+      fs.writeFileSync(path.join(project, file), "");
+    }
+    const { code, stdout } = statusIn(path.join(project, "data"), { PATH: systemBin }, "--json");
+    expect(code).toBe(0);
+    expect(JSON.parse(stdout).project).toEqual({
+      root: project,
+      marker: "Snakefile",
+      platforms: ["illumina"],
+      assay: "rna-seq",
+      readPairs: 1,
+      config: null,
+      truncated: false,
+    });
+    expect(statusIn(project, { PATH: systemBin }).stdout).toMatch(/^ {2}platforms: illumina, assay: rna-seq, read pairs: 1$/m);
   });
 });

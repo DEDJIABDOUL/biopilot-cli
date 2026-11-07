@@ -14,7 +14,7 @@ cmd
     const { runStatus } = await import("./statusRunner.js");
     process.exitCode = runStatus(
       { json: options.json === true },
-      { stdout: (t) => process.stdout.write(t), stderr: (t) => process.stderr.write(t), env: process.env },
+      { stdout: (t) => process.stdout.write(t), stderr: (t) => process.stderr.write(t), env: process.env, cwd: process.cwd() },
     );
   });
 

@@ -74,6 +74,8 @@ export interface UserStore {
   usageCounts(tool: string, command: string): Map<string, number>;
   addUsage(tool: string, command: string, optionName: string, now?: number): void;
   resetUsage(): void;
+  /** Every Profile stored for a tool, most recent first. */
+  listProfiles(tool: string): Profile[];
   getLearnedTool(name: string): LearnedTool | undefined;
   listLearnedTools(): LearnedTool[];
   putLearnedTool(tool: LearnedTool): void;
@@ -100,6 +102,9 @@ class SqliteUserStore implements UserStore {
         "INSERT INTO usage (tool, command, option_name, count, last_used) VALUES (?, ?, ?, 1, ?) ON CONFLICT (tool, command, option_name) DO UPDATE SET count = count + 1, last_used = excluded.last_used",
       ),
       resetUsage: db.prepare("DELETE FROM usage"),
+      listProfiles: db.prepare<[string], { version: string; command: string; options: string; fingerprint: string; created_at: number }>(
+        "SELECT version, command, options, fingerprint, created_at FROM profiles WHERE tool = ? ORDER BY created_at DESC",
+      ),
       getLearned: db.prepare<[string], { definition: string }>("SELECT definition FROM learned_tools WHERE name = ?"),
       listLearned: db.prepare<[], { definition: string }>("SELECT definition FROM learned_tools ORDER BY name"),
       putLearned: db.prepare("INSERT OR REPLACE INTO learned_tools (name, definition) VALUES (?, ?)"),
@@ -149,6 +154,21 @@ class SqliteUserStore implements UserStore {
 
   resetUsage(): void {
     this.#statements.resetUsage.run();
+  }
+
+  listProfiles(tool: string): Profile[] {
+    try {
+      return this.#statements.listProfiles.all(tool).map((row) => ({
+        tool,
+        version: row.version,
+        command: row.command,
+        options: JSON.parse(row.options) as HelpOption[],
+        fingerprint: row.fingerprint,
+        createdAt: row.created_at,
+      }));
+    } catch {
+      return [];
+    }
   }
 
   getLearnedTool(name: string): LearnedTool | undefined {

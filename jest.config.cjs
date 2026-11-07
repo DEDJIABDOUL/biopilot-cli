@@ -27,7 +27,7 @@ module.exports = {
   // entry point, where coverage cannot see them.
   collectCoverageFrom: [
     "src/biopilot/**/*.ts",
-    "!src/biopilot/cli/{info,status,sync,uninstall,resetUsage,computeProfile,doctor}.ts",
+    "!src/biopilot/cli/{info,status,sync,uninstall,resetUsage,computeProfile,doctor,learn,search}.ts",
   ],
   coverageThreshold: { global: { lines: 80 } },
   coverageReporters: ["text-summary"],

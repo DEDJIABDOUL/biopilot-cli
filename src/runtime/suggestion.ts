@@ -12,6 +12,8 @@ import log from "../utils/log.js";
 import { escapePath } from "./utils.js";
 import { addPathSeparator, endsWithPathSeparator, getPathDirname, removePathSeparator, Shell } from "../utils/shell.js";
 import { getConfig } from "../utils/config.js";
+// BIOPILOT: M4 context rules of Catalog options.
+import { boostOptionSuggestions } from "../biopilot/engine/ranking.js";
 
 export enum SuggestionIcons {
   File = "📄",
@@ -122,7 +124,8 @@ const getSuggestionPriority = (suggestion: Fig.Suggestion): number => {
     (suggestion.name instanceof Array
       ? suggestion.name.some((n) => n.startsWith("--") || n.startsWith("-"))
       : suggestion?.name?.startsWith("--") || suggestion?.name?.startsWith("-"));
-  if (isOption) return 45;
+  // BIOPILOT: M4 an option with an explicit priority keeps it (upstream forced every option to 45).
+  if (isOption) return suggestion.priority ?? 45;
   return suggestion.priority ?? 50;
 };
 
@@ -272,7 +275,8 @@ const optionSuggestions = (
 ): Suggestion[] => {
   const usedOptions = new Set(acceptedTokens.filter((t) => t.isOption).map((t) => t.token));
   const validOptions = options?.filter((o) => o.exclusiveOn?.every((exclusiveOption) => !usedOptions.has(exclusiveOption)) ?? true);
-  return filter<Fig.Option>(validOptions ?? [], filterStrategy, partialCmd, "option");
+  // BIOPILOT: M4 Catalog options also get the boosts of their context rules that hold.
+  return boostOptionSuggestions(filter<Fig.Option>(validOptions ?? [], filterStrategy, partialCmd, "option"), validOptions ?? [], [...usedOptions]);
 };
 
 function adjustPathSuggestions(

@@ -18,5 +18,8 @@ module.exports = {
       },
     ],
   },
-  testPathIgnorePatterns: ["/node_modules/", "src/tests/ui/", ".tui-test/"],
+  testPathIgnorePatterns: ["/node_modules/", "src/tests/ui/", ".tui-test/", "/.claude/"],
+  // BIOPILOT: one temporary folder per test run, removed at the end; agent worktrees under .claude/ ignored.
+  globalSetup: "<rootDir>/scripts/jest/tmpdir-setup.cjs",
+  globalTeardown: "<rootDir>/scripts/jest/tmpdir-teardown.cjs",
 };

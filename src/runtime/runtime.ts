@@ -62,6 +62,13 @@ const loadSpec = async (cmd: CommandToken[], signal?: AbortSignal): Promise<Fig.
   if (loadedSpecs[rootToken.token]) {
     return loadedSpecs[rootToken.token];
   }
+  // BIOPILOT: M3 a Catalog Tool gets its spec from the Catalog (loaded on demand); otherwise Fig, as before.
+  const { catalogSpec } = await import("../biopilot/engine/catalogSpec.js");
+  const biopilotSpec = catalogSpec(rootToken.token);
+  if (biopilotSpec) {
+    loadedSpecs[rootToken.token] = biopilotSpec;
+    return biopilotSpec;
+  }
   if (specSet[rootToken.token]) {
     signal?.throwIfAborted();
     const specPath = specSet[rootToken.token];
@@ -327,7 +334,20 @@ const runArg = async (
       if (option != null) {
         return runOption(tokens, allTokens, option, subcommand, cwd, shell, persistentOptions, acceptedTokens, signal);
       }
-      return;
+      // BIOPILOT: M5 an unknown option is skipped (as a flag) instead of ending the analysis.
+      return runArg(
+        tokens.slice(1),
+        allTokens,
+        args,
+        subcommand,
+        cwd,
+        shell,
+        persistentOptions,
+        acceptedTokens.concat(activeToken),
+        fromOption,
+        fromVariadic,
+        signal,
+      );
     }
 
     const nextSubcommand = await genSubcommand(activeToken.token, subcommand, signal);
@@ -403,7 +423,19 @@ const runSubcommand = async (
     if (option != null) {
       return runOption(tokens, allTokens, option, subcommand, cwd, shell, persistentOptions, acceptedTokens, signal);
     }
-    return;
+    // BIOPILOT: M5 an unknown option is skipped (as a flag) instead of ending the analysis.
+    return runSubcommand(
+      tokens.slice(1),
+      allTokens,
+      subcommand,
+      cwd,
+      shell,
+      persistentOptions,
+      acceptedTokens.concat(activeToken),
+      argsDepleted,
+      argsUsed,
+      signal,
+    );
   }
 
   const nextSubcommand = await genSubcommand(activeToken.token, subcommand, signal);
@@ -435,8 +467,12 @@ const runSubcommand = async (
 };
 
 const runCommand = async (token: CommandToken): Promise<SuggestionBlob | undefined> => {
-  const specs = prefixMatches(specNames, token.token);
+  // BIOPILOT: M6 Catalog Tools are completed ahead of other specs, below shell aliases (an alias of the same name wins).
+  const { catalogTools } = await import("../biopilot/engine/catalogSpec.js");
   const aliases = prefixMatches(getAliasNames(), token.token);
+  const bioTools = catalogTools().filter((tool) => tool.name.startsWith(token.token) && !aliases.includes(tool.name));
+  const bioToolNames = new Set(bioTools.map((tool) => tool.name));
+  const specs = prefixMatches(specNames, token.token).filter((spec) => !bioToolNames.has(spec) && !aliases.includes(spec));
   return {
     suggestions: [
       ...aliases.map(
@@ -447,6 +483,17 @@ const runCommand = async (token: CommandToken): Promise<SuggestionBlob | undefin
             allNames: [alias],
             icon: SuggestionIcons.Shortcut,
             priority: 100,
+          }) as Suggestion,
+      ),
+      ...bioTools.map(
+        (tool) =>
+          ({
+            name: tool.name,
+            description: tool.description,
+            type: "subcommand",
+            allNames: [tool.name],
+            icon: SuggestionIcons.Subcommand,
+            priority: 90,
           }) as Suggestion,
       ),
       ...specs.map(

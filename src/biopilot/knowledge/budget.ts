@@ -13,12 +13,24 @@ export const CATALOG_SIZE_BUDGET = { bytes: 5_000_000, tools: 50 } as const;
 /** Spec §11: a SQLite query under 2 ms. */
 export const LOOKUP_BUDGET_MS = 2;
 
+/** Spec §11: a tool's first suggestion, cold cache (fresh process, Catalog not yet opened), under 300 ms. */
+export const COLD_SUGGESTION_BUDGET_MS = 300;
+
+/** Spec §11: a known tool's suggestions, warm cache, under 10 ms on BioPilot's side. */
+export const WARM_SUGGESTION_BUDGET_MS = 10;
+
 /** Size budget of a Catalog of `toolCount` tools: the 50-tool budget scaled linearly, at least one tool's share. */
 export const catalogSizeBudget = (toolCount: number): number => (Math.max(1, toolCount) * CATALOG_SIZE_BUDGET.bytes) / CATALOG_SIZE_BUDGET.tools;
 
 export type LookupTiming = { name: string; samples: number; medianMs: number; p95Ms: number };
 
 const percentile = (sorted: number[], fraction: number) => sorted[Math.min(Math.ceil(sorted.length * fraction) - 1, sorted.length - 1)] ?? 0;
+
+/** Median and 95th percentile of measured durations, in ms. */
+export const summarizeTimings = (name: string, durations: readonly number[]): LookupTiming => {
+  const sorted = [...durations].sort((a, b) => a - b);
+  return { name, samples: sorted.length, medianMs: percentile(sorted, 0.5), p95Ms: percentile(sorted, 0.95) };
+};
 
 /** Times `samples` calls of `call`, rotating over `probes`, after one warm-up round. */
 const time = <P>(name: string, probes: P[], samples: number, call: (probe: P) => unknown): LookupTiming => {
@@ -30,8 +42,7 @@ const time = <P>(name: string, probes: P[], samples: number, call: (probe: P) =>
     call(probe);
     durations.push(performance.now() - start);
   }
-  durations.sort((a, b) => a - b);
-  return { name, samples, medianMs: percentile(durations, 0.5), p95Ms: percentile(durations, 0.95) };
+  return summarizeTimings(name, durations);
 };
 
 /**

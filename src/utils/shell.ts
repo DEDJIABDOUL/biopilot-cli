@@ -324,25 +324,30 @@ export const getShellSourceCommand = (shell: Shell, initFilePath?: string): stri
   return "";
 };
 
+// BIOPILOT: M1 the init script starts `biopilot` (it still called the original `is`, missing here, so every
+// new terminal closed). It replaces the shell only when the session ran: with biopilot missing from PATH
+// or a session that cannot start (resources of another version), the terminal stays usable.
 export const getShellConfig = (shell: Shell): string => {
   switch (shell) {
     case Shell.Zsh:
       return `if [[ -z "\${BIOPILOT}" && $- = *i* && \${+ZSH_EXECUTION_STRING} -eq 0 && -z "\${VSCODE_RESOLVING_ENVIRONMENT}" ]]; then
-  if [[ -o login ]]; then
-    is -s zsh --login ; exit
-  else
-    is -s zsh ; exit
+  if (( $+commands[biopilot] )); then
+    if [[ -o login ]]; then
+      biopilot -s zsh --login && exit
+    else
+      biopilot -s zsh && exit
+    fi
   fi
 fi`;
     case Shell.Bash:
       return `if [[ -z "\${BIOPILOT}" && $- = *i* && $- != *c* && -z "\${VSCODE_RESOLVING_ENVIRONMENT}" ]]; then
-  shopt -q login_shell
-  login_shell=$?
-  if [ $login_shell -eq 0 ]; then
-    is -s bash --login ; exit
-  else
-    is -s bash ; exit
-  fi 
+  if command -v biopilot > /dev/null 2>&1; then
+    if shopt -q login_shell; then
+      biopilot -s bash --login && exit
+    else
+      biopilot -s bash && exit
+    fi
+  fi
 fi`;
     case Shell.Powershell:
     case Shell.Pwsh:
@@ -350,26 +355,28 @@ fi`;
 $__IsNoExitFlag = ([Environment]::GetCommandLineArgs() | Where-Object { $_ -imatch '^-noe(xit)?$' }).Count -gt 0
 $__IsInteractive = -not $__IsCommandFlag -or ($__IsCommandFlag -and $__IsNoExitFlag)
 if ([string]::IsNullOrEmpty($env:BIOPILOT) -and [Environment]::UserInteractive -and $__IsInteractive -and [string]::IsNullOrEmpty($env:VSCODE_RESOLVING_ENVIRONMENT)) {
-  is -s ${shell}
+  biopilot -s ${shell}
   Stop-Process -Id $pid
 }`;
     case Shell.Fish:
       return `if test -z "$BIOPILOT" && status --is-interactive && test -z "$VSCODE_RESOLVING_ENVIRONMENT"
-  if status --is-login
-    is -s fish --login ; kill %self
-  else
-    is -s fish ; kill %self
-  end 
+  if command -q biopilot
+    if status --is-login
+      biopilot -s fish --login; and kill %self
+    else
+      biopilot -s fish; and kill %self
+    end
+  end
 end`;
     case Shell.Xonsh:
       return `if 'BIOPILOT' not in \${...} and $XONSH_INTERACTIVE and 'VSCODE_RESOLVING_ENVIRONMENT' not in \${...}:
     if $XONSH_LOGIN:
-        is -s xonsh --login ; exit
+        biopilot -s xonsh --login ; exit
     else:
-        is -s xonsh ; exit`;
+        biopilot -s xonsh ; exit`;
     case Shell.Nushell:
       return `if "BIOPILOT" not-in $env and $nu.is-interactive and "VSCODE_RESOLVING_ENVIRONMENT" not-in $env {
-    if $nu.is-login { is -s nu --login ; exit } else { is -s nu ; exit }
+    if $nu.is-login { biopilot -s nu --login ; exit } else { biopilot -s nu ; exit }
 }`;
   }
   return "";

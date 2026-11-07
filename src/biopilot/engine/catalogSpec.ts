@@ -14,6 +14,7 @@ import { knownVersion } from "../profile/compute.js";
 import { requestProfile } from "../profile/detached.js";
 import type { HelpOption } from "../profile/helpParser.js";
 import { openUserStore, versionKey, type UserStore } from "../profile/userStore.js";
+import { fileGenerator, type FileValueContext } from "./fileValues.js";
 import { optionRanking } from "./ranking.js";
 
 /** Below every Rank (0–100): deprecated options come last, whatever their Rank. */
@@ -46,13 +47,29 @@ const getCatalog = (): Catalog | null => {
   return catalog;
 };
 
-/** What a value takes, as a Fig argument: files or folders, suggested values, optional, several. */
-const valueArg = (value: ValueSpec, name: string, description?: string): Fig.Arg => ({
+/** Every name of each option of a command, by canonical name: how values refer to other options. */
+type NamesOf = (canonicalName: string) => readonly string[];
+const namesOfOptions = (options: readonly Option[]): NamesOf => {
+  const names = new Map(options.map((option) => [option.canonicalName, option.aliases] as const));
+  return (canonicalName) => names.get(canonicalName) ?? [canonicalName];
+};
+
+/**
+ * What a value takes, as a Fig argument: files or folders, suggested values, optional, several. A file or
+ * folder of declared formats gets BioPilot's project-aware generator; without formats, the engine's templates.
+ */
+const valueArg = (value: ValueSpec, name: string, description: string | undefined, files: FileValueContext): Fig.Arg => ({
   name,
   ...(description ? { description } : {}),
   isOptional: value.optional,
   isVariadic: value.multiple,
-  ...(value.type === "file" ? { template: "filepaths" as const } : value.type === "dir" ? { template: "folders" as const } : {}),
+  ...((value.type === "file" || value.type === "dir") && value.formats.length > 0
+    ? { generators: fileGenerator(value, files, getCatalog) }
+    : value.type === "file"
+    ? { template: "filepaths" as const }
+    : value.type === "dir"
+    ? { template: "folders" as const }
+    : {}),
   ...(value.values.length > 0 ? { suggestions: mapLocal(value.values, (v) => ({ name: v.value, description: v.description ?? undefined })) } : {}),
 });
 
@@ -61,12 +78,14 @@ const valueName = (value: ValueSpec) => (value.formats.length > 0 ? value.format
 /** Canonical name first, so that the engine shows it and matches it first. */
 const optionNames = (option: Option): string[] => [option.canonicalName, ...option.aliases.filter((alias) => alias !== option.canonicalName)];
 
-const toFigOption = (option: Option): Fig.Option => {
+const toFigOption = (option: Option, namesOf: NamesOf): Fig.Option => {
   const figOption: Fig.Option = {
     name: optionNames(option),
     description: option.description ?? undefined,
     priority: option.deprecated ? DEPRECATED_PRIORITY : option.rank,
-    ...(option.value ? { args: valueArg(option.value, valueName(option.value)) } : {}),
+    ...(option.value
+      ? { args: valueArg(option.value, valueName(option.value), undefined, { ownNames: option.aliases, namesOf, mate: option.mate, derive: option.derive }) }
+      : {}),
     ...(option.repeatable ? { isRepeatable: true } : {}),
     ...(option.hidden ? { hidden: true } : {}),
   };
@@ -74,9 +93,9 @@ const toFigOption = (option: Option): Fig.Option => {
   return figOption;
 };
 
-const toFigArg = (argument: Argument): Fig.Arg => {
+const toFigArg = (argument: Argument, namesOf: NamesOf): Fig.Arg => {
   const base = argument.value
-    ? valueArg(argument.value, argument.name, argument.description ?? undefined)
+    ? valueArg(argument.value, argument.name, argument.description ?? undefined, { ownNames: [], namesOf, mate: null, derive: null })
     : { name: argument.name, description: argument.description ?? undefined };
   return { ...base, isVariadic: argument.variadic || (argument.value?.multiple ?? false) };
 };
@@ -102,6 +121,8 @@ const toProfileOnlyOption = (option: HelpOption): Fig.Option => {
  */
 const commandOptions = (current: Catalog, command: Command, installed: Installed | undefined): { options: Fig.Option[]; complete: boolean } => {
   const catalogOptions = current.listOptions(command);
+  const namesOf = namesOfOptions(catalogOptions);
+  const toOption = (option: Option) => toFigOption(option, namesOf);
   const profile = installed?.store?.getProfile(installed.tool, installed.key, command.path.join(" "));
   if (profile && profile.options.length > 0) {
     const byAlias = new Map(catalogOptions.flatMap((option) => option.aliases.map((alias) => [alias, option] as const)));
@@ -117,7 +138,7 @@ const commandOptions = (current: Catalog, command: Command, installed: Installed
       options: [
         ...mapLocal(
           catalogOptions.filter((option) => kept.has(option)),
-          toFigOption,
+          toOption,
         ),
         ...extra,
       ],
@@ -127,7 +148,7 @@ const commandOptions = (current: Catalog, command: Command, installed: Installed
   const version = installed?.version;
   const listed = version === undefined ? catalogOptions : catalogOptions.filter((option) => withinVersions(version, option.since, option.until));
   // A missing Profile may land later (sync, detached computation); a computed but empty one never will.
-  return { options: mapLocal(listed, toFigOption), complete: installed === undefined || profile !== undefined };
+  return { options: mapLocal(listed, toOption), complete: installed === undefined || profile !== undefined };
 };
 
 const toFigCommand = (
@@ -137,7 +158,8 @@ const toFigCommand = (
   description: string | undefined,
   installed: Installed | undefined,
 ): { spec: Fig.Subcommand; complete: boolean } => {
-  const args = mapLocal(current.listArguments(command), toFigArg);
+  const namesOf = namesOfOptions(current.listOptions(command));
+  const args = mapLocal(current.listArguments(command), (argument) => toFigArg(argument, namesOf));
   let complete = true;
   const subcommands = mapLocal(current.listSubcommands(command), (sub) => {
     const built = toFigCommand(current, sub, sub.path[sub.path.length - 1], sub.description ?? undefined, installed);

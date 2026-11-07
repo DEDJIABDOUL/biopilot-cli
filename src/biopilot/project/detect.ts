@@ -94,6 +94,21 @@ const walk = (root: string): { files: string[]; folders: string[]; truncated: bo
   return { files, folders, truncated: false };
 };
 
+/** The read number a file name carries (`_R1`, `_1`, `.R1`, `_R1_001` before the extension), if any. */
+export const readNumber = (file: string): 1 | 2 | undefined => {
+  const number = path.basename(file).match(MATE_MARKER)?.[2];
+  return number === "1" ? 1 : number === "2" ? 2 : undefined;
+};
+
+/** The other mate of a read file (absolute path), when it exists. */
+export const mateOf = (file: string): string | undefined => {
+  const base = path.basename(file);
+  const match = base.match(MATE_MARKER);
+  if (!match) return;
+  const mate = path.join(path.dirname(file), `${base.slice(0, match.index)}${match[1]}${match[2] === "1" ? "2" : "1"}${match[3]}`);
+  return fs.existsSync(mate) ? mate : undefined;
+};
+
 /** Complete read pairs among FASTQ files: both mates exist, names identical but for the marker. */
 export const readPairs = (files: readonly string[], formats: FormatRecogniser): ReadPair[] => {
   const present = new Set(files);

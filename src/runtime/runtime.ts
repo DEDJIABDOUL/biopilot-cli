@@ -334,7 +334,20 @@ const runArg = async (
       if (option != null) {
         return runOption(tokens, allTokens, option, subcommand, cwd, shell, persistentOptions, acceptedTokens, signal);
       }
-      return;
+      // BIOPILOT: M5 an unknown option is skipped (as a flag) instead of ending the analysis.
+      return runArg(
+        tokens.slice(1),
+        allTokens,
+        args,
+        subcommand,
+        cwd,
+        shell,
+        persistentOptions,
+        acceptedTokens.concat(activeToken),
+        fromOption,
+        fromVariadic,
+        signal,
+      );
     }
 
     const nextSubcommand = await genSubcommand(activeToken.token, subcommand, signal);
@@ -410,7 +423,19 @@ const runSubcommand = async (
     if (option != null) {
       return runOption(tokens, allTokens, option, subcommand, cwd, shell, persistentOptions, acceptedTokens, signal);
     }
-    return;
+    // BIOPILOT: M5 an unknown option is skipped (as a flag) instead of ending the analysis.
+    return runSubcommand(
+      tokens.slice(1),
+      allTokens,
+      subcommand,
+      cwd,
+      shell,
+      persistentOptions,
+      acceptedTokens.concat(activeToken),
+      argsDepleted,
+      argsUsed,
+      signal,
+    );
   }
 
   const nextSubcommand = await genSubcommand(activeToken.token, subcommand, signal);

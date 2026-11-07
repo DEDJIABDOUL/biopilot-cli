@@ -3,9 +3,8 @@
 
 // An option the spec doesn't know (e.g. a brand-new flag) doesn't stop suggestions for the rest of the line (M5).
 
-import os from "node:os";
 import { Shell } from "../../../utils/shell.js";
-import { SAMTOOLS, TRIMMER, compileValid, hideInstalledTools } from "../helpers.js";
+import { SAMTOOLS, TRIMMER, compileValid, hideInstalledTools, outsideAnyProject } from "../helpers.js";
 
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
@@ -16,7 +15,7 @@ beforeAll(async () => {
   runtime = await import("../../../runtime/runtime.js");
 });
 
-const names = async (line: string) => ((await runtime.getSuggestions(line, os.tmpdir(), Shell.Bash))?.suggestions ?? []).map((s) => s.name);
+const names = async (line: string) => ((await runtime.getSuggestions(line, outsideAnyProject, Shell.Bash))?.suggestions ?? []).map((s) => s.name);
 
 test("an unknown option is skipped and the options keep coming", async () => {
   expect(await names("trimmer --brand-new-flag --")).toEqual(expect.arrayContaining(["--in1", "--mode"]));

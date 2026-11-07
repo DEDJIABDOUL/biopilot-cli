@@ -9,11 +9,13 @@
 import { resolveBinary, type Binary } from "../env/resolver.js";
 import { sessionEnvironment } from "../env/session.js";
 import { withinVersions } from "../env/versionOrder.js";
-import { openCatalog, type Argument, type Catalog, type Command, type Option, type ValueSpec } from "../knowledge/catalog.js";
+import type { Argument, Catalog, Command, Option, ValueSpec } from "../knowledge/catalog.js";
+import { getCatalog, projectAt } from "./catalogAccess.js";
 import { knownVersion } from "../profile/compute.js";
 import { requestProfile } from "../profile/detached.js";
 import type { HelpOption } from "../profile/helpParser.js";
 import { openUserStore, versionKey, type UserStore } from "../profile/userStore.js";
+import { fileGenerator, type FileValueContext } from "./fileValues.js";
 import { optionRanking } from "./ranking.js";
 
 /** Below every Rank (0–100): deprecated options come last, whatever their Rank. */
@@ -26,8 +28,6 @@ const DEPRECATED_PRIORITY = -1;
  */
 const mapLocal = <T, U>(items: readonly T[], map: (item: T) => U): U[] => Array.from(items, (item) => map(item));
 
-/** The Catalog, opened once per session; `null` when unavailable (the engine then falls back to Fig). */
-let catalog: Catalog | null | undefined;
 /** Built specs, by Tool and what they were built for (binary, version, Profiles found). */
 const specs = new Map<string, { key: string; spec: Fig.Subcommand | null; checkedAt: number }>();
 /** Below this age, a spec built without every Profile is reused as is; older, the User store is asked again. */
@@ -38,21 +38,29 @@ const PROFILE_ONLY_RANK = 50;
 const versions = new Map<string, string | undefined>();
 let userStore: UserStore | undefined;
 
-const getCatalog = (): Catalog | null => {
-  if (catalog === undefined) {
-    const opened = openCatalog();
-    catalog = opened.available ? opened.catalog : null;
-  }
-  return catalog;
+/** Every name of each option of a command, by canonical name: how values refer to other options. */
+type NamesOf = (canonicalName: string) => readonly string[];
+const namesOfOptions = (options: readonly Option[]): NamesOf => {
+  const names = new Map(options.map((option) => [option.canonicalName, option.aliases] as const));
+  return (canonicalName) => names.get(canonicalName) ?? [canonicalName];
 };
 
-/** What a value takes, as a Fig argument: files or folders, suggested values, optional, several. */
-const valueArg = (value: ValueSpec, name: string, description?: string): Fig.Arg => ({
+/**
+ * What a value takes, as a Fig argument: files or folders, suggested values, optional, several. A file or
+ * folder of declared formats gets BioPilot's project-aware generator; without formats, the engine's templates.
+ */
+const valueArg = (value: ValueSpec, name: string, description: string | undefined, files: FileValueContext): Fig.Arg => ({
   name,
   ...(description ? { description } : {}),
   isOptional: value.optional,
   isVariadic: value.multiple,
-  ...(value.type === "file" ? { template: "filepaths" as const } : value.type === "dir" ? { template: "folders" as const } : {}),
+  ...((value.type === "file" || value.type === "dir") && value.formats.length > 0
+    ? { generators: fileGenerator(value, files, getCatalog) }
+    : value.type === "file"
+    ? { template: "filepaths" as const }
+    : value.type === "dir"
+    ? { template: "folders" as const }
+    : {}),
   ...(value.values.length > 0 ? { suggestions: mapLocal(value.values, (v) => ({ name: v.value, description: v.description ?? undefined })) } : {}),
 });
 
@@ -61,22 +69,30 @@ const valueName = (value: ValueSpec) => (value.formats.length > 0 ? value.format
 /** Canonical name first, so that the engine shows it and matches it first. */
 const optionNames = (option: Option): string[] => [option.canonicalName, ...option.aliases.filter((alias) => alias !== option.canonicalName)];
 
-const toFigOption = (option: Option): Fig.Option => {
+const toFigOption = (option: Option, namesOf: NamesOf, command: Command): Fig.Option => {
   const figOption: Fig.Option = {
     name: optionNames(option),
     description: option.description ?? undefined,
     priority: option.deprecated ? DEPRECATED_PRIORITY : option.rank,
-    ...(option.value ? { args: valueArg(option.value, valueName(option.value)) } : {}),
+    ...(option.value
+      ? { args: valueArg(option.value, valueName(option.value), undefined, { ownNames: option.aliases, namesOf, mate: option.mate, derive: option.derive }) }
+      : {}),
     ...(option.repeatable ? { isRepeatable: true } : {}),
     ...(option.hidden ? { hidden: true } : {}),
   };
-  optionRanking.set(figOption, { canonicalName: option.canonicalName, rules: option.rules, deprecated: option.deprecated });
+  optionRanking.set(figOption, {
+    canonicalName: option.canonicalName,
+    rules: option.rules,
+    deprecated: option.deprecated,
+    tool: command.tool,
+    command: command.path.join(" "),
+  });
   return figOption;
 };
 
-const toFigArg = (argument: Argument): Fig.Arg => {
+const toFigArg = (argument: Argument, namesOf: NamesOf): Fig.Arg => {
   const base = argument.value
-    ? valueArg(argument.value, argument.name, argument.description ?? undefined)
+    ? valueArg(argument.value, argument.name, argument.description ?? undefined, { ownNames: [], namesOf, mate: null, derive: null })
     : { name: argument.name, description: argument.description ?? undefined };
   return { ...base, isVariadic: argument.variadic || (argument.value?.multiple ?? false) };
 };
@@ -102,6 +118,8 @@ const toProfileOnlyOption = (option: HelpOption): Fig.Option => {
  */
 const commandOptions = (current: Catalog, command: Command, installed: Installed | undefined): { options: Fig.Option[]; complete: boolean } => {
   const catalogOptions = current.listOptions(command);
+  const namesOf = namesOfOptions(catalogOptions);
+  const toOption = (option: Option) => toFigOption(option, namesOf, command);
   const profile = installed?.store?.getProfile(installed.tool, installed.key, command.path.join(" "));
   if (profile && profile.options.length > 0) {
     const byAlias = new Map(catalogOptions.flatMap((option) => option.aliases.map((alias) => [alias, option] as const)));
@@ -117,7 +135,7 @@ const commandOptions = (current: Catalog, command: Command, installed: Installed
       options: [
         ...mapLocal(
           catalogOptions.filter((option) => kept.has(option)),
-          toFigOption,
+          toOption,
         ),
         ...extra,
       ],
@@ -127,7 +145,7 @@ const commandOptions = (current: Catalog, command: Command, installed: Installed
   const version = installed?.version;
   const listed = version === undefined ? catalogOptions : catalogOptions.filter((option) => withinVersions(version, option.since, option.until));
   // A missing Profile may land later (sync, detached computation); a computed but empty one never will.
-  return { options: mapLocal(listed, toFigOption), complete: installed === undefined || profile !== undefined };
+  return { options: mapLocal(listed, toOption), complete: installed === undefined || profile !== undefined };
 };
 
 const toFigCommand = (
@@ -137,7 +155,8 @@ const toFigCommand = (
   description: string | undefined,
   installed: Installed | undefined,
 ): { spec: Fig.Subcommand; complete: boolean } => {
-  const args = mapLocal(current.listArguments(command), toFigArg);
+  const namesOf = namesOfOptions(current.listOptions(command));
+  const args = mapLocal(current.listArguments(command), (argument) => toFigArg(argument, namesOf));
   let complete = true;
   const subcommands = mapLocal(current.listSubcommands(command), (sub) => {
     const built = toFigCommand(current, sub, sub.path[sub.path.length - 1], sub.description ?? undefined, installed);
@@ -171,18 +190,32 @@ const installedFor = (current: Catalog, tool: string): { binary: Binary; install
   return { binary, installed: { tool, version, key: versionKey(version, binary.fingerprint), store } };
 };
 
-/** The Catalog's Tools (name and description), for command-name completion (spec M6); empty when unavailable. */
-let tools: { name: string; description: string | undefined }[] | undefined;
-export const catalogTools = (): { name: string; description: string | undefined }[] => {
+/** Priority of a Catalog Tool's name in command-name completion (spec M6): above other specs (40). */
+const TOOL_PRIORITY = 90;
+/** M6: fixed bonus of a Tool whose platform is among the project's. */
+const PLATFORM_BONUS = 5;
+
+type ListedTool = { name: string; description: string | undefined; platforms: readonly string[] };
+let tools: ListedTool[] | undefined;
+/**
+ * The Catalog's Tools for command-name completion (spec M6), with their priority in the project around
+ * `cwd`; empty when the Catalog is unavailable.
+ */
+export const catalogTools = (cwd?: string): { name: string; description: string | undefined; priority: number }[] => {
   if (tools === undefined) {
     try {
       const listed = getCatalog()?.listTools() ?? [];
-      tools = mapLocal(listed, (tool) => ({ name: tool.name, description: tool.description ?? undefined }));
+      tools = mapLocal(listed, (tool) => ({ name: tool.name, description: tool.description ?? undefined, platforms: tool.platforms }));
     } catch {
       tools = [];
     }
   }
-  return tools;
+  const platforms = projectAt(cwd)?.platforms ?? [];
+  return mapLocal(tools, ({ name, description, platforms: own }) => ({
+    name,
+    description,
+    priority: TOOL_PRIORITY + (own.some((platform) => (platforms as readonly string[]).includes(platform)) ? PLATFORM_BONUS : 0),
+  }));
 };
 
 /**

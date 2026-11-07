@@ -311,3 +311,9 @@ export const writeFakeCondaEnv = (root: string, name: string, pkg: string, versi
  * tests (a samtools in /usr/bin) must not change what they check, nor get Profiles computed for them.
  */
 export const hideInstalledTools = (): void => setSessionEnvironment({ PATH: "" });
+
+/**
+ * An empty folder outside any project, for engine tests that don't test the project context: the shared
+ * temporary folder holds other tests' projects, which would make one.
+ */
+export const outsideAnyProject = tempDir();

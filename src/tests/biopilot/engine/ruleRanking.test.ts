@@ -3,9 +3,8 @@
 
 // Context rules boost options in the engine's ranking: priority = Rank + boosts of the rules that hold.
 
-import os from "node:os";
 import { Shell } from "../../../utils/shell.js";
-import { compileValid, hideInstalledTools } from "../helpers.js";
+import { compileValid, hideInstalledTools, outsideAnyProject } from "../helpers.js";
 
 const BOOSTED = `
 name: boosted
@@ -66,7 +65,7 @@ beforeAll(async () => {
   runtime = await import("../../../runtime/runtime.js");
 });
 
-const names = async (line: string) => ((await runtime.getSuggestions(line, os.tmpdir(), Shell.Bash))?.suggestions ?? []).map((s) => s.name);
+const names = async (line: string) => ((await runtime.getSuggestions(line, outsideAnyProject, Shell.Bash))?.suggestions ?? []).map((s) => s.name);
 
 test("without the options a rule depends on, options keep their Rank", async () => {
   expect(await names("boosted --")).toEqual(["--a", "--d", "--b", "--e", "--c", "--c-alias-target", "--f"]);
@@ -77,7 +76,7 @@ test("a rule whose options are on the line adds its boost; a negative boost lowe
   expect(await names("boosted -C --")).toEqual(["--a", "--b", "--e", "--c", "--d", "--f"]);
 });
 
-test("rules on the project (platform, paired, assay) don't fire in phase 2", async () => {
+test("rules on the project (platform, paired, assay) don't fire outside any project", async () => {
   expect((await names("boosted --")).indexOf("--e")).toBe(3);
 });
 

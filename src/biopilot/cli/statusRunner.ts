@@ -8,6 +8,7 @@ import { resolveBinary } from "../env/resolver.js";
 import { detectVersion } from "../env/version.js";
 import { openCatalog } from "../knowledge/catalog.js";
 import { profilesKnown } from "../profile/compute.js";
+import { detectProject } from "../project/detect.js";
 import { openUserStore } from "../profile/userStore.js";
 
 /** Version of the `--json` output contract. */
@@ -18,6 +19,8 @@ export type StatusIO = {
   stderr: (text: string) => void;
   /** The shell's environment: `PATH`, `CONDA_PREFIX`, `CONDA_DEFAULT_ENV`. */
   env: NodeJS.ProcessEnv;
+  /** The folder the project is detected from. */
+  cwd: string;
 };
 
 type ToolStatus = {
@@ -57,12 +60,26 @@ export const runStatus = ({ json }: { json: boolean }, io: StatusIO): number => 
       };
     });
     const environment = { name: io.env.CONDA_DEFAULT_ENV || null, prefix: io.env.CONDA_PREFIX || null };
+    const detected = detectProject(io.cwd, catalog);
+    const project = {
+      root: detected.root,
+      marker: detected.marker,
+      platforms: detected.platforms,
+      assay: detected.assay,
+      readPairs: detected.pairs.length,
+      config: detected.config?.file ?? null,
+      truncated: detected.truncated,
+    };
     if (json) {
-      io.stdout(JSON.stringify({ format: STATUS_JSON_FORMAT, environment, tools }, null, 2) + "\n");
+      io.stdout(JSON.stringify({ format: STATUS_JSON_FORMAT, environment, project, tools }, null, 2) + "\n");
       return 0;
     }
     const lines = [
       environment.prefix ? `environment: ${environment.name ?? "conda"} (${environment.prefix})` : "environment: none (no conda environment active)",
+      `project: ${project.root}${project.marker ? ` (${project.marker})` : " (no project marker: this folder only)"}`,
+      `  platforms: ${project.platforms.length > 0 ? project.platforms.join(", ") : "generic"}, assay: ${project.assay}, read pairs: ${project.readPairs}` +
+        (project.config ? `, config: ${project.config}` : "") +
+        (project.truncated ? chalk.dim(" (first 2 000 entries)") : ""),
       "",
     ];
     const width = Math.max(0, ...tools.map((tool) => tool.name.length));

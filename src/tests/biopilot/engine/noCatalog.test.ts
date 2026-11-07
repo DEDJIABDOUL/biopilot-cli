@@ -7,7 +7,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { Shell } from "../../../utils/shell.js";
-import { hideInstalledTools } from "../helpers.js";
+import { hideInstalledTools, outsideAnyProject } from "../helpers.js";
 
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
@@ -21,10 +21,10 @@ beforeAll(async () => {
 });
 
 test("a Catalog tool gets no BioPilot suggestions, and nothing throws", async () => {
-  await expect(runtime.getSuggestions("fastp --", os.tmpdir(), Shell.Bash)).resolves.toBeUndefined();
+  await expect(runtime.getSuggestions("fastp --", outsideAnyProject, Shell.Bash)).resolves.toBeUndefined();
 });
 
 test("command names are completed as before", async () => {
-  const suggestions = (await runtime.getSuggestions("sam", os.tmpdir(), Shell.Bash))?.suggestions ?? [];
+  const suggestions = (await runtime.getSuggestions("sam", outsideAnyProject, Shell.Bash))?.suggestions ?? [];
   expect(suggestions.map((s) => s.name)).not.toContain("samtools");
 });

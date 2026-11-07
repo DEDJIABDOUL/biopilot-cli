@@ -23,6 +23,7 @@ const perfCatalog = (env: Record<string, string>) => {
     report: JSON.parse(run.stdout) as {
       scenarios: { name: string }[];
       suggestions: { cold: { medianMs: number }; warm: { name: string }[] };
+      projectScan: { entries: number; medianMs: number };
       failures: string[];
     },
   };
@@ -64,5 +65,17 @@ describe("npm run perf:catalog", () => {
     const { code, report } = perfCatalog({ BIOPILOT_WARM_SUGGESTION_BUDGET_MS: "1e-9" });
     expect(code).toBe(1);
     expect(report.failures).toEqual(expect.arrayContaining([expect.stringMatching(/^suggestions: warm `samtools sort -` median .* over 1e-9 ms$/)]));
+  });
+
+  test("measures the scan of a 2 000-entry project", () => {
+    const { report } = perfCatalog({ BIOPILOT_LOOKUP_BUDGET_MS: "1e-9" });
+    expect(report.projectScan.entries).toBe(2_000);
+    expect(report.projectScan.medianMs).toBeGreaterThan(0);
+  });
+
+  test("exits 1 when the project scan is over budget", () => {
+    const { code, report } = perfCatalog({ BIOPILOT_SCAN_BUDGET_MS: "1e-9" });
+    expect(code).toBe(1);
+    expect(report.failures).toEqual(expect.arrayContaining([expect.stringMatching(/^project scan: 2000 entries, median .* over 1e-9 ms$/)]));
   });
 });

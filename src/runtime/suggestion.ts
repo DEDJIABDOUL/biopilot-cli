@@ -272,11 +272,12 @@ const optionSuggestions = (
   acceptedTokens: CommandToken[],
   filterStrategy: FilterStrategy | undefined,
   partialCmd: string | undefined,
+  cwd?: string,
 ): Suggestion[] => {
   const usedOptions = new Set(acceptedTokens.filter((t) => t.isOption).map((t) => t.token));
   const validOptions = options?.filter((o) => o.exclusiveOn?.every((exclusiveOption) => !usedOptions.has(exclusiveOption)) ?? true);
-  // BIOPILOT: M4 Catalog options also get the boosts of their context rules that hold.
-  return boostOptionSuggestions(filter<Fig.Option>(validOptions ?? [], filterStrategy, partialCmd, "option"), validOptions ?? [], [...usedOptions]);
+  // BIOPILOT: M4 Catalog options also get the boosts of their context rules that hold (line and project).
+  return boostOptionSuggestions(filter<Fig.Option>(validOptions ?? [], filterStrategy, partialCmd, "option"), validOptions ?? [], [...usedOptions], cwd);
 };
 
 function adjustPathSuggestions(
@@ -357,7 +358,7 @@ export const getSubcommandDrivenRecommendation = async (
     suggestions.push(...subcommandSuggestions(subcommand.subcommands, subcommand.filterStrategy, partialCmd));
   }
   if (!argsFromSubcommand || argsDone) {
-    suggestions.push(...optionSuggestions(allOptions, acceptedTokens, subcommand.filterStrategy, partialCmd));
+    suggestions.push(...optionSuggestions(allOptions, acceptedTokens, subcommand.filterStrategy, partialCmd, cwd)); // BIOPILOT: M4
   }
   if (argLength != 0 && !argsDone) {
     const activeArg = subcommand.args instanceof Array ? subcommand.args[0] : subcommand.args;
@@ -419,7 +420,7 @@ export const getArgDrivenRecommendation = async (
 
   if (activeArg.isOptional || (activeArg.isVariadic && variadicArgBound)) {
     suggestions.push(...subcommandSuggestions(subcommand.subcommands, activeArg?.filterStrategy, partialCmd));
-    suggestions.push(...optionSuggestions(allOptions, acceptedTokens, activeArg?.filterStrategy, partialCmd));
+    suggestions.push(...optionSuggestions(allOptions, acceptedTokens, activeArg?.filterStrategy, partialCmd, cwd)); // BIOPILOT: M4
   }
 
   return {

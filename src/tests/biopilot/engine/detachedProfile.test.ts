@@ -6,12 +6,11 @@
 
 import { jest } from "@jest/globals";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import url from "node:url";
 import { setSessionEnvironment } from "../../../biopilot/env/session.js";
 import { Shell } from "../../../utils/shell.js";
-import { compileRepositoryCatalog, tempDir, writeFakeTool } from "../helpers.js";
+import { compileRepositoryCatalog, tempDir, writeFakeTool, outsideAnyProject } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 const recorded = fs.readFileSync(path.join(repoRoot, "knowledge", "help", "fastp", "0.23.4", "root.txt"), "utf-8");
@@ -29,7 +28,7 @@ beforeAll(async () => {
 
 const names = async (line: string, bin: string) => {
   setSessionEnvironment({ PATH: bin });
-  return ((await runtime.getSuggestions(line, os.tmpdir(), Shell.Bash))?.suggestions ?? []).map((s) => s.name);
+  return ((await runtime.getSuggestions(line, outsideAnyProject, Shell.Bash))?.suggestions ?? []).map((s) => s.name);
 };
 const helpCalls = (log: string) =>
   fs.existsSync(log)

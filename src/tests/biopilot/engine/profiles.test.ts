@@ -6,7 +6,6 @@
 // real recorded helps of knowledge/help; the session's PATH points to one or the other.
 
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import url from "node:url";
 import { resolveBinary } from "../../../biopilot/env/resolver.js";
@@ -15,7 +14,7 @@ import { openCatalog } from "../../../biopilot/knowledge/catalog.js";
 import { computeProfiles } from "../../../biopilot/profile/compute.js";
 import { openUserStore } from "../../../biopilot/profile/userStore.js";
 import { Shell } from "../../../utils/shell.js";
-import { compileRepositoryCatalog, tempDir, writeFakeCondaEnv, writeFakeTool } from "../helpers.js";
+import { compileRepositoryCatalog, tempDir, writeFakeCondaEnv, writeFakeTool, outsideAnyProject } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 const recorded = (version: string) => fs.readFileSync(path.join(repoRoot, "knowledge", "help", "fastp", version, "root.txt"), "utf-8");
@@ -63,7 +62,7 @@ beforeAll(async () => {
 
 const suggest = async (line: string, bin: string) => {
   setSessionEnvironment({ PATH: bin });
-  return (await runtime.getSuggestions(line, os.tmpdir(), Shell.Bash))?.suggestions ?? [];
+  return (await runtime.getSuggestions(line, outsideAnyProject, Shell.Bash))?.suggestions ?? [];
 };
 const names = async (line: string, bin: string) => (await suggest(line, bin)).map((s) => s.name);
 

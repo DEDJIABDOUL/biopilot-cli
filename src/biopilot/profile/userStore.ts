@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS binaries (
   fingerprint TEXT PRIMARY KEY,
   tool        TEXT NOT NULL,
   version     TEXT
+);
+CREATE TABLE IF NOT EXISTS usage (
+  tool        TEXT NOT NULL,
+  command     TEXT NOT NULL,
+  option_name TEXT NOT NULL,
+  count       INTEGER NOT NULL DEFAULT 0,
+  last_used   INTEGER NOT NULL,
+  PRIMARY KEY (tool, command, option_name)
 );`;
 
 export interface UserStore {
@@ -45,6 +53,10 @@ export interface UserStore {
   /** The version probed for a binary (`null`: probed, none found); `undefined` when never probed. */
   probedVersion(fingerprint: string): string | null | undefined;
   putProbedVersion(fingerprint: string, tool: string, version: string | null): void;
+  /** How often each option (canonical name) of a command was accepted. */
+  usageCounts(tool: string, command: string): Map<string, number>;
+  addUsage(tool: string, command: string, optionName: string, now?: number): void;
+  resetUsage(): void;
   close(): void;
 }
 
@@ -61,6 +73,11 @@ class SqliteUserStore implements UserStore {
       putProfile: db.prepare("INSERT OR REPLACE INTO profiles (tool, version, command, options, fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?)"),
       probedVersion: db.prepare<[string], { version: string | null }>("SELECT version FROM binaries WHERE fingerprint = ?"),
       putProbedVersion: db.prepare("INSERT OR REPLACE INTO binaries (fingerprint, tool, version) VALUES (?, ?, ?)"),
+      usageCounts: db.prepare<[string, string], { option_name: string; count: number }>("SELECT option_name, count FROM usage WHERE tool = ? AND command = ?"),
+      addUsage: db.prepare(
+        "INSERT INTO usage (tool, command, option_name, count, last_used) VALUES (?, ?, ?, 1, ?) ON CONFLICT (tool, command, option_name) DO UPDATE SET count = count + 1, last_used = excluded.last_used",
+      ),
+      resetUsage: db.prepare("DELETE FROM usage"),
     };
   }
 
@@ -91,6 +108,22 @@ class SqliteUserStore implements UserStore {
     this.#statements.putProbedVersion.run(fingerprint, tool, version);
   }
 
+  usageCounts(tool: string, command: string): Map<string, number> {
+    try {
+      return new Map(this.#statements.usageCounts.all(tool, command).map((row) => [row.option_name, row.count]));
+    } catch {
+      return new Map();
+    }
+  }
+
+  addUsage(tool: string, command: string, optionName: string, now = Date.now()): void {
+    this.#statements.addUsage.run(tool, command, optionName, now);
+  }
+
+  resetUsage(): void {
+    this.#statements.resetUsage.run();
+  }
+
   close(): void {
     this.#db.close();
   }
@@ -116,7 +149,13 @@ export const openUserStore = ({
     const db = openSqlite(file, { fileMustExist: !create });
     if (!existed) fs.chmodSync(file, 0o600);
     db.pragma("busy_timeout = 1000");
-    if (create) db.exec(DDL);
+    // Every table, also in a store made by an earlier BioPilot (no `usage` before phase 4). A store that
+    // cannot be written (read-only folder) is still read.
+    try {
+      db.exec(DDL);
+    } catch {
+      if (create) throw new Error("the User store cannot be written");
+    }
     return new SqliteUserStore(db);
   } catch {
     return;

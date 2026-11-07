@@ -109,7 +109,7 @@ La liste est fermée. Toute modification supplémentaire doit être justifiée d
 | # | Modification | Fichiers concernés | Motif |
 |---|---|---|---|
 | M1 | Renommage : commande `biopilot`, variable de session `BIOPILOT`, config `~/.config/biopilot/`, données `~/.local/share/biopilot/` | `package.json`, `utils/constants.ts`, `utils/config.ts`, scripts `shell/` | Cohabiter avec un Inshellisense installé. Ne pas utiliser la marque d'origine. |
-| M2 | Remontée de l'environnement du shell au moteur, via une séquence d'échappement émise au prompt par l'intégration shell existante | `shell/shellIntegration.*`, `isterm/` | *(faite en phase 3, ticket #44 : bash, zsh et fish émettent `6973;ENV;<PATH>;<CONDA_PREFIX>` à chaque prompt ; les autres shells gardent l'environnement de départ.)* Sans cela, `conda activate` reste invisible pour le moteur, qui tourne dans le processus parent. Supprime le besoin d'un hook à installer. |
+| M2 | Remontée de l'environnement du shell au moteur, via une séquence d'échappement émise au prompt par l'intégration shell existante | `shell/shellIntegration.*`, `isterm/` | *(faite en phase 3, ticket #44 : bash, zsh et fish émettent `6973;ENV;<jeton>;<PATH>;<CONDA_PREFIX>` à chaque prompt ; les autres shells gardent l'environnement de départ. Le jeton, tiré au hasard à chaque session et gardé par le shell dans une variable non exportée, écarte toute séquence forgée par la sortie d'un programme.)* Sans cela, `conda activate` reste invisible pour le moteur, qui tourne dans le processus parent. Supprime le besoin d'un hook à installer. |
 | M3 | Point d'ancrage avant le chargement d'une spec : le noyau BioPilot fournit la spec des outils bio *(faite en phase 2, ticket #30 ; en phase 3, ticket #43, elle est demandée avant le cache du moteur, car elle suit le binaire actif)* | `runtime/runtime.ts` | Brancher la base SQLite. |
 | M4 | Respect de la priorité des options, y compris avant toute saisie : toute option portant une priorité explicite la garde, et les règles de contexte qui s'appliquent l'augmentent *(faite en phase 2, tickets #30 et #33 ; en phase 4, ticket #50, le classement reçoit le dossier courant pour le contexte du projet et l'usage)* | `runtime/suggestion.ts` | Le moteur d'origine force les options à une priorité fixe tant que rien n'est tapé. |
 | M5 | Une option inconnue n'interrompt plus l'analyse de la ligne *(faite en phase 2, ticket #32)* | `runtime/runtime.ts` | Le moteur d'origine cesse de suggérer après une option absente de la spec. |
@@ -441,6 +441,8 @@ Ces valeurs sont des cibles à mesurer en continu. Le prototype actuel indique d
 - Aucune connexion réseau à l'exécution, et aucune télémétrie.
 - Seuls des outils présents dans la base ou explicitement importés sont exécutés, et uniquement avec `--help` ou la commande de version.
 - Les chemins relatifs du PATH ne sont jamais utilisés pour trouver un binaire.
+- Seul le shell de la session peut changer le PATH vu par BioPilot (M2) : une séquence d'environnement sans le jeton de la session, affichée par un programme ou un fichier, est ignorée.
+- Un outil lancé (aide ou version) tourne dans son propre groupe de processus, tué en entier à 2,5 s ou au-delà de 8 Mo de sortie.
 - Le contenu des fichiers de données n'est jamais lu en version 1.
 - Les fichiers de session et `user.db` sont créés avec les droits `0600` ou `0700`.
 - `biopilot reset-usage` et `biopilot uninstall` effacent toutes les données locales.

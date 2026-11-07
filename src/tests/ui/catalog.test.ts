@@ -75,6 +75,19 @@ describe.each(["bash", "zsh", "fish"])("[%s] suggestions follow the shell's PATH
     await closeSession(terminal);
   });
 
+  test("a forged environment sequence in a program's output changes nothing", async () => {
+    // Without the session's token: the text a program prints can never redirect what BioPilot runs.
+    // Printed after the prompt (a background job, `tail -f`…): the next prompt would not undo it.
+    // In the sequence's own format, with a made-up token; detached (zsh's `&!`) so that no job notice
+    // redraws the prompt meanwhile.
+    const forge = `printf '\\033]6973;ENV;made-up-token;${old};\\007'`;
+    await terminal.write(shell === "fish" ? `begin; sleep 1; ${forge}; end &\r` : shell === "zsh" ? `(sleep 1; ${forge}) &!\r` : `(sleep 1; ${forge}) &\r`);
+    await expectPrompt(terminal);
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await terminal.type("fastp --de");
+    await terminal.expectText("--dedup", { strict: false });
+  });
+
   test("`fastp --de` shows --dedup with fastp 0.23.4, and no longer once PATH leads to 0.20.1", async () => {
     await terminal.type("fastp --de");
     await terminal.expectText("--dedup", { strict: false });

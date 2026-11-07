@@ -1,3 +1,6 @@
+# BIOPILOT: M2 the session's token, kept in a variable no program sees (not exported, removed first).
+set -g __is_session_token "$BIOPILOT_SESSION_TOKEN"
+set -e BIOPILOT_SESSION_TOKEN
 function __is_copy_function; functions $argv[1] | sed "s/^function $argv[1]/function $argv[2]/" | source; end
 function __is_prompt_start; printf '\e]6973;PS\a'; end
 function __is_prompt_end; printf '\e]6973;PE\a'; end
@@ -15,7 +18,7 @@ function __is_escape_value
 end
 function __is_update_cwd --on-event fish_prompt; set __is_cwd (__is_escape_value "$PWD"); printf "\e]6973;CWD;%s\a" $__is_cwd; end
 # BIOPILOT: M2 report the environment BioPilot needs to find the binaries the shell would run.
-function __is_update_env --on-event fish_prompt; printf "\e]6973;ENV;%s;%s\a" (__is_escape_value (string join : $PATH)) (__is_escape_value "$CONDA_PREFIX"); end
+function __is_update_env --on-event fish_prompt; printf "\e]6973;ENV;%s;%s;%s\a" "$__is_session_token" (__is_escape_value (string join : $PATH)) (__is_escape_value "$CONDA_PREFIX"); end
 
 if [ "$BIOPILOT_TESTING" = "1" ]
 	function is_user_prompt; printf '> '; end

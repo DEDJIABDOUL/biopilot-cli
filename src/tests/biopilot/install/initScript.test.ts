@@ -19,20 +19,22 @@ describe("the shell init script", () => {
   });
 
   const hasShell = (shell: string) => spawnSync("sh", ["-c", `command -v ${shell}`]).status === 0;
-  const shellDir = (shell: string) => path.dirname(spawnSync("sh", ["-c", `command -v ${shell}`], { encoding: "utf-8" }).stdout.trim());
-  const ARGS: Record<string, string[]> = { bash: ["--norc", "-i"], zsh: ["-f", "-i"], fish: ["--no-config", "-i"] };
+  /** The shell's executable, run by its full path: PATH then holds only what the test puts there. */
+  const shellPath = (shell: string) => spawnSync("sh", ["-c", `command -v ${shell}`], { encoding: "utf-8" }).stdout.trim();
 
   /** Sources the init script in an interactive shell, then runs `echo alive`; with `bin` first on PATH. */
   const interactive = (shell: string, bin: string) => {
     const home = tempDir();
     const init = path.join(home, "init");
     fs.writeFileSync(init, getShellConfig(shell as Shell));
-    // Commands on stdin, not `-c`: the init script rightly does nothing in a `bash -c`.
-    return spawnSync(shell, ARGS[shell], {
-      input: `source ${init}\necho alive\n`,
-      env: { HOME: home, PATH: `${bin}:${shellDir(shell)}:/usr/bin:/bin`, TERM: "dumb" },
-      encoding: "utf-8",
-    }).stdout;
+    const env = { HOME: home, PATH: `${bin}:/usr/bin:/bin`, TERM: "dumb" };
+    // Interactive, as a terminal: bash and zsh read the commands on stdin (the init script rightly does
+    // nothing in a `bash -c`); fish runs them with -i -c (its stdin mode differs between versions).
+    const run =
+      shell === "fish"
+        ? spawnSync(shellPath(shell), ["--no-config", "-i", "-c", `source ${init}; echo alive`], { env, encoding: "utf-8" })
+        : spawnSync(shellPath(shell), shell === "zsh" ? ["-f", "-i"] : ["--norc", "-i"], { input: `source ${init}\necho alive\n`, env, encoding: "utf-8" });
+    return run.stdout;
   };
   const fakeBiopilot = (exitCode: number) => {
     const bin = tempDir();

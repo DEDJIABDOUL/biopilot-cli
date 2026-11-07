@@ -62,6 +62,30 @@ describe("--help parser", () => {
     expect(byName(options, "--template")).toMatchObject({ takesValue: true }); // `(default|disco|…)`
   });
 
+  test("docopt style (mosdepth): names separated by a space, `-t --threads <threads>`", () => {
+    const options = parse("mosdepth", "0.3.14", "root.txt");
+    expect(byName(options, "--threads")).toMatchObject({ names: ["-t", "--threads"], takesValue: true });
+    expect(byName(options, "--no-per-base")).toMatchObject({ names: ["-n", "--no-per-base"], takesValue: false });
+  });
+
+  test("filtlong style: the value's type glued to the name, `-t[int], --target_bases [int]`", () => {
+    const options = parse("filtlong", "0.3.1", "root.txt");
+    expect(byName(options, "--target_bases")).toMatchObject({ names: ["-t", "--target_bases"], takesValue: true });
+    expect(byName(options, "--trim")).toMatchObject({ names: ["--trim"], takesValue: false });
+    expect(options.flatMap((option) => option.names)).not.toContain("-tint");
+  });
+
+  test("Barclay style (Picard, GATK): unindented `--INPUT,-I <File>`, ANSI colours, the type glued to the description", () => {
+    const options = parse("picard", "3.5.0", "SortSam.txt");
+    expect(byName(options, "--INPUT")).toMatchObject({ names: ["--INPUT", "-I"], takesValue: true });
+    expect(byName(options, "--INPUT")?.description).toMatch(/^The SAM, BAM or CRAM file to sort/);
+    expect(byName(options, "--MAX_RECORDS_IN_RAM")).toMatchObject({ names: ["--MAX_RECORDS_IN_RAM"], takesValue: true });
+    expect(byName(options, "--MAX_RECORDS_IN_RAM")?.description).toMatch(/^When writing files/);
+    expect(byName(options, "--REFERENCE_SEQUENCE")).toMatchObject({ names: ["--REFERENCE_SEQUENCE", "-R"], takesValue: true });
+    expect(byName(options, "--REFERENCE_SEQUENCE")?.description).toMatch(/^Reference sequence file/);
+    expect(options).toHaveLength(18);
+  });
+
   test("`--region[s]-file` gives both names", () => {
     expect(parseHelp("  -R, --region[s]-file FILE   restrict to regions\n")).toEqual([
       { names: ["-R", "--region-file", "--regions-file"], takesValue: true, description: "restrict to regions" },

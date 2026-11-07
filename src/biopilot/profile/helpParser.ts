@@ -13,7 +13,8 @@ export type HelpOption = { names: string[]; takesValue: boolean; description: st
 /** An option line: indentation, then a dash and a name character (`-@`, `-5`, `--in1`). */
 const OPTION_LINE = /^(\s+)(--?[A-Za-z0-9@?][^\s]*.*)$/;
 /** An option name, possibly with a value glued on (`--opt=VAL`, `--opt[=VAL]`) or `[s]` in its middle. */
-const NAME = /^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\[[a-z]+\])*)(\[?=.*)?$/;
+// A bracket inside a name is a variant (`--region[s]-file`); at its end, the value's type (`-t[int]`, filtlong).
+const NAME = /^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\[[a-z]+\](?=[A-Za-z0-9_.-]))*)(\[?=.*|\[[a-z]+\])?$/;
 /** fastp's way to say an option takes a value: `(string [=])`, `(int [=4])` at the end of the description. */
 const CMDLINE_VALUE = /\((?:string|int|long|float|double)(?: \[=[^\]]*\])?\)\s*$/;
 
@@ -23,6 +24,11 @@ const RICH_VALUE = /\((?:[A-Z][A-Z _-]*|[\w.-]+(?:\|[\w.-]+)+)\)\s*$/;
 const ALIAS_COLUMN = /^(--?[A-Za-z0-9@?][A-Za-z0-9_.@?-]*)(?:\s{2,}(.*))?$/;
 /** rich-click's box: `│ ` at the start of a line and ` │` at its end become spaces. */
 const unbox = (line: string) => line.replace(/^(\s*)│/, "$1 ").replace(/\s*│\s*$/, "");
+/** Terminal colour codes (Picard, GATK). */
+// eslint-disable-next-line no-control-regex -- the escape character is what is matched
+const ANSI = /\x1b\[[0-9;]*m/g;
+/** Barclay (Picard, GATK): unindented `--INPUT,-I <File>`, the description after `>`, sometimes without a space. */
+const BARCLAY_LINE = /^(--[A-Za-z][A-Za-z0-9_]*(?:,-[A-Za-z0-9_]+)?\s*<[^>]+>)(.*)$/;
 
 /** `--region[s]-file` → `--region-file`, `--regions-file`. */
 const expandBrackets = (name: string): string[] => {
@@ -42,7 +48,15 @@ const readSpec = (spec: string): { names: string[]; takesValue: boolean } | unde
     const match = first?.match(NAME);
     if (!match) return;
     names.push(...expandBrackets(match[1]));
-    if (match[2] !== undefined || rest.length > 0) takesValue = true;
+    if (match[2] !== undefined) takesValue = true;
+    for (const word of rest) {
+      // docopt (mosdepth): more names after a space, `-t --threads <threads>`; anything else is the value.
+      const more = word.startsWith("-") ? word.match(NAME) : null;
+      if (more) {
+        names.push(...expandBrackets(more[1]));
+        if (more[2] !== undefined) takesValue = true;
+      } else takesValue = true;
+    }
   }
   return names.length > 0 ? { names, takesValue } : undefined;
 };
@@ -56,12 +70,13 @@ const splitLine = (body: string): [string, string | null] => {
 export const parseHelp = (text: string): HelpOption[] => {
   const options: HelpOption[] = [];
   const seen = new Set<string>();
-  const lines = text.split(/\r?\n/).map(unbox);
+  const lines = text.replace(ANSI, "").split(/\r?\n/).map(unbox);
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].match(OPTION_LINE);
-    if (!line) continue;
-    const indent = line[1].length;
-    const [specText, rest] = splitLine(line[2]);
+    const barclay = lines[i].match(BARCLAY_LINE);
+    const line = barclay ? null : lines[i].match(OPTION_LINE);
+    if (!barclay && !line) continue;
+    const indent = line ? line[1].length : 0;
+    const [specText, rest] = barclay ? [barclay[1], barclay[2].trim() || null] : splitLine(line![2]);
     const spec = readSpec(specText);
     if (!spec) continue;
     let inline = rest;

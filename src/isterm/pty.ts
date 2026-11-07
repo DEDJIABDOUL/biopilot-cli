@@ -28,6 +28,7 @@ import { Command } from "commander";
 import which from "which";
 import { shellResourcesPath } from "../utils/constants.js";
 import { endTiming, startTiming } from "../utils/performance.js";
+import { setSessionEnvironment } from "../biopilot/env/session.js"; // BIOPILOT: M2
 
 const ISTermOnDataEvent = "data";
 const ISTermOnBufferChangeEvent = "bufferChange";
@@ -188,6 +189,17 @@ export class ISTerm implements IPty {
         const cwd = data.split(";").at(1);
         if (cwd != null) {
           this.cwd = path.resolve(this._sanitizedCwd(this._deserializeIsMessage(cwd)));
+        }
+        break;
+      }
+      // BIOPILOT: M2 the shell's PATH and conda environment, so that BioPilot follows `conda activate`.
+      case IstermOscPt.Environment: {
+        const [, pathValue, condaPrefix] = data.split(";");
+        if (pathValue != null) {
+          setSessionEnvironment({
+            PATH: this._deserializeIsMessage(pathValue),
+            CONDA_PREFIX: condaPrefix ? this._deserializeIsMessage(condaPrefix) : undefined,
+          });
         }
         break;
       }

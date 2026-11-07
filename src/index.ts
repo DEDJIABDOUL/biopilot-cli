@@ -9,7 +9,6 @@ import { Command, Option } from "commander";
 
 import complete from "./commands/complete.js";
 import reinit from "./commands/reinit.js";
-import uninstall from "./commands/uninstall.js";
 import init from "./commands/init.js";
 import specs from "./commands/specs/root.js";
 import doctor from "./commands/doctor.js";
@@ -21,6 +20,7 @@ import status from "./biopilot/cli/status.js";
 import sync from "./biopilot/cli/sync.js";
 import computeProfile from "./biopilot/cli/computeProfile.js";
 import resetUsage from "./biopilot/cli/resetUsage.js";
+import uninstall from "./biopilot/cli/uninstall.js"; // BIOPILOT: M9 replaces the engine's uninstall
 
 const program = new Command();
 

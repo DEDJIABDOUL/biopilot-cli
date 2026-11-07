@@ -46,7 +46,7 @@ describe.each(["bash", "zsh", "fish"])("[%s] suggestions follow the shell's PATH
   const catalogPath = compileRepositoryCatalog().catalogPath;
   const store = path.join(root, "user.db");
   /** A conda environment with a fake fastp printing its recorded help, synced into the User store. */
-  const fastpEnv = (version: string) => {
+  const fastpEnv = async (version: string) => {
     const env = writeFakeCondaEnv(root, `fastp-${version}`, "fastp", version);
     const help = fs.readFileSync(path.join(repoRoot, "knowledge", "help", "fastp", version, "root.txt"), "utf-8");
     writeFakeTool(env.bin, "fastp", { "--help": help, "--version": `fastp ${version}\n` });
@@ -55,13 +55,17 @@ describe.each(["bash", "zsh", "fish"])("[%s] suggestions follow the shell's PATH
     const binary = resolveBinary("fastp", env.bin);
     const query = opened.available ? opened.catalog.getToolQuery("fastp") : undefined;
     if (!opened.available || !userStore || !binary || !query) throw new Error("test setup");
-    computeProfiles("fastp", binary, query, userStore);
+    await computeProfiles("fastp", binary, query, userStore);
     userStore.close();
     opened.catalog.close();
     return env.bin;
   };
-  const recent = fastpEnv("0.23.4");
-  const old = fastpEnv("0.20.1");
+  let recent: string;
+  let old: string;
+  beforeAll(async () => {
+    recent = await fastpEnv("0.23.4");
+    old = await fastpEnv("0.20.1");
+  });
 
   let terminal: TuiTest;
   beforeEach(async () => {
@@ -69,6 +73,19 @@ describe.each(["bash", "zsh", "fish"])("[%s] suggestions follow the shell's PATH
   });
   afterEach(async () => {
     await closeSession(terminal);
+  });
+
+  test("a forged environment sequence in a program's output changes nothing", async () => {
+    // Without the session's token: the text a program prints can never redirect what BioPilot runs.
+    // Printed after the prompt (a background job, `tail -f`…): the next prompt would not undo it.
+    // In the sequence's own format, with a made-up token; detached (zsh's `&!`) so that no job notice
+    // redraws the prompt meanwhile.
+    const forge = `printf '\\033]6973;ENV;made-up-token;${old};\\007'`;
+    await terminal.write(shell === "fish" ? `begin; sleep 1; ${forge}; end &\r` : shell === "zsh" ? `(sleep 1; ${forge}) &!\r` : `(sleep 1; ${forge}) &\r`);
+    await expectPrompt(terminal);
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await terminal.type("fastp --de");
+    await terminal.expectText("--dedup", { strict: false });
   });
 
   test("`fastp --de` shows --dedup with fastp 0.23.4, and no longer once PATH leads to 0.20.1", async () => {
@@ -164,5 +181,31 @@ describe("[bash] the project context (phase 4)", () => {
       opened?.close();
     }
     expect(counted).toBe(1);
+  });
+});
+
+describe("[bash] the status line (M7)", () => {
+  // Only node's folder and the system's: no fastp installed.
+  const noFastp = `${path.dirname(process.execPath)}:/usr/bin:/bin`;
+  const off = tempDir();
+  fs.mkdirSync(path.join(off, "biopilot"));
+  fs.writeFileSync(path.join(off, "biopilot", "rc.toml"), "statusLine = false\n");
+
+  let terminal: TuiTest;
+  afterEach(async () => {
+    await closeSession(terminal);
+  });
+
+  test("under the suggestions, what BioPilot detected for the tool", async () => {
+    terminal = await session({ BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath, PATH: noFastp });
+    await terminal.type("fastp --");
+    await terminal.expectText("not installed: options from the Catalog", { strict: false });
+  });
+
+  test("statusLine = false in rc.toml hides it", async () => {
+    terminal = await session({ BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath, PATH: noFastp, XDG_CONFIG_HOME: off });
+    await terminal.type("fastp --");
+    await terminal.expectText("--in1", { strict: false, bg: accent });
+    await terminal.expectText("not installed", { strict: false, not: true });
   });
 });

@@ -133,7 +133,7 @@ export class SuggestionRenderer {
         cursor: { hidden: cursorHidden, shift: cursorShift, cursorX },
         command,
       } = snapshot;
-      const suggestions = this.#suggestions.render(direction, cursorX);
+      const suggestions = this.#suggestions.render(direction, cursorX, lines); // BIOPILOT: M7 room for the status line
       const fitsViewport = suggestions.length <= lines && suggestions.every(({ startX, length }) => startX >= 0 && startX + length <= this.#term.cols);
 
       if (!fitsViewport || (!previouslyVisible && suggestions.length === 0)) {

@@ -12,7 +12,7 @@ cmd
   .option("--json", "output JSON")
   .action(async (options: { json?: boolean }) => {
     const { runStatus } = await import("./statusRunner.js");
-    process.exitCode = runStatus(
+    process.exitCode = await runStatus(
       { json: options.json === true },
       { stdout: (t) => process.stdout.write(t), stderr: (t) => process.stderr.write(t), env: process.env, cwd: process.cwd() },
     );

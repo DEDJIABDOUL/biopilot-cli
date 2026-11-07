@@ -37,6 +37,8 @@ export class SuggestionManager {
   #commandKey: string;
   #activeSuggestionIdx: number;
   #suggestBlob?: SuggestionBlob;
+  // BIOPILOT: M7 what BioPilot detected for the Catalog Tool on the line, shown under the suggestions.
+  #statusLine?: string;
   #shell: Shell;
   #hideSuggestions: boolean = false;
   #abortController?: AbortController;
@@ -118,6 +120,8 @@ export class SuggestionManager {
       }
       this.#commandKey = commandKey;
       this.#suggestBlob = suggestionBlob;
+      // BIOPILOT: M7
+      this.#statusLine = getConfig().statusLine ? (await import("../biopilot/engine/statusLine.js")).statusLineFor(commandText) : undefined;
       this.#activeSuggestionIdx = 0;
       return true;
     } catch (e) {
@@ -174,7 +178,7 @@ export class SuggestionManager {
     return await this._loadSuggestions();
   }
 
-  render(direction: "above" | "below", cursorX: number): ISTermPatch[] {
+  render(direction: "above" | "below", cursorX: number, availableRows = Infinity): ISTermPatch[] {
     if (!this.#suggestBlob) {
       return [];
     }
@@ -215,6 +219,13 @@ export class SuggestionManager {
         length: (suggestionUIRow == null ? 0 : suggestionWidth) + (descriptionUIRow == null ? 0 : descriptionWidth),
         data: data,
       });
+    }
+    // BIOPILOT: M7 the status line, under the box (above it when the list opens upward), when it fits.
+    if (this.#statusLine && ui.length < availableRows) {
+      const width = suggestionWidth + (descriptionUI.length > 0 ? descriptionWidth : 0);
+      const row = { startX: padding, length: width, data: chalk.dim(truncateText(` ${this.#statusLine}`, width).padEnd(width)) };
+      if (direction == "above") ui.unshift(row);
+      else ui.push(row);
     }
     return ui;
   }

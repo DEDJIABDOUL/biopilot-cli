@@ -22,7 +22,7 @@ cmd.argument("<tool>").action(async (tool: string) => {
   // folder was removed (tests, uninstall) must not bring it back.
   const store = binary && query ? openUserStore({ create: true, createFolder: false }) : undefined;
   try {
-    process.exitCode = binary && query && store && computeProfiles(tool, binary, query, store).status !== "failed" ? 0 : 1;
+    process.exitCode = binary && query && store && (await computeProfiles(tool, binary, query, store)).status !== "failed" ? 0 : 1;
   } finally {
     store?.close();
     if (opened.available) opened.catalog.close();

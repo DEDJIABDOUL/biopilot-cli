@@ -109,12 +109,12 @@ La liste est fermée. Toute modification supplémentaire doit être justifiée d
 | # | Modification | Fichiers concernés | Motif |
 |---|---|---|---|
 | M1 | Renommage : commande `biopilot`, variable de session `BIOPILOT`, config `~/.config/biopilot/`, données `~/.local/share/biopilot/` | `package.json`, `utils/constants.ts`, `utils/config.ts`, scripts `shell/` | Cohabiter avec un Inshellisense installé. Ne pas utiliser la marque d'origine. |
-| M2 | Remontée de l'environnement du shell au moteur, via une séquence d'échappement émise au prompt par l'intégration shell existante | `shell/shellIntegration.*`, `isterm/` | *(faite en phase 3, ticket #44 : bash, zsh et fish émettent `6973;ENV;<PATH>;<CONDA_PREFIX>` à chaque prompt ; les autres shells gardent l'environnement de départ.)* Sans cela, `conda activate` reste invisible pour le moteur, qui tourne dans le processus parent. Supprime le besoin d'un hook à installer. |
+| M2 | Remontée de l'environnement du shell au moteur, via une séquence d'échappement émise au prompt par l'intégration shell existante | `shell/shellIntegration.*`, `isterm/` | *(faite en phase 3, ticket #44 : bash, zsh et fish émettent `6973;ENV;<jeton>;<PATH>;<CONDA_PREFIX>` à chaque prompt ; les autres shells gardent l'environnement de départ. Le jeton, tiré au hasard à chaque session et gardé par le shell dans une variable non exportée, écarte toute séquence forgée par la sortie d'un programme.)* Sans cela, `conda activate` reste invisible pour le moteur, qui tourne dans le processus parent. Supprime le besoin d'un hook à installer. |
 | M3 | Point d'ancrage avant le chargement d'une spec : le noyau BioPilot fournit la spec des outils bio *(faite en phase 2, ticket #30 ; en phase 3, ticket #43, elle est demandée avant le cache du moteur, car elle suit le binaire actif)* | `runtime/runtime.ts` | Brancher la base SQLite. |
 | M4 | Respect de la priorité des options, y compris avant toute saisie : toute option portant une priorité explicite la garde, et les règles de contexte qui s'appliquent l'augmentent *(faite en phase 2, tickets #30 et #33 ; en phase 4, ticket #50, le classement reçoit le dossier courant pour le contexte du projet et l'usage)* | `runtime/suggestion.ts` | Le moteur d'origine force les options à une priorité fixe tant que rien n'est tapé. |
 | M5 | Une option inconnue n'interrompt plus l'analyse de la ligne *(faite en phase 2, ticket #32)* | `runtime/runtime.ts` | Le moteur d'origine cesse de suggérer après une option absente de la spec. |
 | M6 | Commandes bio prioritaires dans la complétion du nom de commande, avec un bonus fixe si la plateforme de l'outil figure dans celles du projet *(faite : phase 2, ticket #34, outils du Catalog en tête avec leur description ; phase 4, ticket #50, bonus de plateforme de +5 et tri par priorité)* | `runtime/runtime.ts` | `sam` doit proposer samtools en premier ; `mini` dans un projet nanopore, minimap2. |
-| M7 | Ligne d'état facultative sous la liste : environnement, version de l'outil, alerte éventuelle | `ui/` | Rendre visible ce que BioPilot a détecté. Désactivable. |
+| M7 | Ligne d'état facultative sous la liste : environnement, version de l'outil, alerte éventuelle *(faite en phase 6, ticket #63 : outils du Catalog seulement, active par défaut, `statusLine = false` dans rc.toml)* | `ui/`, `utils/config.ts` | Rendre visible ce que BioPilot a détecté. Désactivable. |
 | M8 | Correction de `complete` : chargement de la configuration, sortie vide sans plantage *(avancée de la phase 6 à la phase 2, ticket #29)* | `commands/complete.ts` | Permettre des tests automatisés sans terminal. |
 | M9 | Enregistrement des commandes BioPilot (`info`, puis `status`, `sync` et la commande interne cachée du calcul détaché, en phase 3) et contrôle du catalogue dans `doctor` ; le code vit dans `src/biopilot/cli/`, chargé à la demande | `index.ts`, `ui/ui-doctor.ts` | Exposer les commandes de la section 9 sans toucher au démarrage de session. |
 | M10 | Catalogue et addon natif de `better-sqlite3` embarqués dans le binaire autonome : l'addon rejoint les natifs de `node-pty`, le catalogue est écrasé à chaque décompression ; `reinit` le remplace et conserve le magasin utilisateur (`user.db`), y compris en quittant l'ancien dossier `~/.biopilot` | `scripts/pkg.ts`, `utils/node.ts`, `ui/ui-reinit.ts` | Le binaire autonome doit répondre depuis le catalogue comme l'installation npm (ADR-0001, décision 33). |
@@ -441,6 +441,8 @@ Ces valeurs sont des cibles à mesurer en continu. Le prototype actuel indique d
 - Aucune connexion réseau à l'exécution, et aucune télémétrie.
 - Seuls des outils présents dans la base ou explicitement importés sont exécutés, et uniquement avec `--help` ou la commande de version.
 - Les chemins relatifs du PATH ne sont jamais utilisés pour trouver un binaire.
+- Seul le shell de la session peut changer le PATH vu par BioPilot (M2) : une séquence d'environnement sans le jeton de la session, affichée par un programme ou un fichier, est ignorée.
+- Un outil lancé (aide ou version) tourne dans son propre groupe de processus, tué en entier à 2,5 s ou au-delà de 8 Mo de sortie.
 - Le contenu des fichiers de données n'est jamais lu en version 1.
 - Les fichiers de session et `user.db` sont créés avec les droits `0600` ou `0700`.
 - `biopilot reset-usage` et `biopilot uninstall` effacent toutes les données locales.
@@ -482,7 +484,7 @@ Prévue pour l'architecture, non développée en version 1.
 | 3. Version réelle | M2, résolveur, analyse du `--help`, profils, `status`, `sync` *(`learn` reporté)* | `--dedup` apparaît avec fastp 0.23.4 et pas avec 0.20.1 |
 | 4. Contexte | Projet, formats, R1/R2, sorties dérivées, usage, `.biopilot.toml` *(sans `threads`)*, `reset-usage` | Scénarios de l'annexe C verts |
 | 5. Distribution | Script d'installation, binaires (workflow de release sur tag `v*`), `doctor`, `uninstall` *(pas de publication npm ni conda)* | Installation en moins de 30 s sur une machine vierge |
-| 6. Version 1.0 | Documentation, M7, durcissement | Toutes les cibles de la section 11 atteintes |
+| 6. Version 1.0 | Documentation (`docs/guide.md`, `docs/contributing-tools.md`), M7, durcissement (outils défaillants, couverture > 80 %, `perf:targets`) | Toutes les cibles de la section 11 atteintes (vérifiées par `npm run perf:targets` en CI) |
 
 ---
 

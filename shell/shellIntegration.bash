@@ -1,3 +1,7 @@
+# BIOPILOT: M2 the session's token, kept in a variable no program sees (not exported, removed first).
+__is_session_token="${BIOPILOT_SESSION_TOKEN:-}"
+unset BIOPILOT_SESSION_TOKEN
+
 if [ -z "$BIOPILOT_LOGIN" ]; then
 	if [ -r ~/.bashrc ]; then
 		. ~/.bashrc
@@ -68,7 +72,7 @@ __is_update_cwd() {
 
 # BIOPILOT: M2 report the environment BioPilot needs to find the binaries the shell would run.
 __is_update_env() {
-	builtin printf '\e]6973;ENV;%s;%s\a' "$(__is_escape_value "$PATH")" "$(__is_escape_value "${CONDA_PREFIX:-}")"
+	builtin printf '\e]6973;ENV;%s;%s;%s\a' "$__is_session_token" "$(__is_escape_value "$PATH")" "$(__is_escape_value "${CONDA_PREFIX:-}")"
 }
 
 if [[ -n "${bash_preexec_imported:-}" ]]; then

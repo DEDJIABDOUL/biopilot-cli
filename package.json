@@ -1,6 +1,6 @@
 {
   "name": "biopilot-cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Terminal autocompletion for bioinformatics tools",
   "type": "module",
   "engines": {
@@ -29,6 +29,7 @@
     "perf": "npm run build && tsx ./scripts/perf/run.ts",
     "perf:session": "npm run build && tsx ./scripts/perf/session.ts",
     "perf:catalog": "tsx ./scripts/perf/catalog.ts",
+    "perf:targets": "tsx ./scripts/perf/targets.ts",
     "perf:profile": "npm run build && node --cpu-prof --heap-prof --import=tsx ./scripts/perf/run.ts",
     "debug": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --inspect --import=tsx src/index.ts -V"
   },
@@ -58,7 +59,7 @@
     "find-process": "^1.4.7",
     "node-pty": "1.2.0-beta.8",
     "strip-ansi": "^7.1.0",
-    "toml": "^3.0.0",
+    "toml": "^5.0.1",
     "uuid": "^11.1.0",
     "which": "^4.0.0",
     "wrap-ansi": "^8.1.0"

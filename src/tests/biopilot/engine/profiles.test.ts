@@ -33,14 +33,14 @@ const fastpEnv = (name: string, version: string, help = recorded(version)) => {
 };
 
 /** What `biopilot sync` does, for the fastp found in `bin`. */
-const sync = (bin: string) => {
+const sync = async (bin: string) => {
   const opened = openCatalog(catalogPath);
   const userStore = openUserStore({ create: true, file: store });
   if (!opened.available || !userStore) throw new Error("test setup");
   const binary = resolveBinary("fastp", bin);
   const query = opened.catalog.getToolQuery("fastp");
   if (!binary || !query) throw new Error("test setup");
-  computeProfiles("fastp", binary, query, userStore);
+  await computeProfiles("fastp", binary, query, userStore);
   userStore.close();
   opened.catalog.close();
 };
@@ -56,7 +56,7 @@ const emptyHelp = fastpEnv("empty-help", "0.25.0", "fastp: no help today\n");
 beforeAll(async () => {
   process.env.BIOPILOT_CATALOG = catalogPath;
   process.env.BIOPILOT_USER_STORE = store;
-  for (const bin of [synced023, synced020, withNewFlag, emptyHelp]) sync(bin);
+  for (const bin of [synced023, synced020, withNewFlag, emptyHelp]) await sync(bin);
   runtime = await import("../../../runtime/runtime.js");
 });
 

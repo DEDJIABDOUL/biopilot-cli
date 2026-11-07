@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
 import process from "node:process";
 import os from "node:os";
@@ -69,6 +70,9 @@ export class ISTerm implements IPty {
   readonly #term: xterm.Terminal;
   readonly #commandManager: CommandManager;
   readonly #shell: Shell;
+  // BIOPILOT: M2 the token only the shell integration knows: an environment sequence without it is text a
+  // program printed (a file shown with cat, a background job), never the shell's own report.
+  readonly #sessionToken = crypto.randomUUID();
   #pendingData: string[] = [];
   #pendingCursorPositionReports = 0;
 
@@ -78,7 +82,7 @@ export class ISTerm implements IPty {
       cols,
       rows,
       cwd: process.cwd(),
-      env: { ...convertToPtyEnv(shell, underTest, login), ...env },
+      env: { ...convertToPtyEnv(shell, underTest, login), ...env, BIOPILOT_SESSION_TOKEN: this.#sessionToken }, // BIOPILOT: M2
       useConpty: true,
       useConptyDll: true,
     });
@@ -194,8 +198,8 @@ export class ISTerm implements IPty {
       }
       // BIOPILOT: M2 the shell's PATH and conda environment, so that BioPilot follows `conda activate`.
       case IstermOscPt.Environment: {
-        const [, pathValue, condaPrefix] = data.split(";");
-        if (pathValue != null) {
+        const [, token, pathValue, condaPrefix] = data.split(";");
+        if (token != null && this._deserializeIsMessage(token) === this.#sessionToken && pathValue != null) {
           setSessionEnvironment({
             PATH: this._deserializeIsMessage(pathValue),
             CONDA_PREFIX: condaPrefix ? this._deserializeIsMessage(condaPrefix) : undefined,

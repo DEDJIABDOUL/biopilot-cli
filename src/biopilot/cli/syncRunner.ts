@@ -10,7 +10,7 @@ import { computeProfiles } from "../profile/compute.js";
 import { openUserStore, userStorePath } from "../profile/userStore.js";
 import type { StatusIO } from "./statusRunner.js";
 
-export const runSync = (io: StatusIO): number => {
+export const runSync = async (io: StatusIO): Promise<number> => {
   const opened = openCatalog();
   if (!opened.available) {
     io.stderr(`biopilot: the Catalog is unavailable: ${opened.detail}\nrun "biopilot doctor" for details\n`);
@@ -34,7 +34,7 @@ export const runSync = (io: StatusIO): number => {
         io.stdout(`${label}  ${chalk.dim("not installed")}\n`);
         continue;
       }
-      const outcome = computeProfiles(name, binary, query, store);
+      const outcome = await computeProfiles(name, binary, query, store);
       const status = outcome.status === "failed" ? chalk.red("failed") : outcome.status === "computed" ? chalk.green("computed") : "known";
       io.stdout(`${label}  ${status}  ${outcome.version ?? "unknown version"}`.trimEnd() + "\n");
     }

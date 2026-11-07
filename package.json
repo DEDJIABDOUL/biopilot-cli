@@ -1,6 +1,6 @@
 {
   "name": "biopilot-cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Terminal autocompletion for bioinformatics tools",
   "type": "module",
   "engines": {

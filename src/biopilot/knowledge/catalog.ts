@@ -5,9 +5,10 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { CATALOG_SCHEMA_VERSION, type Assay, type FormatKind, type Platform, type ValueType } from "./schema.js";
 import { catalogCandidates, sqliteAddonPath } from "./location.js";
+import { openSqlite } from "../sqlite.js";
 
 export type Tool = {
   name: string;
@@ -574,31 +575,10 @@ class SqliteCatalog implements Catalog {
   }
 }
 
-/** Loaded addons by file: an addon is loaded (and initialised by better-sqlite3) once per process. */
-const loadedAddons = new Map<string, object>();
-
-/**
- * Loads a native addon from its file. `process.dlopen`, not `require`: in the standalone binary `require`
- * only knows Node's builtin modules (better-sqlite3 would `require` a path given as a string).
- */
-const loadAddon = (file: string): object => {
-  let addon = loadedAddons.get(file);
-  if (!addon) {
-    const module = { exports: {} };
-    process.dlopen(module, file);
-    addon = module.exports;
-    loadedAddons.set(file, addon);
-  }
-  return addon;
-};
-
 const openAt = (path: string, addonPath: string | undefined): CatalogOpenResult => {
   let db: Database.Database | undefined;
   try {
-    const nativeBinding = addonPath === undefined ? undefined : loadAddon(addonPath);
-    // better-sqlite3 13 takes the loaded addon object as `nativeBinding`; its types (9.x) only know a path.
-    const options = { readonly: true, fileMustExist: true, ...(nativeBinding && { nativeBinding }) } as Database.Options;
-    db = new Database(path, options);
+    db = openSqlite(path, { readonly: true, fileMustExist: true }, addonPath);
     const meta = new Map(
       db
         .prepare<[], { key: string; value: string }>("SELECT key, value FROM metadata")

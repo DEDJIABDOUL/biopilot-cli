@@ -122,7 +122,8 @@ const getSuggestionPriority = (suggestion: Fig.Suggestion): number => {
     (suggestion.name instanceof Array
       ? suggestion.name.some((n) => n.startsWith("--") || n.startsWith("-"))
       : suggestion?.name?.startsWith("--") || suggestion?.name?.startsWith("-"));
-  if (isOption) return 45;
+  // BIOPILOT: M4 an option with an explicit priority keeps it (upstream forced every option to 45).
+  if (isOption) return suggestion.priority ?? 45;
   return suggestion.priority ?? 50;
 };
 

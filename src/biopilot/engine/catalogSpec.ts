@@ -9,12 +9,12 @@
 import { resolveBinary, type Binary } from "../env/resolver.js";
 import { sessionEnvironment } from "../env/session.js";
 import { withinVersions } from "../env/versionOrder.js";
-import type { Argument, Catalog, Command, Option, ValueSpec } from "../knowledge/catalog.js";
+import type { Argument, Catalog, Command, Option, ToolQuery, ValueSpec } from "../knowledge/catalog.js";
 import { getCatalog, projectAt } from "./catalogAccess.js";
 import { condaMetaVersion, type VersionSource } from "../env/version.js";
 import { requestProfile } from "../profile/detached.js";
 import type { HelpOption } from "../profile/helpParser.js";
-import { openUserStore, versionKey, type UserStore } from "../profile/userStore.js";
+import { openUserStore, versionKey, type LearnedTool, type UserStore } from "../profile/userStore.js";
 import { fileGenerator, type FileValueContext } from "./fileValues.js";
 import { optionRanking } from "./ranking.js";
 
@@ -36,6 +36,8 @@ export const detectionOf = (toolName: string): ToolDetection | undefined => dete
 
 /** Built specs, by Tool and what they were built for (binary, version, Profiles found). */
 const specs = new Map<string, { key: string; spec: Fig.Subcommand | null; checkedAt: number }>();
+/** How long a name that is neither a Catalog Tool nor a learned one stays known as such. */
+const UNKNOWN_RECHECK_MS = 2_000;
 /** Below this age, a spec built without every Profile is reused as is; older, the User store is asked again. */
 const PROFILE_RECHECK_MS = 500;
 /** Rank of an option the Catalog doesn't know (spec §6.4 scale: the default). */
@@ -107,13 +109,46 @@ const toFigArg = (argument: Argument, namesOf: NamesOf): Fig.Arg => {
 type Installed = { tool: string; version: string | undefined; versionSource: VersionSource | undefined; key: string; store: UserStore | undefined };
 
 /** A Profile option the Catalog doesn't know: the help's own description, the default rank. */
-const toProfileOnlyOption = (option: HelpOption): Fig.Option => {
+const toProfileOnlyOption = (option: HelpOption, filesForValues = false): Fig.Option => {
   const long = option.names.filter((name) => name.startsWith("--"));
   return {
     name: [...long, ...option.names.filter((name) => !name.startsWith("--"))],
     description: option.description ?? undefined,
     priority: PROFILE_ONLY_RANK,
-    ...(option.takesValue ? { args: { name: "value" } } : {}),
+    // A learned tool's values are unknown: most are files in bioinformatics.
+    ...(option.takesValue ? { args: filesForValues ? { name: "value", template: "filepaths" as const } : { name: "value" } } : {}),
+  };
+};
+
+/** A learned tool's option (its help is all BioPilot knows): ranked by usage alone (spec §6.5). */
+const toLearnedOption = (option: HelpOption, tool: string, command: string): Fig.Option => {
+  const figOption = toProfileOnlyOption(option, true);
+  const names = typeof figOption.name === "string" ? [figOption.name] : figOption.name;
+  optionRanking.set(figOption, { canonicalName: names[0], rules: [], deprecated: false, tool, command });
+  return figOption;
+};
+
+/** The spec of a Learned tool from its Profiles: subcommands from its definition, options from their help. */
+const toLearnedCommand = (learned: LearnedTool, installed: Installed | undefined): { spec: Fig.Subcommand; complete: boolean } => {
+  let complete = installed !== undefined;
+  const optionsOf = (command: string) => {
+    const profile = installed?.store?.getProfile(learned.name, installed.key, command);
+    if (!profile) complete = false;
+    return mapLocal(profile?.options ?? [], (option) => toLearnedOption(option, learned.name, command));
+  };
+  const subcommands = mapLocal(learned.subcommands, (sub) => ({
+    name: sub.name,
+    ...(sub.description ? { description: sub.description } : {}),
+    options: optionsOf(sub.name),
+  }));
+  return {
+    spec: {
+      name: learned.name,
+      ...(learned.description ? { description: learned.description } : {}),
+      options: optionsOf(""),
+      ...(subcommands.length > 0 ? { subcommands } : {}),
+    },
+    complete,
   };
 };
 
@@ -186,9 +221,9 @@ const toFigCommand = (
 const getUserStore = (): UserStore | undefined => (userStore ??= openUserStore({ create: false }));
 
 /** The binary the shell would run for a Tool, and its version; nothing when it is not installed. */
-const installedFor = (current: Catalog, tool: string): { binary: Binary; installed: Installed } | undefined => {
+const installedFor = (current: Catalog, tool: string, learned?: ToolQuery): { binary: Binary; installed: Installed } | undefined => {
   const binary = resolveBinary(tool, sessionEnvironment().PATH);
-  const query = binary ? current.getToolQuery(tool) : undefined;
+  const query = binary ? learned ?? current.getToolQuery(tool) : undefined;
   if (!binary || !query) return;
   const store = getUserStore();
   if (versions.get(binary.fingerprint) === undefined) {
@@ -225,11 +260,17 @@ export const catalogTools = (cwd?: string): { name: string; description: string 
     }
   }
   const platforms = projectAt(cwd)?.platforms ?? [];
-  return mapLocal(tools, ({ name, description, platforms: own }) => ({
-    name,
-    description,
-    priority: TOOL_PRIORITY + (own.some((platform) => (platforms as readonly string[]).includes(platform)) ? PLATFORM_BONUS : 0),
-  }));
+  // Learned tools too, read each time: one may have been learned during the session.
+  const known = new Set(tools.map((tool) => tool.name));
+  const learned = (getUserStore()?.listLearnedTools() ?? []).filter((tool) => !known.has(tool.name));
+  return [
+    ...mapLocal(tools, ({ name, description, platforms: own }) => ({
+      name,
+      description,
+      priority: TOOL_PRIORITY + (own.some((platform) => (platforms as readonly string[]).includes(platform)) ? PLATFORM_BONUS : 0),
+    })),
+    ...mapLocal(learned, (tool) => ({ name: tool.name, description: tool.description ?? undefined, priority: TOOL_PRIORITY })),
+  ];
 };
 
 /**
@@ -239,20 +280,24 @@ export const catalogTools = (cwd?: string): { name: string; description: string 
  */
 export const catalogSpec = (toolName: string): Fig.Subcommand | undefined => {
   const cached = specs.get(toolName);
-  if (cached?.spec === null) return undefined; // not a Catalog Tool: settled for the session
+  const now = Date.now();
+  // Neither a Catalog Tool nor a learned one: asked again only now and then (it may be learned meanwhile).
+  if (cached?.spec === null && now - cached.checkedAt < UNKNOWN_RECHECK_MS) return undefined;
   try {
     const current = getCatalog();
     const tool = current?.getTool(toolName);
     const root = tool ? current?.getCommand(tool.name) : undefined;
-    if (!current || !tool || !root) {
-      specs.set(toolName, { key: "", spec: null, checkedAt: 0 });
+    const learned = current && !tool ? getUserStore()?.getLearnedTool(toolName) : undefined;
+    if (!current || ((!tool || !root) && !learned)) {
+      specs.set(toolName, { key: "", spec: null, checkedAt: now });
       return undefined;
     }
-    const found = installedFor(current, tool.name);
+    const name = tool?.name ?? toolName;
+    const found = installedFor(current, name, learned?.query);
     const key = found ? `${found.binary.fingerprint}\0${found.installed.key}` : "";
-    const now = Date.now();
-    if (cached && cached.key === key && (cached.checkedAt === Infinity || now - cached.checkedAt < PROFILE_RECHECK_MS)) return cached.spec ?? undefined;
-    const built = toFigCommand(current, root, tool.name, tool.description ?? undefined, found?.installed);
+    if (cached && cached.spec !== null && cached.key === key && (cached.checkedAt === Infinity || now - cached.checkedAt < PROFILE_RECHECK_MS))
+      return cached.spec ?? undefined;
+    const built = learned ? toLearnedCommand(learned, found?.installed) : toFigCommand(current, root!, name, tool?.description ?? undefined, found?.installed);
     specs.set(toolName, { key, spec: built.spec, checkedAt: built.complete ? Infinity : now });
     detections.set(toolName, {
       installed: found !== undefined,
@@ -261,7 +306,7 @@ export const catalogSpec = (toolName: string): Fig.Subcommand | undefined => {
       profilesPending: found !== undefined && !built.complete,
     });
     // A Profile is missing: computed aside (once per binary per session); a later suggestion picks it up.
-    if (found && !built.complete) requestProfile(tool.name, found.binary, sessionEnvironment().PATH);
+    if (found && !built.complete) requestProfile(name, found.binary, sessionEnvironment().PATH);
     return built.spec;
   } catch {
     return cached?.spec ?? undefined; // fail silently: the engine falls back to what it had, or to Fig

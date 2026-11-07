@@ -31,6 +31,20 @@ export const usageCounts = (tool: string, command: string): Map<string, number> 
 };
 
 /**
+ * A learned tool's option: its canonical name is the one the suggestion shows (the help's long name first),
+ * its command the subcommand named on the line, if any.
+ */
+const recordLearned = (toolName: string, words: readonly string[], optionName: string) => {
+  const learned = getStore(false)?.getLearnedTool(toolName);
+  if (!learned) return;
+  const sub = words.find((word) => !word.startsWith("-"));
+  const command = sub && learned.subcommands.some((s) => s.name === sub) ? sub : "";
+  const known = usageCounts(toolName, command);
+  known.set(optionName, (known.get(optionName) ?? 0) + 1);
+  getStore(true)?.addUsage(toolName, command, optionName);
+};
+
+/**
  * Called by the engine (M12) when the user accepts a suggestion on a line: an option of a Catalog Tool is
  * counted, anything else (subcommand, value, other command) is not. Never throws, never blocks for long.
  */
@@ -40,6 +54,10 @@ export const recordAcceptedSuggestion = (line: string, suggestion: { name: strin
     const catalog = getCatalog();
     const [toolName, ...words] = line.trim().split(/\s+/);
     const tool = toolName ? catalog?.getTool(toolName) : undefined;
+    if (catalog && !tool && toolName) {
+      recordLearned(toolName, words, suggestion.name);
+      return;
+    }
     if (!catalog || !tool) return;
     // The command the option belongs to: the subcommands named on the line, in order.
     let command = catalog.getCommand(tool.name);

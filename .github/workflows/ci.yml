@@ -64,3 +64,23 @@ jobs:
       - run: npm link
 
       - run: npm run test:e2e
+  # BIOPILOT: phase 5 exit (ticket #59): install the freshly packaged standalone binary with install.sh on
+  # a clean HOME, under 30 s, use it, uninstall it without leftovers.
+  install:
+    strategy:
+      matrix:
+        os: ["macos-latest", "ubuntu-latest"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use Node.js 22.21.1
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.21.1
+
+      - run: npm ci
+      - run: npm run build:db
+      - run: npm run build
+      - run: npm run package
+      - run: scripts/ci/install-test.sh

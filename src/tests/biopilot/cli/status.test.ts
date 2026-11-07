@@ -109,7 +109,7 @@ describe("biopilot status", () => {
     const { code, stdout } = statusIn(path.join(project, "data"), { PATH: systemBin }, "--json");
     expect(code).toBe(0);
     expect(JSON.parse(stdout).project).toEqual({
-      root: project,
+      root: fs.realpathSync(project), // the process sees the real path (macOS: /var is /private/var)
       marker: "Snakefile",
       platforms: ["illumina"],
       assay: "rna-seq",

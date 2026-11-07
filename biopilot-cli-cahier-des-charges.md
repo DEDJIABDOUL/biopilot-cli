@@ -109,13 +109,13 @@ La liste est fermée. Toute modification supplémentaire doit être justifiée d
 | # | Modification | Fichiers concernés | Motif |
 |---|---|---|---|
 | M1 | Renommage : commande `biopilot`, variable de session `BIOPILOT`, config `~/.config/biopilot/`, données `~/.local/share/biopilot/` | `package.json`, `utils/constants.ts`, `utils/config.ts`, scripts `shell/` | Cohabiter avec un Inshellisense installé. Ne pas utiliser la marque d'origine. |
-| M2 | Remontée de l'environnement du shell au moteur, via une séquence d'échappement émise au prompt par l'intégration shell existante | `shell/shellIntegration.*`, `isterm/` | Sans cela, `conda activate` reste invisible pour le moteur, qui tourne dans le processus parent. Supprime le besoin d'un hook à installer. |
-| M3 | Point d'ancrage avant le chargement d'une spec : le noyau BioPilot fournit la spec des outils bio | `runtime/runtime.ts` | Brancher la base SQLite. |
-| M4 | Respect de la priorité des options, y compris avant toute saisie | `runtime/suggestion.ts` | Le moteur d'origine force les options à une priorité fixe tant que rien n'est tapé. |
-| M5 | Une option inconnue n'interrompt plus l'analyse de la ligne | `runtime/runtime.ts` | Le moteur d'origine cesse de suggérer après une option absente de la spec. |
-| M6 | Commandes bio prioritaires dans la complétion du nom de commande, avec un bonus fixe si la plateforme de l'outil figure dans celles du projet | `runtime/runtime.ts` | `sam` doit proposer samtools en premier ; `mini` dans un projet nanopore, minimap2. |
+| M2 | Remontée de l'environnement du shell au moteur, via une séquence d'échappement émise au prompt par l'intégration shell existante | `shell/shellIntegration.*`, `isterm/` | *(reportée en phase 3, avec le résolveur qui l'utilise.)* Sans cela, `conda activate` reste invisible pour le moteur, qui tourne dans le processus parent. Supprime le besoin d'un hook à installer. |
+| M3 | Point d'ancrage avant le chargement d'une spec : le noyau BioPilot fournit la spec des outils bio *(faite en phase 2, ticket #30)* | `runtime/runtime.ts` | Brancher la base SQLite. |
+| M4 | Respect de la priorité des options, y compris avant toute saisie : toute option portant une priorité explicite la garde, et les règles de contexte qui s'appliquent l'augmentent *(faite en phase 2, tickets #30 et #33)* | `runtime/suggestion.ts` | Le moteur d'origine force les options à une priorité fixe tant que rien n'est tapé. |
+| M5 | Une option inconnue n'interrompt plus l'analyse de la ligne *(faite en phase 2, ticket #32)* | `runtime/runtime.ts` | Le moteur d'origine cesse de suggérer après une option absente de la spec. |
+| M6 | Commandes bio prioritaires dans la complétion du nom de commande, avec un bonus fixe si la plateforme de l'outil figure dans celles du projet *(phase 2, ticket #34 : outils du Catalog en tête, avec leur description ; le bonus de plateforme attend la détection du projet, en phase 4)* | `runtime/runtime.ts` | `sam` doit proposer samtools en premier ; `mini` dans un projet nanopore, minimap2. |
 | M7 | Ligne d'état facultative sous la liste : environnement, version de l'outil, alerte éventuelle | `ui/` | Rendre visible ce que BioPilot a détecté. Désactivable. |
-| M8 | Correction de `complete` : chargement de la configuration, sortie vide sans plantage *(avancée en phase 2, ticket #29)* | `commands/complete.ts` | Permettre des tests automatisés sans terminal. |
+| M8 | Correction de `complete` : chargement de la configuration, sortie vide sans plantage *(avancée de la phase 6 à la phase 2, ticket #29)* | `commands/complete.ts` | Permettre des tests automatisés sans terminal. |
 | M9 | Enregistrement des commandes BioPilot (`info`, puis les suivantes) et contrôle du catalogue dans `doctor` ; le code vit dans `src/biopilot/cli/`, chargé à la demande | `index.ts`, `ui/ui-doctor.ts` | Exposer les commandes de la section 9 sans toucher au démarrage de session. |
 | M10 | Catalogue et addon natif de `better-sqlite3` embarqués dans le binaire autonome : l'addon rejoint les natifs de `node-pty`, le catalogue est écrasé à chaque décompression ; `reinit` le remplace et conserve le magasin utilisateur (`user.db`), y compris en quittant l'ancien dossier `~/.biopilot` | `scripts/pkg.ts`, `utils/node.ts`, `ui/ui-reinit.ts` | Le binaire autonome doit répondre depuis le catalogue comme l'installation npm (ADR-0001, décision 33). |
 
@@ -476,11 +476,11 @@ Prévue pour l'architecture, non développée en version 1.
 |---|---|---|
 | 0. Fondations | Fork, renommage (M1), choix SQLite, mesures de référence | `biopilot` s'installe et fonctionne comme Inshellisense |
 | 1. Base | Schéma, compilation YAML vers SQLite, 10 outils de l'annexe A | `biopilot info fastp` répond depuis la base |
-| 2. Moteur | M2 à M6, branchement de la base | `fastp --` affiche les options classées |
-| 3. Version réelle | Résolveur, analyse du `--help`, profils | `--dedup` apparaît avec fastp 0.23.4 et pas avec 0.20.1 |
+| 2. Moteur | M3 à M6 et M8, branchement de la base | `fastp --` affiche les options classées |
+| 3. Version réelle | M2, résolveur, analyse du `--help`, profils | `--dedup` apparaît avec fastp 0.23.4 et pas avec 0.20.1 |
 | 4. Contexte | Projet, formats, R1/R2, sorties dérivées, usage | Scénarios de l'annexe C verts |
 | 5. Distribution | Script d'installation, binaires, `doctor`, `uninstall` | Installation en moins de 30 s sur une machine vierge |
-| 6. Version 1.0 | Documentation, M7, M8, durcissement | Toutes les cibles de la section 11 atteintes |
+| 6. Version 1.0 | Documentation, M7, durcissement | Toutes les cibles de la section 11 atteintes |
 
 ---
 

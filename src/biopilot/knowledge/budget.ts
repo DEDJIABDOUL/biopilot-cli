@@ -19,6 +19,9 @@ export const COLD_SUGGESTION_BUDGET_MS = 300;
 /** Spec §11: a known tool's suggestions, warm cache, under 10 ms on BioPilot's side. */
 export const WARM_SUGGESTION_BUDGET_MS = 10;
 
+/** Spec §11: the project scan under 50 ms for 2 000 entries. */
+export const PROJECT_SCAN_BUDGET_MS = 50;
+
 /** Size budget of a Catalog of `toolCount` tools: the 50-tool budget scaled linearly, at least one tool's share. */
 export const catalogSizeBudget = (toolCount: number): number => (Math.max(1, toolCount) * CATALOG_SIZE_BUDGET.bytes) / CATALOG_SIZE_BUDGET.tools;
 

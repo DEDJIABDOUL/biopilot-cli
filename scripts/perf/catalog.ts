@@ -10,14 +10,17 @@
 // Prints a JSON report; exits 1 if any check fails.
 // Usage: tsx scripts/perf/catalog.ts [samples]   (default 1000, or BIOPILOT_PERF_ITERATIONS)
 // BIOPILOT_LOOKUP_BUDGET_MS, BIOPILOT_SIZE_BUDGET_BYTES, BIOPILOT_COLD_SUGGESTION_BUDGET_MS and
-// BIOPILOT_WARM_SUGGESTION_BUDGET_MS override the budgets (tests force unreachable ones).
+// BIOPILOT_WARM_SUGGESTION_BUDGET_MS and BIOPILOT_SCAN_BUDGET_MS override the budgets (tests force
+// unreachable ones). Last, the uncached scan of a 2 000-entry project (§11: under 50 ms).
 
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import { performance } from "node:perf_hooks";
 import os from "node:os";
 import path from "node:path";
 import {
   COLD_SUGGESTION_BUDGET_MS,
+  PROJECT_SCAN_BUDGET_MS,
   LOOKUP_BUDGET_MS,
   WARM_SUGGESTION_BUDGET_MS,
   catalogSizeBudget,
@@ -27,6 +30,7 @@ import {
 } from "../../src/biopilot/knowledge/budget.js";
 import { openCatalog } from "../../src/biopilot/knowledge/catalog.js";
 import { compileCatalog } from "../../src/biopilot/knowledge/compile.js";
+import { detectProject } from "../../src/biopilot/project/detect.js";
 import { fiftyTypicalTools, largeCommandTool } from "./catalogScenarios.js";
 
 const samples = Number.parseInt(process.argv[2] ?? process.env.BIOPILOT_PERF_ITERATIONS ?? "1000", 10);
@@ -34,6 +38,7 @@ const budgetFromEnv = (name: string, fallback: number) => (process.env[name] ? N
 const budgetMs = budgetFromEnv("BIOPILOT_LOOKUP_BUDGET_MS", LOOKUP_BUDGET_MS);
 const coldBudgetMs = budgetFromEnv("BIOPILOT_COLD_SUGGESTION_BUDGET_MS", COLD_SUGGESTION_BUDGET_MS);
 const warmBudgetMs = budgetFromEnv("BIOPILOT_WARM_SUGGESTION_BUDGET_MS", WARM_SUGGESTION_BUDGET_MS);
+const scanBudgetMs = budgetFromEnv("BIOPILOT_SCAN_BUDGET_MS", PROJECT_SCAN_BUDGET_MS);
 const formatsPath = path.resolve("knowledge", "formats.yml");
 const biopilotVersion = JSON.parse(fs.readFileSync("package.json", "utf-8")).version as string;
 const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "biopilot-perf-"));
@@ -100,6 +105,41 @@ const timeSuggestions = (catalogPath: string) => {
   return { coldBudgetMs, warmBudgetMs, cold: rounded(cold), warm: warm.map(rounded) };
 };
 
+/** Spec §11: the size of project whose scan is budgeted. */
+const SCAN_ENTRIES = 2_000;
+const SCAN_SAMPLES = 20;
+
+/** A project of 2 000 entries over three levels (folders and read files), scanned uncached each time. */
+const timeProjectScan = (catalogPath: string) => {
+  const root = path.join(workDir, "project");
+  fs.mkdirSync(path.join(root, ".git"), { recursive: true });
+  let entries = 0;
+  for (let a = 0; entries < SCAN_ENTRIES; a++) {
+    const first = path.join(root, `sample${a}`);
+    fs.mkdirSync(first);
+    entries++;
+    for (let b = 0; b < 4 && entries < SCAN_ENTRIES; b++) {
+      const second = path.join(first, `run${b}`);
+      fs.mkdirSync(second);
+      entries++;
+      for (let c = 0; c < 8 && entries < SCAN_ENTRIES; c++, entries++) fs.writeFileSync(path.join(second, `s${a}_${b}_${c}_R${(c % 2) + 1}.fastq.gz`), "");
+    }
+  }
+  const opened = openCatalog(catalogPath);
+  if (!opened.available) throw new Error(`project scan: Catalog unavailable: ${opened.detail}`);
+  const durations: number[] = [];
+  for (let i = 0; i < SCAN_SAMPLES; i++) {
+    const start = performance.now();
+    detectProject(root, opened.catalog, (i + 1) * 60_000); // past the 10 s cache every time
+    durations.push(performance.now() - start);
+  }
+  opened.catalog.close();
+  const timing = summarizeTimings("project scan", durations);
+  if (timing.medianMs >= scanBudgetMs)
+    failures.push(`project scan: ${SCAN_ENTRIES} entries, median ${timing.medianMs.toFixed(3)} ms is over ${scanBudgetMs} ms`);
+  return { entries: SCAN_ENTRIES, budgetMs: scanBudgetMs, ...rounded(timing) };
+};
+
 let report: object;
 try {
   const repositorySources = path.resolve("knowledge", "tools");
@@ -123,6 +163,7 @@ try {
     budgetMs,
     scenarios,
     suggestions: timeSuggestions(first.outputPath),
+    projectScan: timeProjectScan(first.outputPath),
     failures,
   };
 } finally {

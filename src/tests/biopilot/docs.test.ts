@@ -15,6 +15,7 @@ import { compileRepositoryCatalog, compileValid, tempDir } from "./helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..");
 const guide = fs.readFileSync(path.join(repoRoot, "docs", "guide.md"), "utf-8");
+const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf-8");
 const contributing = fs.readFileSync(path.join(repoRoot, "docs", "contributing-tools.md"), "utf-8");
 /** The fenced blocks of a language in a Markdown text. */
 const blocks = (text: string, language: string) => [...text.matchAll(new RegExp("```" + language + "\\n([\\s\\S]*?)```", "g"))].map((match) => match[1]);
@@ -58,6 +59,29 @@ describe("the user guide", () => {
       config: { resultsDir: "out", reference: "ref/GRCh38.fa" },
     });
     opened.catalog.close();
+  });
+});
+
+/** Words after "biopilot" in the messages the README quotes ("biopilot session [live]"…), not commands. */
+const MESSAGES = ["session", "resources"];
+
+describe("the README", () => {
+  test("every `biopilot <command>` it names is a command of the CLI", () => {
+    const help = biopilot(["--help"]).stdout;
+    const commands = new Set([...help.slice(help.indexOf("Commands:")).matchAll(/^ {2}([a-z-]+)/gm)].map((match) => match[1]));
+    const named = new Set([...readme.matchAll(/biopilot ([a-z][a-z-]*)/g)].map((match) => match[1]).filter((name) => !MESSAGES.includes(name)));
+    expect([...named].filter((name) => !commands.has(name))).toEqual([]);
+  });
+
+  test("its install step 2 really yields the start line, for bash, zsh and fish", () => {
+    for (const shell of ["bash", "zsh", "fish"]) {
+      const lines = biopilot(["init", shell]).stdout.trimEnd().split("\n");
+      expect(lines.at(-1)).toMatch(new RegExp(`source .*biopilot/init/${shell}/`));
+    }
+  });
+
+  test("contains no emoji", () => {
+    expect([...readme].filter((c) => /\p{Extended_Pictographic}/u.test(c))).toEqual([]);
   });
 });
 

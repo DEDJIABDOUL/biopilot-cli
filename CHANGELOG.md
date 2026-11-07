@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+- **Fix:** the start line added to the shell's startup file called the original engine's command (`is`) instead of `biopilot`, so every new terminal closed at once. It now starts `biopilot`, does nothing when `biopilot` is not on the `PATH`, and keeps the terminal open when the session cannot start (for example when its resources are of another version), so that `biopilot reinit` can be run.
+- **Security:** a random token per session protects the environment report of the shell integration: text printed by a program can no longer redirect which binaries BioPilot runs. `toml` updated to 5.0.1.
+- **Documentation:** the README explains installation on Ubuntu, macOS and Windows (WSL), how to start and stop BioPilot, the diagnostic commands and the requirements.
+
+Updating with the install command installs the new start script; nothing else to do.
+
 ## 1.0.0
 
 The first stable release: terminal autocompletion for bioinformatics, fitted to the tool version installed in your environment and to the project you work in.

@@ -12,11 +12,12 @@ import { FASTP, SAMTOOLS, compileValid, tempDir, writeFakeCondaEnv, writeFakeToo
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 const catalogPath = compileValid({ "fastp.yml": FASTP, "samtools.yml": SAMTOOLS });
+const userStore = path.join(tempDir(), "user.db"); // never created: status only reads it
 
 const status = (env: Record<string, string>, ...args: string[]) => {
   const result = spawnSync(process.execPath, ["--import", "tsx", path.join(repoRoot, "src", "index.ts"), "status", ...args], {
     cwd: repoRoot,
-    env: { HOME: process.env.HOME ?? "", BIOPILOT_CATALOG: catalogPath, FORCE_COLOR: "0", ...env },
+    env: { HOME: process.env.HOME ?? "", BIOPILOT_CATALOG: catalogPath, BIOPILOT_USER_STORE: userStore, FORCE_COLOR: "0", ...env },
     encoding: "utf-8",
   });
   return { code: result.status, stdout: result.stdout, stderr: result.stderr };
@@ -64,6 +65,7 @@ describe("biopilot status", () => {
       fingerprint: null,
       version: null,
       versionSource: null,
+      profile: null,
     });
   });
 
@@ -81,8 +83,8 @@ describe("biopilot status", () => {
     const { code, stdout } = status({ PATH: `${conda.bin}:${systemBin}`, CONDA_PREFIX: conda.prefix, CONDA_DEFAULT_ENV: "fastp-0.23.4" });
     expect(code).toBe(0);
     expect(stdout).toMatch(/^environment: fastp-0\.23\.4 \(.*\)$/m);
-    expect(stdout).toMatch(/^fastp +0\.23\.4 +conda-meta +.*bin\/fastp$/m);
-    expect(stdout).toMatch(/^samtools +1\.21 +version command +.*bin\/samtools$/m);
+    expect(stdout).toMatch(/^fastp +0\.23\.4 +conda-meta +no profile +.*bin\/fastp$/m);
+    expect(stdout).toMatch(/^samtools +1\.21 +version command +no profile +.*bin\/samtools$/m);
   });
 
   test("an unavailable Catalog is an error", () => {

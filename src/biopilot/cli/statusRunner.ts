@@ -7,6 +7,8 @@ import chalk from "chalk";
 import { resolveBinary } from "../env/resolver.js";
 import { detectVersion } from "../env/version.js";
 import { openCatalog } from "../knowledge/catalog.js";
+import { profilesKnown } from "../profile/compute.js";
+import { openUserStore } from "../profile/userStore.js";
 
 /** Version of the `--json` output contract. */
 export const STATUS_JSON_FORMAT = 1;
@@ -25,6 +27,8 @@ type ToolStatus = {
   fingerprint: string | null;
   version: string | null;
   versionSource: "conda-meta" | "version-command" | null;
+  /** Whether the Profiles of this binary's version are in the User store; `null` when not installed. */
+  profile: "known" | "unknown" | null;
 };
 
 const SOURCE_TEXT = { "conda-meta": "conda-meta", "version-command": "version command" } as const;
@@ -36,6 +40,7 @@ export const runStatus = ({ json }: { json: boolean }, io: StatusIO): number => 
     return 1;
   }
   const { catalog } = opened;
+  const store = openUserStore({ create: false });
   try {
     const tools: ToolStatus[] = catalog.listTools().map(({ name }) => {
       const binary = resolveBinary(name, io.env.PATH);
@@ -48,6 +53,7 @@ export const runStatus = ({ json }: { json: boolean }, io: StatusIO): number => 
         fingerprint: binary?.fingerprint ?? null,
         version: version?.version ?? null,
         versionSource: version?.source ?? null,
+        profile: binary && query ? (profilesKnown(name, binary, query, store) ? "known" : "unknown") : null,
       };
     });
     const environment = { name: io.env.CONDA_DEFAULT_ENV || null, prefix: io.env.CONDA_PREFIX || null };
@@ -67,12 +73,14 @@ export const runStatus = ({ json }: { json: boolean }, io: StatusIO): number => 
       else {
         const version = (tool.version ?? "unknown").padEnd(versionWidth);
         const source = (tool.versionSource ? SOURCE_TEXT[tool.versionSource] : "").padEnd(15);
-        lines.push(`${name}  ${version}  ${source}  ${tool.binary}`);
+        const profile = (tool.profile === "known" ? "profile" : chalk.dim("no profile")).padEnd(10);
+        lines.push(`${name}  ${version}  ${source}  ${profile}  ${tool.binary}`);
       }
     }
     io.stdout(lines.join("\n") + "\n");
     return 0;
   } finally {
+    store?.close();
     catalog.close();
   }
 };

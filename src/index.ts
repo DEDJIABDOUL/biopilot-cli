@@ -18,6 +18,7 @@ import { getVersion } from "./utils/version.js";
 // BIOPILOT: M9 register BioPilot commands.
 import info from "./biopilot/cli/info.js";
 import status from "./biopilot/cli/status.js";
+import sync from "./biopilot/cli/sync.js";
 
 const program = new Command();
 
@@ -47,5 +48,6 @@ program.addCommand(complete);
 program.addCommand(uninstall);
 program.addCommand(info); // BIOPILOT: M9
 program.addCommand(status); // BIOPILOT: M9
+program.addCommand(sync); // BIOPILOT: M9
 
 program.parse();

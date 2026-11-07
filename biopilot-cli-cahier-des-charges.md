@@ -482,7 +482,7 @@ Prévue pour l'architecture, non développée en version 1.
 | 3. Version réelle | M2, résolveur, analyse du `--help`, profils, `status`, `sync` *(`learn` reporté)* | `--dedup` apparaît avec fastp 0.23.4 et pas avec 0.20.1 |
 | 4. Contexte | Projet, formats, R1/R2, sorties dérivées, usage, `.biopilot.toml` *(sans `threads`)*, `reset-usage` | Scénarios de l'annexe C verts |
 | 5. Distribution | Script d'installation, binaires (workflow de release sur tag `v*`), `doctor`, `uninstall` *(pas de publication npm ni conda)* | Installation en moins de 30 s sur une machine vierge |
-| 6. Version 1.0 | Documentation, M7, durcissement | Toutes les cibles de la section 11 atteintes |
+| 6. Version 1.0 | Documentation (`docs/guide.md`, `docs/contributing-tools.md`), M7, durcissement (outils défaillants, couverture > 80 %, `perf:targets`) | Toutes les cibles de la section 11 atteintes (vérifiées par `npm run perf:targets` en CI) |
 
 ---
 

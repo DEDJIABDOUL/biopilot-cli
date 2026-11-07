@@ -36,6 +36,8 @@ type Config = {
   maxSuggestions?: number;
   activeSuggestionBackgroundColor: string;
   boxBorderStyle: BoxBorderStyle;
+  /** BIOPILOT: M7 the status line under the suggestions of a Catalog Tool. */
+  statusLine: boolean;
 };
 
 const bindingSchema: JSONSchemaType<Binding> = {
@@ -103,6 +105,12 @@ const configSchema = {
       enum: ["square", "rounded"],
       default: "square",
     },
+    // BIOPILOT: M7
+    statusLine: {
+      type: "boolean",
+      nullable: true,
+      default: true,
+    },
   },
   additionalProperties: false,
 };
@@ -127,6 +135,7 @@ let globalConfig: Config = {
   useNerdFont: false,
   activeSuggestionBackgroundColor: "#7D56F4",
   boxBorderStyle: "square",
+  statusLine: true, // BIOPILOT: M7
 };
 
 export const getConfig = (): Config => globalConfig;
@@ -159,6 +168,7 @@ export const loadConfig = async (program: Command) => {
         maxSuggestions: config?.maxSuggestions ?? 5,
         activeSuggestionBackgroundColor: config?.activeSuggestionBackgroundColor ?? "#7D56F4",
         boxBorderStyle: config?.boxBorderStyle ?? "square",
+        statusLine: config?.statusLine ?? true, // BIOPILOT: M7
       };
     }
   }

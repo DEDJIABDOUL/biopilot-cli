@@ -39,7 +39,9 @@ case "$machine" in
   aarch64 | arm64) arch=arm64 ;;
   *) fail "unsupported architecture: $machine (x86_64 and arm64 are supported)" ;;
 esac
-asset="biopilot-$os-$arch"
+binary_name="biopilot-$os-$arch"
+# Published gzip-compressed: a third of the size, and gzip is everywhere.
+asset="$binary_name.gz"
 
 if [ -n "${BIOPILOT_DOWNLOAD_URL:-}" ]; then
   base="${BIOPILOT_DOWNLOAD_URL%/}"
@@ -79,13 +81,15 @@ expected=$(awk -v file="$asset" '$2 == file || $2 == "*" file { print $1 }' "$wo
 [ -n "$expected" ] || fail "no checksum for $asset in $base/SHA256SUMS"
 actual=$(sha256 "$work/$asset")
 [ "$actual" = "$expected" ] || fail "checksum mismatch for $asset (expected $expected, got $actual): nothing was installed"
+command -v gzip > /dev/null 2>&1 || fail "gzip is needed to unpack BioPilot"
+gzip -dc "$work/$asset" > "$work/$binary_name" || fail "could not unpack $asset"
 
 # --- Install ---------------------------------------------------------------------------------------
 install_dir="${BIOPILOT_INSTALL_DIR:-$HOME/.local/bin}"
 binary="$install_dir/biopilot"
 mkdir -p "$install_dir" || fail "cannot create $install_dir"
 # Copied next to its final place, then renamed: a running biopilot is never left half-written.
-cp "$work/$asset" "$binary.download" || fail "cannot write to $install_dir"
+cp "$work/$binary_name" "$binary.download" || fail "cannot write to $install_dir"
 chmod 755 "$binary.download"
 mv -f "$binary.download" "$binary"
 

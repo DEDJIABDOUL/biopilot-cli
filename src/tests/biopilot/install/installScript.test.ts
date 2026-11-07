@@ -9,6 +9,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
+import zlib from "node:zlib";
 import { tempDir } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -24,12 +25,14 @@ case "$1" in
   init) printf '\\n\\n[ -f ~/.local/share/biopilot/init/%s/init.sh ] && source ~/.local/share/biopilot/init/%s/init.sh\\n' "$2" "$2" ;;
 esac
 `;
-  fs.writeFileSync(path.join(dir, asset), binary);
+  // Published gzip-compressed (a third of the size); the checksum is the compressed file's.
+  const compressed = zlib.gzipSync(binary);
+  fs.writeFileSync(path.join(dir, `${asset}.gz`), compressed);
   const sum = crypto
     .createHash("sha256")
-    .update(options.badChecksum ? "something else" : binary)
+    .update(options.badChecksum ? "something else" : compressed)
     .digest("hex");
-  fs.writeFileSync(path.join(dir, "SHA256SUMS"), `${sum}  ${asset}\n${"0".repeat(64)}  biopilot-other-arch\n`);
+  fs.writeFileSync(path.join(dir, "SHA256SUMS"), `${sum}  ${asset}.gz\n${"0".repeat(64)}  biopilot-other-arch.gz\n`);
   return dir;
 };
 

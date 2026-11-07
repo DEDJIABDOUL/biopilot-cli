@@ -21,10 +21,10 @@ export type ComputeOutcome = { status: "computed" | "known" | "failed"; version:
  * A help that prints something is stored even with no option in it (computed once, never retried);
  * a help that cannot run or times out stores nothing.
  */
-export const computeProfiles = (tool: string, binary: Binary, query: ToolQuery, store: UserStore, now = Date.now()): ComputeOutcome => {
+export const computeProfiles = async (tool: string, binary: Binary, query: ToolQuery, store: UserStore, now = Date.now()): Promise<ComputeOutcome> => {
   let version = knownVersion(binary, query, store);
   if (version === undefined && store.probedVersion(binary.fingerprint) === undefined) {
-    const probed = probeVersion(binary, query);
+    const probed = await probeVersion(binary, query);
     store.putProbedVersion(binary.fingerprint, tool, probed ?? null);
     version = probed;
   }
@@ -34,7 +34,7 @@ export const computeProfiles = (tool: string, binary: Binary, query: ToolQuery, 
   for (const help of query.helps) {
     const command = help.path.join(" ");
     if (store.getProfile(tool, key, command)) continue;
-    const output = runTool(binary, help.args);
+    const output = await runTool(binary, help.args);
     if (output === undefined || output.trim() === "") {
       failed++;
       continue;

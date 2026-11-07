@@ -46,7 +46,7 @@ describe.each(["bash", "zsh", "fish"])("[%s] suggestions follow the shell's PATH
   const catalogPath = compileRepositoryCatalog().catalogPath;
   const store = path.join(root, "user.db");
   /** A conda environment with a fake fastp printing its recorded help, synced into the User store. */
-  const fastpEnv = (version: string) => {
+  const fastpEnv = async (version: string) => {
     const env = writeFakeCondaEnv(root, `fastp-${version}`, "fastp", version);
     const help = fs.readFileSync(path.join(repoRoot, "knowledge", "help", "fastp", version, "root.txt"), "utf-8");
     writeFakeTool(env.bin, "fastp", { "--help": help, "--version": `fastp ${version}\n` });
@@ -55,13 +55,17 @@ describe.each(["bash", "zsh", "fish"])("[%s] suggestions follow the shell's PATH
     const binary = resolveBinary("fastp", env.bin);
     const query = opened.available ? opened.catalog.getToolQuery("fastp") : undefined;
     if (!opened.available || !userStore || !binary || !query) throw new Error("test setup");
-    computeProfiles("fastp", binary, query, userStore);
+    await computeProfiles("fastp", binary, query, userStore);
     userStore.close();
     opened.catalog.close();
     return env.bin;
   };
-  const recent = fastpEnv("0.23.4");
-  const old = fastpEnv("0.20.1");
+  let recent: string;
+  let old: string;
+  beforeAll(async () => {
+    recent = await fastpEnv("0.23.4");
+    old = await fastpEnv("0.20.1");
+  });
 
   let terminal: TuiTest;
   beforeEach(async () => {

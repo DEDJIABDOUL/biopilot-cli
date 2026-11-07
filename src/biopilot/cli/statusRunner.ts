@@ -36,7 +36,7 @@ type ToolStatus = {
 
 const SOURCE_TEXT = { "conda-meta": "conda-meta", "version-command": "version command" } as const;
 
-export const runStatus = ({ json }: { json: boolean }, io: StatusIO): number => {
+export const runStatus = async ({ json }: { json: boolean }, io: StatusIO): Promise<number> => {
   const opened = openCatalog();
   if (!opened.available) {
     io.stderr(`biopilot: the Catalog is unavailable: ${opened.detail}\nrun "biopilot doctor" for details\n`);
@@ -45,20 +45,23 @@ export const runStatus = ({ json }: { json: boolean }, io: StatusIO): number => 
   const { catalog } = opened;
   const store = openUserStore({ create: false });
   try {
-    const tools: ToolStatus[] = catalog.listTools().map(({ name }) => {
-      const binary = resolveBinary(name, io.env.PATH);
-      const query = catalog.getToolQuery(name);
-      const version = binary && query ? detectVersion(binary, query, { probe: true }) : undefined;
-      return {
-        name,
-        installed: binary !== undefined,
-        binary: binary?.path ?? null,
-        fingerprint: binary?.fingerprint ?? null,
-        version: version?.version ?? null,
-        versionSource: version?.source ?? null,
-        profile: binary && query ? (profilesKnown(name, binary, query, store) ? "known" : "unknown") : null,
-      };
-    });
+    // Versions probed side by side: a slow tool delays status by 2.5 s at most, not once per tool.
+    const tools: ToolStatus[] = await Promise.all(
+      catalog.listTools().map(async ({ name }) => {
+        const binary = resolveBinary(name, io.env.PATH);
+        const query = catalog.getToolQuery(name);
+        const version = binary && query ? await detectVersion(binary, query, { probe: true }) : undefined;
+        return {
+          name,
+          installed: binary !== undefined,
+          binary: binary?.path ?? null,
+          fingerprint: binary?.fingerprint ?? null,
+          version: version?.version ?? null,
+          versionSource: version?.source ?? null,
+          profile: binary && query ? (profilesKnown(name, binary, query, store) ? "known" : "unknown") : null,
+        };
+      }),
+    );
     const environment = { name: io.env.CONDA_DEFAULT_ENV || null, prefix: io.env.CONDA_PREFIX || null };
     const detected = detectProject(io.cwd, catalog);
     const project = {

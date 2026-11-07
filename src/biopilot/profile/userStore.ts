@@ -97,13 +97,21 @@ class SqliteUserStore implements UserStore {
 }
 
 /**
- * Opens the User store. `create`: make it (0600, in a 0700 folder) when missing; otherwise a missing store
- * is simply unavailable. Never throws.
+ * Opens the User store. `create`: make it (0600) when missing; otherwise a missing store is simply
+ * unavailable. `createFolder`: also make its folder (0700) when missing. Never throws.
  */
-export const openUserStore = ({ create, file = userStorePath() }: { create: boolean; file?: string }): UserStore | undefined => {
+export const openUserStore = ({
+  create,
+  createFolder = create,
+  file = userStorePath(),
+}: {
+  create: boolean;
+  createFolder?: boolean;
+  file?: string;
+}): UserStore | undefined => {
   try {
     if (!create && !fs.existsSync(file)) return;
-    if (create) fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    if (createFolder) fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
     const existed = fs.existsSync(file);
     const db = openSqlite(file, { fileMustExist: !create });
     if (!existed) fs.chmodSync(file, 0o600);

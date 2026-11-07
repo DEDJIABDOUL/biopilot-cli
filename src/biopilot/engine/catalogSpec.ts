@@ -11,6 +11,7 @@ import { sessionEnvironment } from "../env/session.js";
 import { withinVersions } from "../env/versionOrder.js";
 import { openCatalog, type Argument, type Catalog, type Command, type Option, type ValueSpec } from "../knowledge/catalog.js";
 import { knownVersion } from "../profile/compute.js";
+import { requestProfile } from "../profile/detached.js";
 import type { HelpOption } from "../profile/helpParser.js";
 import { openUserStore, versionKey, type UserStore } from "../profile/userStore.js";
 import { optionRanking } from "./ranking.js";
@@ -206,6 +207,8 @@ export const catalogSpec = (toolName: string): Fig.Subcommand | undefined => {
     if (cached && cached.key === key && (cached.checkedAt === Infinity || now - cached.checkedAt < PROFILE_RECHECK_MS)) return cached.spec ?? undefined;
     const built = toFigCommand(current, root, tool.name, tool.description ?? undefined, found?.installed);
     specs.set(toolName, { key, spec: built.spec, checkedAt: built.complete ? Infinity : now });
+    // A Profile is missing: computed aside (once per binary per session); a later suggestion picks it up.
+    if (found && !built.complete) requestProfile(tool.name, found.binary, sessionEnvironment().PATH);
     return built.spec;
   } catch {
     return cached?.spec ?? undefined; // fail silently: the engine falls back to what it had, or to Fig

@@ -85,3 +85,38 @@ describe.each(["bash", "zsh", "fish"])("[%s] suggestions follow the shell's PATH
     await terminal.expectText("--dedup", { strict: false, not: true });
   });
 });
+
+describe("[bash] an unknown Profile is computed in the background (ADR-0002)", () => {
+  const root = tempDir();
+  const bin = path.join(root, "bin");
+  // Outside conda and never synced: neither its version nor its Profile is known when typing starts.
+  const help = fs.readFileSync(path.join(repoRoot, "knowledge", "help", "fastp", "0.20.1", "root.txt"), "utf-8");
+  writeFakeTool(bin, "fastp", { "--help": help, "--version": "fastp 0.20.1\n" });
+
+  let terminal: TuiTest;
+  beforeEach(async () => {
+    terminal = await session({
+      BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath,
+      BIOPILOT_USER_STORE: path.join(tempDir(), "user.db"),
+      PATH: `${bin}:${process.env.PATH}`,
+    });
+  });
+  afterEach(async () => {
+    await closeSession(terminal);
+  });
+
+  test("without sync, --dedup leaves fastp 0.20.1's suggestions once its Profile lands", async () => {
+    await terminal.type("fastp --de");
+    await terminal.expectText("--dedup", { strict: false }); // the Catalog meanwhile: nothing waited for
+
+    // The Profile lands in the background; typing again picks it up.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await terminal.press("Backspace");
+      await terminal.type("e");
+      await terminal.expectText("--detect_adapter_for_pe", { strict: false });
+      if (!(await terminal.text()).includes("--dedup")) break;
+    }
+    await terminal.expectText("--dedup", { strict: false, not: true });
+  });
+});

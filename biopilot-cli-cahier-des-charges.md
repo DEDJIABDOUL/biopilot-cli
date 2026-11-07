@@ -386,15 +386,15 @@ Exigences communes :
 ### 10.1 Une seule ligne
 
 ```shell
-curl -fsSL https://<domaine>/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | sh
 ```
 
 Le script :
 1. détecte le système et l'architecture ;
-2. télécharge le binaire autonome correspondant, avec Node embarqué, comme le fait déjà le paquet d'Inshellisense ;
-3. vérifie sa somme SHA-256 ;
+2. télécharge le binaire autonome correspondant, avec Node embarqué, comme le fait déjà le paquet d'Inshellisense, depuis la Release GitHub, compressé en gzip (140 Mo → 45 Mo) ;
+3. vérifie sa somme SHA-256 (`SHA256SUMS` de la Release) ;
 4. l'installe dans `~/.local/bin`, sans droits administrateur ;
-5. place `knowledge.db` dans `~/.local/share/biopilot/` ;
+5. place `knowledge.db` dans `~/.local/share/biopilot/` (par `biopilot reinit`) ;
 6. affiche la ligne `biopilot init <shell>` à ajouter, sans modifier les fichiers du shell sans accord.
 
 Variantes pour les utilisateurs qui préfèrent un gestionnaire de paquets :
@@ -481,7 +481,7 @@ Prévue pour l'architecture, non développée en version 1.
 | 2. Moteur | M3 à M6 et M8, branchement de la base | `fastp --` affiche les options classées |
 | 3. Version réelle | M2, résolveur, analyse du `--help`, profils, `status`, `sync` *(`learn` reporté)* | `--dedup` apparaît avec fastp 0.23.4 et pas avec 0.20.1 |
 | 4. Contexte | Projet, formats, R1/R2, sorties dérivées, usage, `.biopilot.toml` *(sans `threads`)*, `reset-usage` | Scénarios de l'annexe C verts |
-| 5. Distribution | Script d'installation, binaires, `doctor`, `uninstall` | Installation en moins de 30 s sur une machine vierge |
+| 5. Distribution | Script d'installation, binaires (workflow de release sur tag `v*`), `doctor`, `uninstall` *(pas de publication npm ni conda)* | Installation en moins de 30 s sur une machine vierge |
 | 6. Version 1.0 | Documentation, M7, durcissement | Toutes les cibles de la section 11 atteintes |
 
 ---

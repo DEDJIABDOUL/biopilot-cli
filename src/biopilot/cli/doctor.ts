@@ -1,24 +1,21 @@
 // Copyright (c) BioPilot CLI contributors.
 // Licensed under the MIT License.
 
-import chalk from "chalk";
+// `biopilot doctor`'s BioPilot section. Imported by the engine's doctor at every start of biopilot: the
+// checks (and SQLite) load only when doctor actually runs.
 
-/** `biopilot doctor` check: is the Catalog present, readable and of the expected schema? Returns the error count. */
+import chalk from "chalk";
+import sea from "node:sea";
+
+/** Prints BioPilot's checks the way doctor prints its own; returns the error count. */
 export const renderCatalogIssues = async (): Promise<number> => {
-  // Loaded on demand: SQLite stays out of session startup.
-  const { openCatalog } = await import("../knowledge/catalog.js");
-  const opened = openCatalog();
-  if (!opened.available) {
-    process.stderr.write(chalk.red("•") + chalk.bold(" the Catalog is unavailable\n"));
-    process.stderr.write(`  ${opened.detail}\n`);
-    process.stderr.write(chalk.yellow("  run " + chalk.underline(chalk.cyan("biopilot reinit")) + " to reinstall it\n"));
-    return 1;
+  const [{ installationChecks }, { userStorePath }] = await Promise.all([import("./doctorChecks.js"), import("../profile/userStore.js")]);
+  const checks = installationChecks({ env: process.env, userStoreFile: userStorePath(), standaloneBinary: sea.isSea() ? process.execPath : null });
+  for (const check of checks) {
+    const stream = check.level === "ok" ? process.stdout : process.stderr;
+    const mark = check.level === "ok" ? chalk.green("✓") : check.level === "warning" ? chalk.yellow("•") : chalk.red("•");
+    stream.write(`${mark} ${check.level === "ok" ? check.text : chalk.bold(check.text)}\n`);
+    if (check.hint) stream.write(chalk.yellow(`  ${check.hint}\n`));
   }
-  const { catalog } = opened;
-  const toolCount = catalog.listTools().length;
-  process.stdout.write(
-    chalk.green("✓") + ` Catalog available (${toolCount} ${toolCount === 1 ? "tool" : "tools"}, schema ${catalog.schemaVersion}, ${catalog.path})\n`,
-  );
-  catalog.close();
-  return 0;
+  return checks.filter((check) => check.level === "error").length;
 };

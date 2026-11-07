@@ -7,19 +7,26 @@ Terminal autocompletion for bioinformatics. While you type, BioPilot suggests th
 - **Project-aware:** suggests files of the expected format, pairs R1/R2 mates, and derives output names.
 - **Keeps general completion:** git, cd, ls… still work; bio tools come first.
 
-> **Status: pre-alpha (phase 4).** Options, subcommands and values of 10 bio tools come from the Catalog, filtered by the version really installed in the active environment (followed across `conda activate`), and ranked for the project you are in: files of the expected format, R1/R2 mates, derived output names, reference indexes, and the options you use most. Installation is from source for now (phase 5). See the [specification](./biopilot-cli-cahier-des-charges.md) (French).
+> **Status: pre-alpha (phase 5).** Options, subcommands and values of 10 bio tools come from the Catalog, filtered by the version really installed in the active environment (followed across `conda activate`), and ranked for the project you are in: files of the expected format, R1/R2 mates, derived output names, reference indexes, and the options you use most. One-line install (phase 5); version 1.0 is phase 6. See the [specification](./biopilot-cli-cahier-des-charges.md) (French).
 
 ## Supported platforms
 
 Shells: bash, zsh, fish. Systems: Linux (x64, arm64), macOS (arm64, x64), Windows through WSL.
 
-## Getting started
+## Install
 
 ```shell
-biopilot init bash     # or zsh, fish
+curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | sh
 ```
 
-Add the printed `source` line to your shell startup file (`~/.bashrc`, `~/.zshrc` or `~/.config/fish/config.fish`). `biopilot doctor` checks the installation; `biopilot -c` tells you whether the current shell runs inside a BioPilot session.
+Available from the first release (before it, install from the sources). No administrator rights, nothing to compile, no prerequisite: the script downloads the standalone binary for your system (Node embedded), checks its SHA-256, installs it in `~/.local/bin` and its Catalog in `~/.local/share/biopilot/`. It never edits your shell files: it prints the one line to add to `~/.bashrc`, `~/.zshrc` or `~/.config/fish/config.fish`. Open a new terminal and start typing `fastp --`.
+
+- **A given version, another folder:** `BIOPILOT_VERSION=0.1.0` and `BIOPILOT_INSTALL_DIR=~/bin` before `sh`.
+- **Update:** run the same line again; a running session asks for `biopilot reinit` when its resources are of another version.
+- **Check:** `biopilot doctor` (installation, Catalog, User store, PATH, environment); `biopilot status` shows the environment, project and tool versions BioPilot detects.
+- **Uninstall:** `biopilot uninstall` removes the binary, configuration, data and the init line, after showing them.
+
+From the sources: see Development below, then `biopilot init bash` (or zsh, fish) prints the line to add.
 
 ## Development
 

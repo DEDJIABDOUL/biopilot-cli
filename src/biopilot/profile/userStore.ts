@@ -193,8 +193,9 @@ class SqliteUserStore implements UserStore {
   }
 
   forgetLearnedTool(name: string): boolean {
+    // A Catalog Tool's Profiles are its own: only a learned tool's go with it.
     const forgotten = this.#statements.forgetLearned.run(name).changes > 0;
-    this.#statements.forgetProfiles.run(name);
+    if (forgotten) this.#statements.forgetProfiles.run(name);
     return forgotten;
   }
 

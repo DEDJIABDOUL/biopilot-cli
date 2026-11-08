@@ -123,6 +123,17 @@ describe("--help parser", () => {
     ]);
   });
 
+  test("a variant bracket at the end of a name gives both names, a value type does not", () => {
+    expect(parseHelp("  --region[s]   restrict to regions\n  -t[int]   threads\n")).toEqual([
+      { names: ["--region", "--regions"], takesValue: false, description: "restrict to regions" },
+      { names: ["-t"], takesValue: true, description: "threads" },
+    ]);
+  });
+
+  test("prose wrapped at the margin is not read as an option", () => {
+    expect(parseHelp("Polishing uses the\n--polish-target option.\n")).toEqual([]);
+  });
+
   test("usage lines, titles and prose produce no option", () => {
     expect(parseHelp("Usage: tool [-h] [-o FILE] <in>\nOptions:\n\n  some prose - not an option\n  -- end of options\n")).toEqual([]);
     expect(parse("bwa", "0.7.19", "samse.txt")).toEqual([]);

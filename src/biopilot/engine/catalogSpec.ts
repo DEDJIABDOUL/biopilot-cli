@@ -220,6 +220,19 @@ const toFigCommand = (
 /** The User store, opened once it exists (`biopilot sync` or a detached computation may create it later). */
 const getUserStore = (): UserStore | undefined => (userStore ??= openUserStore({ create: false }));
 
+/**
+ * Learned tools by name, read from the User store at most once per UNKNOWN_RECHECK_MS: one may be learned,
+ * re-learned or forgotten meanwhile (in another terminal too), but completion asks on every keystroke.
+ */
+let learnedTools: { byName: Map<string, LearnedTool>; checkedAt: number } | undefined;
+const currentLearnedTools = (now = Date.now()): Map<string, LearnedTool> => {
+  if (!learnedTools || now - learnedTools.checkedAt >= UNKNOWN_RECHECK_MS) {
+    const listed = getUserStore()?.listLearnedTools() ?? [];
+    learnedTools = { byName: new Map(listed.map((tool) => [tool.name, tool])), checkedAt: now };
+  }
+  return learnedTools.byName;
+};
+
 /** The binary the shell would run for a Tool, and its version; nothing when it is not installed. */
 const installedFor = (current: Catalog, tool: string, learned?: ToolQuery): { binary: Binary; installed: Installed } | undefined => {
   const binary = resolveBinary(tool, sessionEnvironment().PATH);
@@ -260,9 +273,9 @@ export const catalogTools = (cwd?: string): { name: string; description: string 
     }
   }
   const platforms = projectAt(cwd)?.platforms ?? [];
-  // Learned tools too, read each time: one may have been learned during the session.
+  // Learned tools too: one may have been learned during the session.
   const known = new Set(tools.map((tool) => tool.name));
-  const learned = (getUserStore()?.listLearnedTools() ?? []).filter((tool) => !known.has(tool.name));
+  const learned = [...currentLearnedTools().values()].filter((tool) => !known.has(tool.name));
   return [
     ...mapLocal(tools, ({ name, description, platforms: own }) => ({
       name,
@@ -287,14 +300,15 @@ export const catalogSpec = (toolName: string): Fig.Subcommand | undefined => {
     const current = getCatalog();
     const tool = current?.getTool(toolName);
     const root = tool ? current?.getCommand(tool.name) : undefined;
-    const learned = current && !tool ? getUserStore()?.getLearnedTool(toolName) : undefined;
+    const learned = current && !tool ? currentLearnedTools(now).get(toolName) : undefined;
     if (!current || ((!tool || !root) && !learned)) {
       specs.set(toolName, { key: "", spec: null, checkedAt: now });
       return undefined;
     }
     const name = tool?.name ?? toolName;
     const found = installedFor(current, name, learned?.query);
-    const key = found ? `${found.binary.fingerprint}\0${found.installed.key}` : "";
+    // A learned tool's spec is rebuilt when it is learned again (new subcommands, new help commands).
+    const key = `${found ? `${found.binary.fingerprint}\0${found.installed.key}` : ""}${learned ? `\0${learned.learnedAt}` : ""}`;
     if (cached && cached.spec !== null && cached.key === key && (cached.checkedAt === Infinity || now - cached.checkedAt < PROFILE_RECHECK_MS))
       return cached.spec ?? undefined;
     const built = learned ? toLearnedCommand(learned, found?.installed) : toFigCommand(current, root!, name, tool?.description ?? undefined, found?.installed);
@@ -311,4 +325,21 @@ export const catalogSpec = (toolName: string): Fig.Subcommand | undefined => {
   } catch {
     return cached?.spec ?? undefined; // fail silently: the engine falls back to what it had, or to Fig
   }
+};
+
+/**
+ * Where a learned tool's option accepted on `words` (the line after the tool's name) is counted: its command
+ * (the subcommand that opens the line, if any) and the canonical name its spec ranks it by. Nothing when the
+ * tool isn't learned or the option isn't in its spec.
+ */
+export const learnedOptionUsage = (toolName: string, words: readonly string[], optionName: string): { command: string; canonicalName: string } | undefined => {
+  const learned = currentLearnedTools().get(toolName);
+  const spec = learned ? catalogSpec(toolName) : undefined;
+  if (!learned || !spec) return;
+  const first = words[0];
+  const sub = first && !first.startsWith("-") && learned.subcommands.some((s) => s.name === first) ? first : undefined;
+  const options = sub ? spec.subcommands?.find((s) => s.name === sub)?.options : spec.options;
+  const option = options?.find((o) => (typeof o.name === "string" ? [o.name] : o.name).includes(optionName));
+  const ranking = option ? optionRanking.get(option) : undefined;
+  return ranking ? { command: ranking.command, canonicalName: ranking.canonicalName } : undefined;
 };

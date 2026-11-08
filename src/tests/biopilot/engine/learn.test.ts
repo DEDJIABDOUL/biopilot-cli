@@ -7,6 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { runLearn } from "../../../biopilot/cli/learnRunner.js";
+import { openUserStore } from "../../../biopilot/profile/userStore.js";
 import { setSessionEnvironment } from "../../../biopilot/env/session.js";
 import { statusLineFor } from "../../../biopilot/engine/statusLine.js";
 import { recordAcceptedSuggestion } from "../../../biopilot/engine/usage.js";
@@ -20,6 +21,7 @@ Usage: mytool <command> [options]
 Commands:
   align    align reads to a reference
   index    build an index
+  update   update the databases
   help     print this help
 
 Options:
@@ -63,6 +65,10 @@ describe("biopilot learn", () => {
     const { out, io } = capture();
     expect(await runLearn(["mytool"], io)).toBe(0);
     expect(out.join("")).toMatch(/learned mytool 2\.3\.1: 2 subcommands \(align, index\)/);
+    // `index` prints its usage bare (bwa's way); `update` would act: it is never run without arguments.
+    const ran = fs.readFileSync(calls, "utf-8").split("\n");
+    expect(ran).toContain("index");
+    expect(ran).not.toContain("update");
   });
 
   test("then it is completed like a Catalog Tool, in the same session", async () => {
@@ -85,6 +91,15 @@ describe("biopilot learn", () => {
     expect(await priority()).toBe((before ?? 0) + 3);
   });
 
+  test("an option accepted by its short name counts for the option, under its subcommand", async () => {
+    setSessionEnvironment({ PATH: bin, CONDA_PREFIX: undefined });
+    const priority = async () =>
+      ((await runtime.getSuggestions("mytool align --", outsideAnyProject, Shell.Bash))?.suggestions ?? []).find((s) => s.name === "--preset")?.priority;
+    const before = await priority();
+    recordAcceptedSuggestion("mytool align -", { name: "-x" });
+    expect(await priority()).toBe((before ?? 0) + 3);
+  });
+
   test("--list shows it; --forget removes it and its Profiles", async () => {
     const list = capture();
     expect(await runLearn(["--list"], list.io)).toBe(0);
@@ -94,6 +109,17 @@ describe("biopilot learn", () => {
     const again = capture();
     await runLearn(["--list"], again.io);
     expect(again.out.join("")).toContain("no learned tool");
+  });
+
+  test("--forget on a Catalog Tool refuses, and keeps its Profiles", async () => {
+    const opened = openUserStore({ create: true, file: store });
+    opened?.putProfile({ tool: "fastp", version: "1.0", command: "", options: [], fingerprint: "f", createdAt: 0 });
+    opened?.close();
+    const { io } = capture();
+    expect(await runLearn(["--forget", "fastp"], io)).toBe(1);
+    const after = openUserStore({ create: false, file: store });
+    expect(after?.listProfiles("fastp")).toHaveLength(1);
+    after?.close();
   });
 
   test.each([

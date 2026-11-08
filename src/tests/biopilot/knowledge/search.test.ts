@@ -51,6 +51,12 @@ describe("Catalog reader: full-text option search", () => {
     expect(catalog.searchOptions("input", 1)).toHaveLength(1);
   });
 
+  test("a search can be kept to one Tool, before the limit applies", () => {
+    expect(catalog.searchOptions("threads", 20, "samtools").map(({ command }) => command.tool)).toEqual(["samtools"]);
+    expect(catalog.searchOptions("threads", 20, "ruled")).toEqual([]);
+    expect(catalog.searchOptions("output", 1, "samtools").map(({ command }) => command.tool)).toEqual(["samtools"]);
+  });
+
   test("a damaged Catalog (index pointing at a missing command or option) never makes search throw", () => {
     const file = compileValid({ "ruled.yml": RULED, "samtools.yml": SAMTOOLS });
     const db = new Database(file);

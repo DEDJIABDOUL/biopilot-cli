@@ -20,6 +20,12 @@ const HELP_ARGS = [["--help"], ["-h"], []];
 const VERSION_ARGS = [["--version"], ["-V"], ["version"]];
 /** A version number: two numbers at least, then what follows them (`2.3.1`, `0.7.19-r1273`, `1.4.0a`). */
 const VERSION_REGEX = "(\\d+\\.\\d+(?:\\.\\d+)*(?:[-+][\\w.]+|[a-z]\\w*)?)";
+/**
+ * Subcommands never run bare to read their help (bwa's way, `bwa mem`): run with no argument, they would act
+ * (update the tool, delete caches, download databases, start a server…) instead of printing their usage.
+ */
+const ACTION_NAME =
+  /^(?:self-?)?(?:update|upgrade|install|uninstall|setup|init|config(?:ure)?|clean(?:up)?|clear|purge|prune|reset|rm|remove|delete|download|fetch|pull|push|sync|upload|run|start|stop|serve|server|daemon|restart|kill|test|selftest|build|make|compile|migrate|login|logout|auth)(?:[-_].*)?$/i;
 /** Subcommand helps read side by side. */
 const PARALLEL = 8;
 
@@ -35,7 +41,9 @@ const readHelp = async (binary: Binary, candidates: string[][]): Promise<{ args:
 const versionCommand = async (binary: Binary): Promise<{ args: string[]; regex: string }> => {
   for (const args of VERSION_ARGS) {
     const output = await runTool(binary, args);
-    if (output && new RegExp(VERSION_REGEX).test(output)) return { args, regex: VERSION_REGEX };
+    // A tool that doesn't know the command often prints its help instead, whose defaults (`[default: 0.5]`)
+    // would pass for a version: an output listing options is not a version.
+    if (output && new RegExp(VERSION_REGEX).test(output) && parseHelp(output).length === 0) return { args, regex: VERSION_REGEX };
   }
   return { args: [], regex: "" }; // none: never probed, Profiles keyed by the binary's Fingerprint
 };
@@ -63,7 +71,7 @@ export const learnTool = async (name: string, binary: Binary, store: UserStore, 
   const listed = parseSubcommands(root.text);
   const subcommands = (
     await mapLimited(listed, PARALLEL, async (sub) => {
-      const help = await readHelp(binary, [[sub.name, "--help"], [sub.name]]);
+      const help = await readHelp(binary, [[sub.name, "--help"], [sub.name, "-h"], ...(ACTION_NAME.test(sub.name) ? [] : [[sub.name]])]);
       return help ? { ...sub, args: help.args } : undefined;
     })
   ).filter((sub): sub is NonNullable<typeof sub> => sub !== undefined);

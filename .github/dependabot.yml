@@ -12,6 +12,15 @@ updates:
   # BIOPILOT: security and version updates of the npm dependencies too (the engine's and the build's).
   - package-ecosystem: "npm"
     directory: "/"
+    # Majors that break the build until BioPilot is adapted: TypeScript 7 (typescript-eslint does not support
+    # it yet), Node types past the Node 22 BioPilot runs on, and tui-test's new locator API (the e2e tests).
+    ignore:
+      - dependency-name: "typescript"
+        versions: [">=6"]
+      - dependency-name: "@types/node"
+        versions: [">=23"]
+      - dependency-name: "@microsoft/tui-test"
+        versions: [">=0.1.0"]
     groups:
       development:
         dependency-type: "development"

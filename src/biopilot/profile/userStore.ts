@@ -11,7 +11,7 @@ import { allResourcesPath } from "../../utils/constants.js";
 import { USER_STORE_FILE_NAME } from "../resources.js";
 import { openSqlite } from "../sqlite.js";
 import type { ToolQuery } from "../knowledge/catalog.js";
-import type { HelpOption } from "./helpParser.js";
+import { HELP_READER_VERSION, type HelpOption } from "./helpParser.js";
 
 /**
  * A Learned tool (spec §6.3): how to query a tool absent from the Catalog, as the Catalog says it for its own
@@ -208,6 +208,19 @@ class SqliteUserStore implements UserStore {
  * Opens the User store. `create`: make it (0600) when missing; otherwise a missing store is simply
  * unavailable. `createFolder`: also make its folder (0700) when missing. Never throws.
  */
+/**
+ * Profiles read by an earlier help reader may lack options it missed (1.1.0 dropped bowtie2's -x): they are
+ * deleted once, and computed again from the tools' helps when next needed (`biopilot sync`, or in the background).
+ * The store's `user_version` holds the help reader version its Profiles were read with.
+ */
+const dropStaleProfiles = (db: Database.Database): void => {
+  if ((db.pragma("user_version", { simple: true }) as number) >= HELP_READER_VERSION) return;
+  db.transaction(() => {
+    db.exec("DELETE FROM profiles");
+    db.pragma(`user_version = ${HELP_READER_VERSION}`);
+  })();
+};
+
 export const openUserStore = ({
   create,
   createFolder = create,
@@ -228,6 +241,7 @@ export const openUserStore = ({
     // cannot be written (read-only folder) is still read.
     try {
       db.exec(DDL);
+      dropStaleProfiles(db);
     } catch {
       if (create) throw new Error("the User store cannot be written");
     }

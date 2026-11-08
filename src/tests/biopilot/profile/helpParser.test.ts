@@ -134,8 +134,73 @@ describe("--help parser", () => {
     expect(parseHelp("Polishing uses the\n--polish-target option.\n")).toEqual([]);
   });
 
-  test("usage lines, titles and prose produce no option", () => {
-    expect(parseHelp("Usage: tool [-h] [-o FILE] <in>\nOptions:\n\n  some prose - not an option\n  -- end of options\n")).toEqual([]);
-    expect(parse("bwa", "0.7.19", "samse.txt")).toEqual([]);
+  test("titles and prose produce no option", () => {
+    expect(parseHelp("Options:\n\n  some prose - not an option\n  -- end of options\n")).toEqual([]);
+  });
+
+  test("options only the usage line names: a value when `<…>` or a word follows, a flag when it closes its group", () => {
+    expect(parseHelp("Usage: tool [-h] [-o FILE] <in>\n")).toEqual([
+      { names: ["-h"], takesValue: false, description: null },
+      { names: ["-o"], takesValue: true, description: null },
+    ]);
+    const bowtie2 = parse("bowtie2", "2.5.5", "root.txt");
+    for (const name of ["-x", "-1", "-2", "-U", "--interleaved", "-b", "-S"]) expect(byName(bowtie2, name)).toMatchObject({ takesValue: true });
+    expect(byName(parse("hisat2", "2.2.3", "root.txt"), "-x")).toMatchObject({ takesValue: true });
+    expect(parse("bwa", "0.7.19", "samse.txt").map((option) => option.names[0])).toEqual(["-n", "-f", "-r"]);
+  });
+
+  test("Trimmomatic's usage: `[-threads <threads>]` takes a value, `[-phred33|-phred64]` and `[-quiet]` are flags", () => {
+    const options = parse("trimmomatic", "0.41", "root.txt");
+    expect(byName(options, "-threads")).toMatchObject({ takesValue: true });
+    expect(byName(options, "-trimlog")).toMatchObject({ takesValue: true });
+    expect(byName(options, "-phred33")).toMatchObject({ takesValue: false });
+    expect(byName(options, "-phred64")).toMatchObject({ takesValue: false });
+    expect(byName(options, "-quiet")).toMatchObject({ takesValue: false });
+    expect(byName(options, "-basein")).toMatchObject({ takesValue: true });
+  });
+
+  test("a usage line's bundles, glued values and piped examples are not options", () => {
+    const names = (tool: string, version: string, file: string) => parse(tool, version, file).flatMap((option) => option.names);
+    expect(names("samtools", "1.25", "calmd.txt")).not.toContain("-eubrAESQ");
+    expect(names("bwa-mem2", "2.3", "mem.txt")).not.toContain("-TdBOELU");
+    expect(names("seqtk", "1.5", "fqchk.txt")).not.toContain("-q0");
+    expect(names("samtools", "1.25", "samples.txt")).not.toContain("-type");
+    expect(names("samtools", "1.25", "stats.txt")).not.toContain("-1"); // `[-1]` in a description below the usage
+    expect(names("samtools", "1.25", "cram-size.txt")).toEqual(expect.arrayContaining(["-v", "-e", "-o"])); // `[-ve]`
+    expect(names("qualimap", "2.3", "bamqc.txt")).not.toContain("-i"); // `[-ip]` is -ip, listed below
+  });
+
+  test("a description starting with `...` is an option's (samtools view), only `-1  ... ` values are not (STAR)", () => {
+    const options = parse("samtools", "1.25", "view.txt");
+    expect(byName(options, "--min-MQ")).toMatchObject({ names: ["-q", "--min-MQ"], takesValue: true });
+    expect(byName(options, "--require-flags")).toMatchObject({ takesValue: true });
+    expect(byName(options, "-L")).toMatchObject({ takesValue: true });
+  });
+
+  test("bcftools: `-f,   --apply-filters LIST` and two options on a line, `-i/e, --include/--exclude EXPR`", () => {
+    const options = parse("bcftools", "1.25", "view.txt");
+    expect(byName(options, "-f")).toMatchObject({ names: ["-f", "--apply-filters"], takesValue: true });
+    expect(byName(options, "-i")).toMatchObject({ names: ["-i", "--include"], takesValue: true });
+    expect(byName(options, "-e")).toMatchObject({ names: ["-e", "--exclude"], takesValue: true });
+    expect(byName(options, "-k")).toMatchObject({ names: ["-k", "--known"], takesValue: false });
+    expect(byName(options, "-n")).toMatchObject({ names: ["-n", "--novel"], takesValue: false });
+    expect(byName(options, "-e")?.description).toMatch(/^Select\/exclude sites/);
+    expect(byName(parse("bcftools", "1.25", "call.txt"), "-*")).toMatchObject({ names: ["-*", "--keep-unseen-allele"] });
+    expect(byName(parse("bcftools", "1.25", "mpileup.txt"), "-6")).toMatchObject({ names: ["-6", "--illumina1.3+"] });
+  });
+
+  test("a heading glued to the first option, `Options: -a STR   …` (bwa, seqtk)", () => {
+    expect(byName(parse("bwa", "0.7.19", "index.txt"), "-a")).toMatchObject({
+      takesValue: true,
+      description: "BWT construction algorithm: bwtsw, is or rb2 [auto]",
+    });
+    expect(byName(parse("bwa", "0.7.19", "index.txt"), "-b")).toMatchObject({ takesValue: true });
+    expect(byName(parse("seqtk", "1.5", "sample.txt"), "-s")).toMatchObject({ takesValue: true, description: "RNG seed [11]" });
+  });
+
+  test("bowtie2's note: --un, --al, --un-conc and --al-conc have -gz and -bz2 variants", () => {
+    const options = parse("bowtie2", "2.5.5", "root.txt");
+    for (const name of ["--un-gz", "--un-bz2", "--al-gz", "--al-bz2", "--un-conc-gz", "--un-conc-bz2", "--al-conc-gz", "--al-conc-bz2"])
+      expect(byName(options, name)).toMatchObject({ takesValue: true });
   });
 });

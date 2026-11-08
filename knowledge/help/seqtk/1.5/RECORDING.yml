@@ -15,9 +15,9 @@ conda_env: biopilot-tools-2
 used_by_catalog: true
 files:
   root.txt: seqtk
-  seq.txt: seqtk seq (in a terminal: without one it reads standard input)
-  size.txt: seqtk size (in a terminal: without one it reads standard input)
-  comp.txt: seqtk comp (in a terminal: without one it reads standard input)
+  seq.txt: "seqtk seq (in a terminal: without one it reads standard input)"
+  size.txt: "seqtk size (in a terminal: without one it reads standard input)"
+  comp.txt: "seqtk comp (in a terminal: without one it reads standard input)"
   sample.txt: seqtk sample
   subseq.txt: seqtk subseq
   fqchk.txt: seqtk fqchk
@@ -29,11 +29,11 @@ files:
   mutfa.txt: seqtk mutfa
   mergefa.txt: seqtk mergefa
   famask.txt: seqtk famask
-  dropse.txt: seqtk dropse (in a terminal: without one it reads standard input)
-  rename.txt: seqtk rename (in a terminal: without one it reads standard input)
+  dropse.txt: "seqtk dropse (in a terminal: without one it reads standard input)"
+  rename.txt: "seqtk rename (in a terminal: without one it reads standard input)"
   randbase.txt: seqtk randbase
   cutN.txt: seqtk cutN
   gap.txt: seqtk gap
   listhet.txt: seqtk listhet
-  hpc.txt: seqtk hpc (in a terminal: without one it reads standard input)
-  telo.txt: seqtk telo (in a terminal: without one it reads standard input)
+  hpc.txt: "seqtk hpc (in a terminal: without one it reads standard input)"
+  telo.txt: "seqtk telo (in a terminal: without one it reads standard input)"

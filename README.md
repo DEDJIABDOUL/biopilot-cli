@@ -232,7 +232,7 @@ If you installed with npm, run `npm update -g biopilot-cli` instead.
 To install a specific version, set `BIOPILOT_VERSION` for the script, for example:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.0 sh
+curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.1 sh
 ```
 
 ## Uninstall

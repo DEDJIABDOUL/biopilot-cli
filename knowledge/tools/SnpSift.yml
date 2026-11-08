@@ -1,0 +1,273 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# SnpSift 5.4c, written from its recorded helps: knowledge/help/SnpSift/5.4.0c/ (LGPL-3.0; attribution in
+# RECORDING.yml next to it) and its documentation (https://pcingola.github.io/SnpEff/snpsift/introduction/),
+# in our own words (spec decision 31). Only its most used commands are described. The options common to all
+# commands are written once with a YAML anchor (&name) and repeated with an alias. Ranks follow spec §6.4.
+name: SnpSift
+package: snpsift
+description: filter, annotate and extract fields of VCF files, often after SnpEff (dbSNP, ClinVar, dbNSFP)
+version: { args: [], regex: 'SnpSift version (\d[\w.]*)' }
+help: []
+options:
+  - &verbose
+    names: ["-v"]
+    description: more messages
+    rank: 30
+  - &noLog
+    names: ["-noLog"]
+    description: do not send usage statistics to the SnpEff server
+    rank: 45
+  - &download
+    names: ["-download"]
+    description: download a missing database (the default)
+    rank: 15
+  - &noDownload
+    names: ["-noDownload"]
+    description: never download a missing database
+    rank: 35
+  - &debug
+    names: ["-d"]
+    description: debug messages
+    rank: 10
+  - &help
+    names: ["-h"]
+    description: print the help and exit
+    rank: 10
+commands:
+  - name: annotate
+    help: ["annotate", "-h"]
+    description: add the ID and INFO fields of a database VCF (dbSNP, gnomAD, ClinVar…) to matching variants
+    options:
+      - names: ["-info"]
+        description: INFO fields of the database to add, comma-separated (all by default)
+        value: { type: string }
+        rank: 75
+      - names: ["-id"]
+        description: add only the ID field
+        rank: 65
+      - names: ["-noId"]
+        description: do not add the ID field
+        rank: 50
+      - names: ["-noInfo"]
+        description: do not add INFO fields
+        rank: 40
+      - names: ["-name"]
+        description: prefix added to the names of the added INFO fields
+        value: { type: string }
+        rank: 50
+      - names: ["-exists"]
+        description: add this INFO flag to variants present in the database
+        value: { type: string }
+        rank: 45
+      - names: ["-a"]
+        description: add fields even when the database value is empty ('.')
+        rank: 30
+      - names: ["-noAlt"]
+        description: match database entries by position only, not by REF and ALT
+        rank: 35
+      - names: ["-tabix"]
+        description: the database VCF is bgzipped and tabix-indexed
+        rank: 55
+      - names: ["-sorted"]
+        description: the database VCF is sorted and uncompressed
+        rank: 30
+      - names: ["-maxBlockSize"]
+        description: block size of the index made with -sorted
+        value: { type: int }
+        default: 16384
+        rank: 10
+      - names: ["-dbsnp"]
+        description: annotate with the dbSNP database of the configuration
+        rank: 45
+      - names: ["-clinvar"]
+        description: annotate with the ClinVar database of the configuration
+        rank: 45
+      - &config
+        names: ["-c", "-config"]
+        description: SnpEff configuration file
+        value: { type: file }
+        rank: 30
+      - &db
+        names: ["-db"]
+        description: database file, for commands that use one
+        value: { type: file }
+        rank: 40
+      - *download
+      - *noDownload
+      - *noLog
+      - *verbose
+      - *debug
+      - *help
+    arguments:
+      - name: database.vcf
+        value: { type: file, format: vcf }
+      - name: file.vcf
+        value: { type: file, format: vcf, optional: true }
+  - name: filter
+    help: ["filter", "-h"]
+    description: keep the variants for which an expression on their fields is true, e.g. "(QUAL > 30) & (DP > 10)"
+    options:
+      - names: ["-f", "--file"]
+        description: VCF to filter (standard input by default)
+        value: { type: file, format: vcf }
+        rank: 80
+      - names: ["-e", "--exprFile"]
+        description: read the expression from this file
+        value: { type: file }
+        rank: 45
+      - names: ["-n", "--inverse"]
+        description: keep the variants for which the expression is false
+        rank: 55
+      - names: ["-p", "--pass"]
+        description: set FILTER to PASS when the expression is true, instead of dropping variants
+        rank: 50
+      - names: ["-a", "--addFilter"]
+        description: add this string to FILTER when the expression is true
+        value: { type: string }
+        rank: 50
+      - names: ["-r", "--rmFilter"]
+        description: remove this string from FILTER when the expression is true
+        value: { type: string }
+        rank: 35
+      - names: ["-i", "--filterId"]
+        description: ID of this filter in the header and FILTER (SnpSift by default)
+        value: { type: string }
+        rank: 35
+      - names: ["-s", "--set"]
+        description: file of a set of values, usable in the expression (repeatable)
+        value: { type: file }
+        repeatable: true
+        rank: 30
+      - names: ["--errMissing"]
+        description: fail when a field of the expression is missing
+        rank: 20
+      - names: ["--format"]
+        description: version of the SnpEff annotation format, 2 or 3 (detected by default)
+        value: { type: enum, values: ["2", "3"] }
+        rank: 10
+      - names: ["--galaxy"]
+        description: the expression comes from Galaxy (sanitised)
+        rank: 10
+    arguments:
+      - name: expression
+        description: filter expression, in quotes
+        value: { type: string }
+      - name: input.vcf
+        value: { type: file, format: vcf, optional: true }
+  - name: extractFields
+    help: ["extractFields", "-h"]
+    description: write chosen fields of a VCF as a table (CHROM POS ID "ANN[*].GENE" "GEN[0].GT"…)
+    options:
+      - names: ["-s"]
+        description: separator of multiple values in a field (a tab by default)
+        value: { type: string }
+        rank: 55
+      - names: ["-e"]
+        description: text written for an empty field (nothing by default)
+        value: { type: string }
+        rank: 55
+    arguments:
+      - name: file.vcf
+        value: { type: file, format: vcf }
+      - name: fieldName
+        variadic: true
+        value: { type: string }
+  - name: dbnsfp
+    help: ["dbnsfp", "-h"]
+    description: add dbNSFP predictions and scores (SIFT, PolyPhen, CADD, REVEL…) to the variants
+    options:
+      - names: ["-db"]
+        description: dbNSFP database (bgzipped and tabix-indexed)
+        value: { type: file }
+        rank: 90
+      - names: ["-f"]
+        description: dbNSFP fields to add, comma-separated
+        value: { type: string }
+        rank: 75
+      - names: ["-n"]
+        description: add every field except those of -f
+        rank: 30
+      - names: ["-a"]
+        description: add fields even when the database value is empty ('.')
+        rank: 30
+      - names: ["-m"]
+        description: add fields ('.') even when the database has no matching entry
+        rank: 25
+      - names: ["-collapse"]
+        description: collapse repeated values
+        rank: 35
+      - names: ["-noCollapse"]
+        description: do not collapse repeated values (the default)
+        rank: 20
+      - names: ["-g"]
+        description: genome version
+        value: { type: string }
+        rank: 40
+      - *config
+      - *download
+      - *noDownload
+      - *noLog
+      - *verbose
+      - *debug
+      - *help
+    arguments:
+      - name: file.vcf
+        value: { type: file, format: vcf }
+  - name: varType
+    help: ["varType", "-h"]
+    description: add the type of each variant (SNP, MNP, INS, DEL or MIXED) to INFO
+    arguments:
+      - name: file.vcf
+        value: { type: file, format: vcf }
+  - name: intervals
+    help: ["intervals", "-h"]
+    description: keep the variants inside the intervals of BED files
+    options:
+      - names: ["-i"]
+        description: VCF to filter (standard input by default)
+        value: { type: file, format: vcf }
+        rank: 75
+      - names: ["-x"]
+        description: drop the variants inside the intervals instead
+        rank: 55
+    arguments:
+      - name: file.bed
+        variadic: true
+        value: { type: file, format: bed }
+  - name: split
+    help: ["split", "-h"]
+    description: split a VCF by chromosome or by number of lines, or join split files
+    options:
+      - names: ["-l"]
+        description: split every this many lines instead of by chromosome
+        value: { type: int }
+        rank: 55
+      - names: ["-j"]
+        description: join the files given into one, on standard output
+        rank: 50
+    arguments:
+      - name: file.vcf
+        variadic: true
+        value: { type: file, format: vcf }
+  - name: caseControl
+    help: ["caseControl", "-h"]
+    description: count the variants in case and control samples, with p-values
+    options:
+      - names: ["-tfam"]
+        description: TFAM file giving the phenotype (case or control) of each sample
+        value: { type: file }
+        rank: 75
+      - names: ["-name"]
+        description: name added after the Cases and Controls tags
+        value: { type: string }
+        rank: 40
+      - names: ["-chi2"]
+        description: chi-square approximation instead of Fisher's exact test
+        rank: 40
+      - *verbose
+    arguments:
+      - name: caseControlString
+        description: one character per sample, + for case, - for control, 0 for neither (or use -tfam)
+        value: { type: string, optional: true }
+      - name: file.vcf
+        value: { type: file, format: vcf }

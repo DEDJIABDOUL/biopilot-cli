@@ -782,7 +782,7 @@ commands:
         rank: 20
       - names: [ --DB_SNP ]
         description: known variants, VCF, left out by some programs
-        value: { type: file, format: [ vcf, bcf ] }
+        value: { type: file, format: [ vcf, gvcf, bcf ] }
         rank: 20
       - names: [ --arguments_file ]
         description: file of arguments added to the command line
@@ -2184,7 +2184,7 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: variants to lift
-        value: { type: file, format: [ vcf, bcf ] }
+        value: { type: file, format: [ vcf, gvcf, bcf ] }
         rank: 95
       - names: [ --CHAIN, -C ]
         description: chain file from the source to the target assembly
@@ -2196,7 +2196,7 @@ commands:
         rank: 90
       - names: [ --REJECT ]
         description: file for the variants that could not be lifted
-        value: { type: file, format: [ vcf, bcf ] }
+        value: { type: file, format: [ vcf, gvcf, bcf ] }
         rank: 85
       - names: [ --CREATE_INDEX ]
         description: write an index of coordinate-sorted BAM or VCF output

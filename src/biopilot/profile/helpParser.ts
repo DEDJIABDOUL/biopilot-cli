@@ -10,20 +10,24 @@
 
 /**
  * The version of this reader, raised whenever it reads a help differently: Profiles stored by an earlier one are
- * computed again (userStore). 2: usage-line options, bcftools pairs, `Options: -a` (1.1.1).
+ * computed again (userStore). 2: usage-line options, bcftools pairs, `Options: -a` (1.1.1). 3: continued example
+ * command lines, `java -jar`, a lone `|`, `-&`, GATK names with dashes (1.1.2).
  */
-export const HELP_READER_VERSION = 2;
+export const HELP_READER_VERSION = 3;
 
 /** An option as a tool's own --help describes it. */
 export type HelpOption = { names: string[]; takesValue: boolean; description: string | null };
 
 /** An option line: indentation, then a dash and a name character (`-@`, `-5`, `--in1`). */
-const OPTION_LINE = /^(\s*)(--?[A-Za-z0-9@?*][^\s]*.*)$/;
+const OPTION_LINE = /^(\s*)(--?[A-Za-z0-9@?*][^\s]*.*|-[&$=]\s.*)$/;
 /** An option name, possibly with a value glued on (`--opt=VAL`, `--opt[=VAL]`) or `[s]` in its middle. */
 // A bracket is a variant (`--region[s]-file`, `--color[s]`), unless it ends the name and names a value's type
 // (`-t[int]`, filtlong).
 const VALUE_TYPE = "(?:int|integer|float|double|long|num|number|str|string|file|path|dir)";
-const NAME = new RegExp(`^(--?[A-Za-z0-9@?*](?:[A-Za-z0-9_.@?+-]|\\[(?!${VALUE_TYPE}\\]$)[a-z]+\\](?=[A-Za-z0-9_.-]|$))*)(\\[?=.*|\\[${VALUE_TYPE}\\])?$`);
+// freebayes also names options with a symbol alone: `-&`, `-$`, `-=`.
+const NAME = new RegExp(
+  `^(-[&$=](?=$)|--?[A-Za-z0-9@?*](?:[A-Za-z0-9_.@?+-]|\\[(?!${VALUE_TYPE}\\]$)[a-z]+\\](?=[A-Za-z0-9_.-]|$))*)(\\[?=.*|\\[${VALUE_TYPE}\\])?$`,
+);
 /** fastp's way to say an option takes a value: `(string [=])`, `(int [=4])` at the end of the description. */
 const CMDLINE_VALUE = /\((?:string|int|long|float|double)(?: \[=[^\]]*\])?\)\s*$/;
 
@@ -43,7 +47,8 @@ const STAR_NAME = /^([a-z][A-Za-z0-9]+)\s+\S/;
 /** STAR: the line below the name, its value's type then its description, `    int>0: number of…`, `    4 integers: …`. */
 const STAR_TYPE = /^\s{3,}(?:(?:\d+|N)\s+|\d+\*)?(?:string|int|uint|real|double|integer)[a-z]*(?:\(s\))?(?:\s*[<>=][^:]*)?(?:,[^:]*)?:\s*(.*)$/;
 /** Barclay (Picard, GATK): unindented `--INPUT,-I <File>`, the description after `>`, sometimes without a space. */
-const BARCLAY_LINE = /^(--[A-Za-z][A-Za-z0-9_]*(?:,-[A-Za-z0-9_]+)?\s*<[^>]+>)(.*)$/;
+// GATK's names have dashes (`--emit-ref-confidence,-ERC`, `--use-jdk-inflater,-jdk-inflater`).
+const BARCLAY_LINE = /^(--[A-Za-z][A-Za-z0-9_-]*(?:,-[A-Za-z0-9_-]+)?\s*<[^>]+>)(.*)$/;
 
 /** A heading glued to the first option (bwa, seqtk): `Options: -a STR   …`. Replaced by spaces, so the column stays. */
 const OPTIONS_HEADING = /^(?:Options|Opts)\s*:\s+(?=-)/i;
@@ -67,7 +72,7 @@ const expandBrackets = (name: string): string[] => {
 const readSpec = (spec: string): { names: string[]; takesValue: boolean } | undefined => {
   const names: string[] = [];
   let takesValue = false;
-  for (const part of spec.split(/\s*[,/]\s*(?=-)/)) {
+  for (const part of spec.split(/\s*[,/|]\s*(?=--?[A-Za-z0-9@?*&$=])/)) {
     const [first, ...rest] = part.trim().split(/\s+/);
     const match = first?.match(NAME);
     if (!match) return;
@@ -76,6 +81,7 @@ const readSpec = (spec: string): { names: string[]; takesValue: boolean } | unde
     // `-1 ... all alignments`: a value in a list of values (STAR), not an option.
     if (rest[0] === "...") return;
     for (const word of rest) {
+      if (word === "|") continue; // VEP: `-i | --input_file`
       // docopt (mosdepth): more names after a space, `-t --threads <threads>`; anything else is the value.
       const more = word.startsWith("-") ? word.match(NAME) : null;
       if (more) {
@@ -119,6 +125,9 @@ const usageOptions = (lines: readonly string[]): { names: string[]; takesValue: 
       if (i + 1 >= lines.length || lines[i + 1].trim() === "" || /^\s*(?!or:)[A-Za-z][^:]*:\s*$/i.test(lines[i + 1])) break;
     }
     const words = block.join(" ").split(/\s+/).filter(Boolean);
+    // `java -jar SnpSift.jar filter [options] …`: the options before the jar are Java's.
+    const jar = words.findIndex((word) => /\.jar$/.test(word));
+    if (jar !== -1 && words.slice(0, jar).includes("-jar")) words.splice(0, jar + 1);
     for (let w = 0; w < words.length; w++) {
       // `[-phred33|-phred64]`: alternatives, flags; `-x <idx>`: a value; `[-quiet]`: a flag closing its group.
       const alternatives = words[w].includes("|");
@@ -135,12 +144,13 @@ const usageOptions = (lines: readonly string[]): { names: string[]; takesValue: 
 };
 
 /** The description of an option: its inline part, then the following lines indented deeper that are not options. */
-const continuation = (lines: readonly string[], i: number, indent: number, inline: string | null): [string | null, number] => {
+// Barclay (GATK): names start at the margin, so every indented line below is description, even `-encode argument`.
+const continuation = (lines: readonly string[], i: number, indent: number, inline: string | null, barclay = false): [string | null, number] => {
   const parts = inline ? [inline] : [];
   while (i + 1 < lines.length) {
     const next = lines[i + 1];
     const nextIndent = next.match(/^\s*/)?.[0].length ?? 0;
-    if (next.trim() === "" || nextIndent <= indent || OPTION_LINE.test(next)) break;
+    if (next.trim() === "" || nextIndent <= indent || (!barclay && OPTION_LINE.test(next))) break;
     parts.push(next.trim());
     i++;
   }
@@ -173,6 +183,8 @@ export const parseHelp = (text: string): HelpOption[] => {
       i++;
       continue;
     }
+    // The rest of an example command line (freebayes: `freebayes -f ref.fa … \` then `--min-alternate-fraction 0 …`).
+    if (i > 0 && lines[i - 1].trimEnd().endsWith("\\")) continue;
     const barclay = lines[i].match(BARCLAY_LINE);
     const line = barclay ? null : lines[i].match(OPTION_LINE);
     if (!barclay && !line) continue;
@@ -213,7 +225,7 @@ export const parseHelp = (text: string): HelpOption[] => {
       spec.takesValue = true;
       inline = valueColumn[1]?.trim() || null;
     }
-    const [description, last] = continuation(lines, i, indent, inline);
+    const [description, last] = continuation(lines, i, indent, inline, barclay !== null);
     i = last;
     const takesValue = spec.takesValue || (description !== null && (CMDLINE_VALUE.test(description) || RICH_VALUE.test(description)));
     add(spec.names, takesValue, description);

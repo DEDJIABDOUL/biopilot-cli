@@ -1,0 +1,905 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# bedtools 2.31.1, written from its recorded helps: knowledge/help/bedtools/2.31.1/ (MIT; attribution in
+# RECORDING.yml next to it) and its documentation (https://bedtools.readthedocs.io), in our own words
+# (spec decision 31). Only the 18 most used of its subcommands are described. Ranks follow spec §6.4.
+name: bedtools
+description: 'genome arithmetic on intervals (BED, GFF, VCF, BAM): intersect, merge, coverage, closest, flanks, sequences'
+version:
+  args: [--version]
+  regex: bedtools v?(\d[\w.]*)
+help: [--help]
+options:
+- names: [--cram-ref]
+  description: reference FASTA of CRAM inputs
+  value: {type: file, format: fasta}
+  rank: 30
+- names: [--version]
+  description: print the version and exit
+  rank: 10
+- names: [--help]
+  description: print the help and exit
+  rank: 10
+- names: [--contact]
+  description: where to report bugs and ask questions
+  rank: 10
+commands:
+- name: intersect
+  help: [intersect, -h]
+  description: report the overlaps between the intervals of A and B
+  options:
+  - names: [-a]
+    description: 'file A: each of its intervals is compared with those of B'
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    rank: 95
+  - names: [-b]
+    description: file(s) B, compared with A (several files, or a wildcard, allowed)
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    repeatable: true
+    rank: 90
+  - names: [-wa]
+    description: write the A entry of each overlap
+    rank: 75
+  - names: [-wb]
+    description: write the B entry of each overlap, after the A part
+    rank: 70
+  - names: [-u]
+    description: write each A entry once if it overlaps B at all
+    rank: 75
+  - names: [-v]
+    description: write the A entries that overlap nothing in B
+    rank: 75
+  - names: [-c]
+    description: write each A entry with its number of overlaps in B
+    rank: 65
+  - names: [-C]
+    description: write each A entry with its number of overlaps in each B file, one line per file
+    rank: 30
+  - names: [-wo]
+    description: write A and B entries with the number of overlapping bases
+    rank: 60
+  - names: [-wao]
+    description: as -wo, also writing A entries without overlap (overlap 0)
+    rank: 50
+  - names: [-loj]
+    description: 'left outer join: each A entry with its B overlaps, or a null B'
+    rank: 50
+  - &id017
+    names: [-ubam]
+    description: write uncompressed BAM
+    rank: 15
+  - &id005
+    names: [-s]
+    description: only overlaps on the same strand
+    rank: 50
+  - &id006
+    names: [-S]
+    description: only overlaps on opposite strands
+    rank: 40
+  - &id007
+    names: [-f]
+    description: least overlap, as a fraction of A (e.g. 0.5)
+    value: {type: float}
+    default: !!float '1e-09'
+    rank: 55
+  - &id008
+    names: [-F]
+    description: least overlap, as a fraction of B
+    value: {type: float}
+    default: !!float '1e-09'
+    rank: 40
+  - &id009
+    names: [-r]
+    description: the -f fraction must hold for both A and B (reciprocal)
+    rank: 45
+  - &id010
+    names: [-e]
+    description: the -f or -F fraction must hold for A or for B
+    rank: 25
+  - &id011
+    names: [-split]
+    description: split BAM or BED12 records into their blocks (spliced reads)
+    rank: 40
+  - names: [-g]
+    description: genome file setting the chromosome order of sorted inputs (with -sorted)
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 30
+  - &id012
+    names: [-nonamecheck]
+    description: with sorted input, accept chromosome names of different styles (chr1 and 1)
+    rank: 15
+  - &id013
+    names: [-sorted]
+    description: faster, low-memory algorithm for inputs sorted by chromosome then start
+    rank: 60
+  - &id014
+    names: [-names]
+    description: names of the B files, in the output instead of their numbers
+    value: {type: string}
+    rank: 25
+  - &id015
+    names: [-filenames]
+    description: write the full file name of each B hit
+    rank: 20
+  - &id016
+    names: [-sortout]
+    description: sort the hits of several B files by position
+    rank: 15
+  - &id001
+    names: [-bed]
+    description: with BAM input, write BED instead of BAM
+    rank: 40
+  - &id002
+    names: [-header]
+    description: print the header of A before the results
+    rank: 40
+  - &id003
+    names: [-nobuf]
+    description: write each line at once, unbuffered
+    rank: 10
+  - &id004
+    names: [-iobuf]
+    description: input buffer size, e.g. 1G
+    value: {type: string}
+    rank: 10
+- name: merge
+  help: [merge, -h]
+  description: merge overlapping or nearby intervals into one
+  options:
+  - names: [-i]
+    description: intervals to read
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 95
+  - names: [-d]
+    description: 'merge intervals at most this many bp apart (negative: overlapping by at least that much)'
+    value: {type: int}
+    default: 0
+    rank: 70
+  - names: [-s]
+    description: merge only intervals on the same strand
+    rank: 50
+  - names: [-S]
+    description: merge only intervals of this strand
+    value:
+      type: enum
+      values: [+, '-']
+    rank: 30
+  - names: [-c]
+    description: columns to summarise over the merged intervals, comma-separated (with -o)
+    value: {type: string}
+    rank: 60
+  - names: [-o]
+    description: operation applied to each -c column
+    value:
+      type: enum
+      values: &id018 [sum, min, max, absmin, absmax, mean, median, mode, antimode, stdev, sstdev, collapse, distinct, distinct_sort_num, distinct_sort_num_desc,
+        distinct_only, count, count_distinct, first, last]
+    rank: 60
+  - names: [-delim]
+    description: separator of the collapse operations (, by default)
+    value: {type: string}
+    rank: 20
+  - names: [-prec]
+    description: decimal places of the output
+    value: {type: int}
+    default: 5
+    rank: 15
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+- name: sort
+  help: [sort, -h]
+  description: sort intervals by chromosome then start
+  options:
+  - names: [-i]
+    description: intervals to read
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 95
+  - names: [-sizeA]
+    description: sort by size, ascending
+    rank: 30
+  - names: [-sizeD]
+    description: sort by size, descending
+    rank: 30
+  - names: [-chrThenSizeA]
+    description: sort by chromosome, then size ascending
+    rank: 25
+  - names: [-chrThenSizeD]
+    description: sort by chromosome, then size descending
+    rank: 25
+  - names: [-chrThenScoreA]
+    description: sort by chromosome, then score ascending
+    rank: 25
+  - names: [-chrThenScoreD]
+    description: sort by chromosome, then score descending
+    rank: 25
+  - names: [-g]
+    description: sort chromosomes in the order of this genome file
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 55
+  - names: [-faidx]
+    description: sort chromosomes in the order of this file of names (a .fai)
+    value:
+      type: file
+      format: [fai, genome]
+    rank: 55
+  - *id002
+- name: subtract
+  help: [subtract, -h]
+  description: remove from A the parts that overlap B
+  options:
+  - names: [-a]
+    description: 'file A: each of its intervals is compared with those of B'
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    rank: 95
+  - names: [-b]
+    description: file(s) B, compared with A (several files, or a wildcard, allowed)
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    repeatable: true
+    rank: 90
+  - names: [-A]
+    description: remove whole A entries that overlap B
+    rank: 65
+  - names: [-N]
+    description: as -A, the -f fraction counting all overlapping B entries together
+    rank: 25
+  - names: [-wb]
+    description: write the B entry of each overlap
+    rank: 20
+  - names: [-wo]
+    description: write A and B entries with the number of overlapping bases
+    rank: 20
+  - *id005
+  - *id006
+  - *id007
+  - *id008
+  - *id009
+  - *id010
+  - *id011
+  - names: [-g]
+    description: genome file setting the chromosome order of sorted inputs (with -sorted)
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 30
+  - *id012
+  - *id013
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+- name: closest
+  help: [closest, -h]
+  description: find the nearest interval of B to each interval of A
+  options:
+  - names: [-a]
+    description: 'file A: each of its intervals is compared with those of B'
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    rank: 95
+  - names: [-b]
+    description: file(s) B, compared with A (several files, or a wildcard, allowed)
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    repeatable: true
+    rank: 90
+  - names: [-d]
+    description: also write the distance to the closest B entry
+    rank: 75
+  - names: [-D]
+    description: 'write a signed distance, upstream negative: ref (genome), a (strand of A) or b (strand of B)'
+    value:
+      type: enum
+      values: [ref, a, b]
+    rank: 60
+  - names: [-io]
+    description: ignore B entries that overlap A
+    rank: 50
+  - names: [-iu]
+    description: ignore B entries upstream of A (with -D)
+    rank: 35
+  - names: [-id]
+    description: ignore B entries downstream of A (with -D)
+    rank: 35
+  - names: [-fu]
+    description: choose the first upstream B entry (with -D)
+    rank: 25
+  - names: [-fd]
+    description: choose the first downstream B entry (with -D)
+    rank: 25
+  - names: [-t]
+    description: 'ties: all, first or last'
+    value:
+      type: enum
+      values: [all, first, last]
+    rank: 55
+  - names: [-mdb]
+    description: 'with several B files: each (closest per file) or all (closest overall)'
+    value:
+      type: enum
+      values: [each, all]
+    rank: 30
+  - names: [-k]
+    description: report the k closest hits
+    value: {type: int}
+    default: 1
+    rank: 45
+  - names: [-N]
+    description: the closest hit must have a different name
+    rank: 20
+  - *id005
+  - *id006
+  - *id007
+  - *id008
+  - *id009
+  - *id010
+  - *id011
+  - names: [-g]
+    description: genome file setting the chromosome order of the sorted inputs
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 30
+  - *id012
+  - *id014
+  - *id015
+  - *id016
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+- name: window
+  help: [window, -h]
+  description: report B intervals within a window around each A interval
+  options:
+  - names: [-a]
+    description: 'file A: each of its intervals is compared with those of B'
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    rank: 95
+  - names: [-b]
+    description: file(s) B, compared with A (several files, or a wildcard, allowed)
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    repeatable: true
+    rank: 90
+  - names: [-abam]
+    description: A in BAM; the output is BAM too (replaces -a)
+    value: {type: file, format: bam}
+    rank: 40
+  - *id017
+  - names: [-bed]
+    description: with -abam, write BED instead of BAM
+    rank: 30
+  - names: [-w]
+    description: bp added on both sides of each A entry
+    value: {type: int}
+    default: 1000
+    rank: 75
+  - names: [-l]
+    description: bp added upstream (left) of each A entry
+    value: {type: int}
+    rank: 50
+  - names: [-r]
+    description: bp added downstream (right) of each A entry
+    value: {type: int}
+    rank: 50
+  - names: [-sw]
+    description: -l and -r follow the strand of A
+    rank: 35
+  - names: [-sm]
+    description: only hits on the same strand
+    rank: 35
+  - names: [-Sm]
+    description: only hits on the opposite strand
+    rank: 30
+  - names: [-u]
+    description: write each A entry once if it has any hit
+    rank: 55
+  - names: [-c]
+    description: write each A entry with its number of hits
+    rank: 50
+  - names: [-v]
+    description: write the A entries without hits
+    rank: 55
+  - *id002
+- name: coverage
+  help: [coverage, -h]
+  description: depth and breadth of coverage of each A interval by B
+  options:
+  - names: [-a]
+    description: 'file A: each of its intervals is compared with those of B'
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    rank: 95
+  - names: [-b]
+    description: file(s) B, compared with A (several files, or a wildcard, allowed)
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    repeatable: true
+    rank: 90
+  - names: [-hist]
+    description: histogram of depth for each A entry, and for all
+    rank: 55
+  - names: [-d]
+    description: depth at each position of each A entry
+    rank: 45
+  - names: [-counts]
+    description: only the number of overlapping B entries
+    rank: 55
+  - names: [-mean]
+    description: mean depth of each A entry
+    rank: 60
+  - *id005
+  - *id006
+  - *id007
+  - *id008
+  - *id009
+  - *id010
+  - *id011
+  - names: [-g]
+    description: genome file setting the chromosome order of the sorted inputs (with -sorted)
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 40
+  - *id012
+  - *id013
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+- name: genomecov
+  help: [genomecov, -h]
+  description: coverage over a whole genome, as a histogram, per base or as BedGraph
+  options:
+  - names: [-i]
+    description: intervals to read
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 90
+  - names: [-ibam]
+    description: BAM or CRAM to read instead of -i (no genome file needed)
+    value:
+      type: file
+      format: [bam, cram]
+    rank: 95
+  - names: [-g]
+    description: genome file of sequence names and lengths (with -i)
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 85
+  - names: [-bg]
+    description: write the depth as BedGraph, non-zero regions only
+    rank: 80
+  - names: [-bga]
+    description: write the depth as BedGraph, zero regions too
+    rank: 70
+  - names: [-d]
+    description: depth at each position, 1-based
+    rank: 50
+  - names: [-dz]
+    description: depth at each covered position, 0-based
+    rank: 45
+  - names: [-split]
+    description: count the blocks of spliced BAM or BED12 records only (RNA-seq)
+    rank: 50
+  - names: [-ignoreD]
+    description: ignore deletions (CIGAR D) in BAM records
+    rank: 25
+  - names: [-strand]
+    description: coverage of one strand only
+    value:
+      type: enum
+      values: [+, '-']
+    rank: 45
+  - names: [-pc]
+    description: coverage of whole paired-end fragments
+    rank: 40
+  - names: [-fs]
+    description: use this fragment size instead of the read length
+    value: {type: int}
+    rank: 25
+  - names: [-du]
+    description: count the mate on the same strand as the first read (with -strand)
+    rank: 20
+  - names: ['-5']
+    description: coverage of 5' ends only
+    rank: 35
+  - names: ['-3']
+    description: coverage of 3' ends only
+    rank: 30
+  - names: [-max]
+    description: pool depths of this value or more in the histogram
+    value: {type: int}
+    rank: 25
+  - names: [-scale]
+    description: multiply the depth by this factor (normalisation)
+    value: {type: float}
+    rank: 40
+  - names: [-trackline]
+    description: add a UCSC track line
+    rank: 25
+  - names: [-trackopts]
+    description: more parameters of the track line, e.g. 'name="My Track" color=255,30,30'
+    value: {type: string}
+    rank: 15
+- name: multicov
+  help: [multicov, -h]
+  description: count the alignments of several BAM files over each interval
+  options:
+  - names: [-bams]
+    description: BAM files to count, indexed
+    value: {type: file, format: bam}
+    repeatable: true
+    rank: 95
+  - names: [-bed]
+    description: intervals to count over
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 90
+  - names: [-split]
+    description: count only the blocks of spliced reads
+    rank: 40
+  - names: [-s]
+    description: count only reads on the same strand
+    rank: 40
+  - names: [-S]
+    description: count only reads on the opposite strand
+    rank: 35
+  - names: [-f]
+    description: least overlap, as a fraction of the interval
+    value: {type: float}
+    rank: 35
+  - names: [-r]
+    description: the -f fraction must hold for the read too (reciprocal)
+    rank: 25
+  - names: [-F]
+    description: least overlap, as a fraction of the read
+    value: {type: float}
+    rank: 25
+  - names: [-q]
+    description: least mapping quality
+    value: {type: int}
+    default: 0
+    rank: 55
+  - names: [-D]
+    description: count duplicates too
+    rank: 40
+  - names: [-p]
+    description: count only proper pairs
+    rank: 40
+- name: getfasta
+  help: [getfasta, -h]
+  description: extract the sequences of intervals from a FASTA
+  options:
+  - names: [-fi]
+    description: FASTA to extract from
+    value: {type: file, format: fasta}
+    rank: 95
+  - names: [-bed]
+    description: intervals to extract
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 90
+  - names: [-fo]
+    description: file to write (standard output by default)
+    value: {type: file, format: fasta}
+    rank: 75
+  - names: [-s]
+    description: reverse complement intervals on the minus strand
+    rank: 60
+  - names: [-name]
+    description: headers from the name column, with the coordinates
+    rank: 55
+  - names: [-name+]
+    description: headers from the name column and coordinates (deprecated)
+    rank: 10
+  - names: [-nameOnly]
+    description: headers from the name column only
+    rank: 45
+  - names: [-tab]
+    description: write name and sequence separated by a tab
+    rank: 45
+  - names: [-bedOut]
+    description: write the intervals as BED with their sequence in a column
+    rank: 35
+  - names: [-split]
+    description: concatenate the blocks of BED12 intervals (transcripts)
+    rank: 40
+  - names: [-fullHeader]
+    description: keep the whole FASTA header, not only the first word
+    rank: 20
+  - names: [-rna]
+    description: the FASTA is RNA
+    rank: 15
+- name: maskfasta
+  help: [maskfasta, -h]
+  description: mask the intervals of a FASTA with N (or lowercase)
+  options:
+  - names: [-fi]
+    description: FASTA to mask
+    value: {type: file, format: fasta}
+    rank: 95
+  - names: [-bed]
+    description: intervals to mask
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 90
+  - names: [-fo]
+    description: masked FASTA to write
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [-soft]
+    description: 'soft-mask: write the masked bases in lowercase'
+    rank: 55
+  - names: [-mc]
+    description: character to mask with (N by default)
+    value: {type: string}
+    rank: 35
+  - names: [-fullHeader]
+    description: keep the whole FASTA header
+    rank: 20
+- name: slop
+  help: [slop, -h]
+  description: extend each interval on both sides, within the chromosome
+  options:
+  - names: [-i]
+    description: intervals to read
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 95
+  - names: [-g]
+    description: genome file of sequence names and lengths (samtools faidx's .fai works)
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 90
+  - names: [-b]
+    description: bp added on both sides
+    value: {type: int}
+    rank: 80
+  - names: [-l]
+    description: bp added to the start (upstream with -s)
+    value: {type: int}
+    rank: 60
+  - names: [-r]
+    description: bp added to the end (downstream with -s)
+    value: {type: int}
+    rank: 60
+  - names: [-s]
+    description: -l and -r follow the strand
+    rank: 45
+  - names: [-pct]
+    description: -b, -l and -r are fractions of the interval length
+    rank: 35
+  - *id002
+- name: flank
+  help: [flank, -h]
+  description: create intervals flanking each interval
+  options:
+  - names: [-i]
+    description: intervals to read
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 95
+  - names: [-g]
+    description: genome file of sequence names and lengths (samtools faidx's .fai works)
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 90
+  - names: [-b]
+    description: flank size on both sides, in bp
+    value: {type: int}
+    rank: 80
+  - names: [-l]
+    description: flank size at the start (upstream with -s)
+    value: {type: int}
+    rank: 60
+  - names: [-r]
+    description: flank size at the end (downstream with -s)
+    value: {type: int}
+    rank: 60
+  - names: [-s]
+    description: -l and -r follow the strand
+    rank: 45
+  - names: [-pct]
+    description: -b, -l and -r are fractions of the interval length
+    rank: 35
+  - *id002
+- name: complement
+  help: [complement, -h]
+  description: the regions of the genome not covered by the intervals
+  options:
+  - names: [-i]
+    description: intervals to read
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 95
+  - names: [-g]
+    description: genome file of sequence names and lengths (samtools faidx's .fai works)
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 90
+  - names: [-L]
+    description: only the chromosomes present in the input
+    rank: 40
+- name: makewindows
+  help: [makewindows, -h]
+  description: make windows across a genome or across intervals
+  options:
+  - names: [-g]
+    description: 'genome file: windows over each whole sequence'
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 85
+  - names: [-b]
+    description: 'intervals: windows over each of them'
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf]
+    rank: 80
+  - names: [-w]
+    description: window size, in bp
+    value: {type: int}
+    rank: 85
+  - names: [-s]
+    description: step between window starts, in bp (sliding windows)
+    value: {type: int}
+    rank: 65
+  - names: [-n]
+    description: number of windows per sequence or interval, instead of -w
+    value: {type: int}
+    rank: 65
+  - names: [-reverse]
+    description: number windows from the end
+    rank: 20
+  - names: [-i]
+    description: 'name column of the windows: src (source name), winnum (window number) or srcwinnum (both)'
+    value:
+      type: enum
+      values: [src, winnum, srcwinnum]
+    rank: 40
+- name: map
+  help: [map, -h]
+  description: summarise a column of the B intervals overlapping each A interval
+  options:
+  - names: [-a]
+    description: 'file A: each of its intervals is compared with those of B'
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    rank: 95
+  - names: [-b]
+    description: file B, whose columns are summarised
+    value:
+      type: file
+      format: [bed, gff, gtf, vcf, bam]
+    rank: 90
+  - names: [-c]
+    description: columns of B to summarise, comma-separated
+    value: {type: string}
+    default: 5
+    rank: 75
+  - names: [-o]
+    description: operation applied to each -c column
+    value:
+      type: enum
+      values: *id018
+    rank: 75
+  - names: [-delim]
+    description: separator of the collapse operations (, by default)
+    value: {type: string}
+    rank: 20
+  - names: [-prec]
+    description: decimal places of the output
+    value: {type: int}
+    default: 5
+    rank: 15
+  - *id005
+  - *id006
+  - *id007
+  - *id008
+  - *id009
+  - *id010
+  - *id011
+  - names: [-g]
+    description: genome file setting the chromosome order of the sorted inputs
+    value:
+      type: file
+      format: [genome, fai]
+    rank: 40
+  - *id012
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+- name: bamtobed
+  help: [bamtobed, -h]
+  description: convert BAM alignments to BED or BEDPE
+  options:
+  - names: [-i]
+    description: BAM to convert
+    value: {type: file, format: bam}
+    rank: 95
+  - names: [-bedpe]
+    description: write read pairs as BEDPE (the BAM sorted by read name)
+    rank: 60
+  - names: [-mate1]
+    description: with -bedpe, write mate 1 first
+    rank: 30
+  - names: [-bed12]
+    description: write blocked BED12 (forces -split)
+    rank: 45
+  - names: [-split]
+    description: one BED entry per block of spliced alignments (CIGAR N)
+    rank: 50
+  - names: [-splitD]
+    description: split at CIGAR N and D
+    rank: 25
+  - names: [-ed]
+    description: edit distance (NM tag) as the BED score
+    rank: 30
+  - names: [-tag]
+    description: numeric BAM tag used as the BED score
+    value: {type: string}
+    rank: 25
+  - names: [-color]
+    description: R,G,B colour of BED12 entries
+    value: {type: string}
+    rank: 15
+  - names: [-cigar]
+    description: add the CIGAR string as a 7th column
+    rank: 30
+- name: bamtofastq
+  help: [bamtofastq, -h]
+  description: convert BAM records to FASTQ
+  options:
+  - names: [-i]
+    description: BAM to convert
+    value: {type: file, format: bam}
+    rank: 95
+  - names: [-fq]
+    description: FASTQ to write (read 1 of pairs)
+    value: {type: file, format: fastq}
+    rank: 90
+  - names: [-fq2]
+    description: FASTQ of read 2 (paired-end BAM sorted by read name)
+    value: {type: file, format: fastq}
+    rank: 75
+  - names: [-tags]
+    description: take sequences from the R2 and Q2 tags of the mates
+    rank: 20

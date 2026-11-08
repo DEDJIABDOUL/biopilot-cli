@@ -1,0 +1,7 @@
+SnpSift version 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+
+Usage: java -jar SnpSift.jar extractFields [options] file.vcf fieldName1 fieldName2 ... fieldNameN > tabFile.txt
+
+Options:
+	-s     : Same field separator. Default: '	'
+	-e     : Empty field. Default: ''

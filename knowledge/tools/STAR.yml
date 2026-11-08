@@ -101,7 +101,7 @@ options:
     rank: 10
   - names: [ --genomeTransformVCF ]
     description: VCF of the genome transformation
-    value: { type: file, format: vcf }
+    value: { type: file, format: [vcf, gvcf] }
     rank: 10
   - names: [ --genomeType ]
     description: type of genome to build
@@ -160,7 +160,7 @@ options:
     rank: 10
   - names: [ --varVCFfile ]
     description: VCF of variants (genotype in the 10th column), for WASP and allele tags
-    value: { type: file, format: vcf }
+    value: { type: file, format: [vcf, gvcf] }
     rank: 15
   - names: [ --inputBAMfile ]
     description: BAM input of --runMode inputAlignmentsFromBAM

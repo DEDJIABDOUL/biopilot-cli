@@ -1,0 +1,25 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/SnpSift.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: SnpSift
+package: snpsift
+version: "5.4.0c"
+build: hdfd78af_0
+channel: noarch
+licence: LGPL-3.0
+copyright: Pablo Cingolani, https://github.com/pcingola/SnpEff
+recorded_on: 2026-11-08
+platform: linux-64
+conda_env: biopilot-tools-4
+used_by_catalog: true
+files:
+  root.txt: "SnpSift"
+  annotate.txt: "SnpSift annotate -h"
+  filter.txt: "SnpSift filter -h"
+  extractFields.txt: "SnpSift extractFields -h"
+  dbnsfp.txt: "SnpSift dbnsfp -h"
+  varType.txt: "SnpSift varType -h"
+  intervals.txt: "SnpSift intervals -h"
+  split.txt: "SnpSift split -h"
+  caseControl.txt: "SnpSift caseControl -h"

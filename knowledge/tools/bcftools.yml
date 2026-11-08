@@ -66,7 +66,7 @@ commands:
     arguments:
       - name: in.vcf.gz
         description: compressed VCF or BCF to index
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   # -- VCF/BCF manipulation
   - name: annotate
@@ -75,7 +75,7 @@ commands:
     arguments:
       - name: in.vcf
         description: variants to annotate
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: concat
     help: ["concat", "--help"]
@@ -176,7 +176,7 @@ commands:
       - name: A.vcf.gz
         description: sorted files to join, in order
         variadic: true
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: convert
     help: ["convert", "--help"]
@@ -184,7 +184,7 @@ commands:
     arguments:
       - name: input
         description: file to convert
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: head
     help: ["head", "--help"]
@@ -192,7 +192,7 @@ commands:
     arguments:
       - name: file
         description: variants (standard input when absent)
-        value: { type: file, format: vcf, optional: true }
+        value: { type: file, format: [vcf, gvcf], optional: true }
 
   - name: isec
     help: ["isec", "--help"]
@@ -201,7 +201,7 @@ commands:
       - name: A.vcf.gz
         description: indexed files to compare
         variadic: true
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: merge
     help: ["merge", "--help"]
@@ -281,7 +281,7 @@ commands:
       - name: A.vcf.gz
         description: files to merge
         variadic: true
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: norm
     help: ["norm", "--help"]
@@ -419,7 +419,7 @@ commands:
     arguments:
       - name: in.vcf.gz
         description: variants to normalise
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: plugin
     help: ["plugin", "--help"]
@@ -461,7 +461,7 @@ commands:
             variantkey-hex, vcf2table, vrfs]
       - name: file
         description: variants the plugin reads
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: query
     help: ["query", "--help"]
@@ -526,7 +526,7 @@ commands:
       - name: A.vcf.gz
         description: variants to print
         variadic: true
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: reheader
     help: ["reheader", "--help"]
@@ -534,7 +534,7 @@ commands:
     arguments:
       - name: in.vcf.gz
         description: variants
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: sort
     help: ["sort", "--help"]
@@ -561,7 +561,7 @@ commands:
     arguments:
       - name: FILE.vcf
         description: variants to sort
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: view
     help: ["view", "--help"]
@@ -683,7 +683,7 @@ commands:
     arguments:
       - name: in.vcf.gz
         description: variants to read
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
       - name: region
         description: regions to extract (chr, chr:from or chr:from-to); needs an index
         variadic: true
@@ -794,7 +794,7 @@ commands:
     arguments:
       - name: file.vcf.gz
         description: indexed variants
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: cnv
     help: ["cnv", "--help"]
@@ -802,7 +802,7 @@ commands:
     arguments:
       - name: FILE.vcf
         description: variants
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: csq
     help: ["csq", "--help"]
@@ -810,7 +810,7 @@ commands:
     arguments:
       - name: in.vcf
         description: variants
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: filter
     help: ["filter", "--help"]
@@ -877,7 +877,7 @@ commands:
     arguments:
       - name: in.vcf.gz
         description: variants to filter
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: gtcheck
     help: ["gtcheck", "--help"]
@@ -885,7 +885,7 @@ commands:
     arguments:
       - name: query.vcf.gz
         description: genotypes to check
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: mpileup
     help: ["mpileup"]
@@ -1127,7 +1127,7 @@ commands:
     arguments:
       - name: FILE.vcf
         description: variants
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: roh
     help: ["roh", "--help"]
@@ -1135,7 +1135,7 @@ commands:
     arguments:
       - name: in.vcf.gz
         description: variants
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
 
   - name: stats
     help: ["stats", "--help"]
@@ -1143,7 +1143,7 @@ commands:
     arguments:
       - name: A.vcf.gz
         description: variants
-        value: { type: file, format: vcf }
+        value: { type: file, format: [vcf, gvcf] }
       - name: B.vcf.gz
         description: second file to compare with
-        value: { type: file, format: vcf, optional: true }
+        value: { type: file, format: [vcf, gvcf], optional: true }

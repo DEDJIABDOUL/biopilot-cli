@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# bgzip (htslib 1.21), written from its recorded help: knowledge/help/bgzip/1.21/ (MIT; attribution in
+# RECORDING.yml next to it) and the htslib documentation (https://www.htslib.org/doc/bgzip.html), in our
+# own words (spec decision 31). Ranks follow the shared scale of spec §6.4.
+name: bgzip
+package: htslib
+description: compress files in blocks (BGZF), so that tabix and samtools can index and seek in them
+version: { args: ["--version"], regex: 'bgzip \(htslib\) (\d[\w.]*)' }
+help: ["-h"]
+options:
+  - names: ["-c", "--stdout"]
+    description: write to standard output and keep the input file
+    rank: 80
+  - names: ["-d", "--decompress"]
+    description: decompress instead of compress
+    rank: 75
+  - names: ["-k", "--keep"]
+    description: keep the input file
+    rank: 70
+  - names: ["-o", "--output"]
+    description: file to write, keeping the input file
+    value: { type: file }
+    rank: 75
+  - names: ["-@", "--threads"]
+    description: compression threads
+    value: { type: int }
+    default: 1
+    rank: 70
+  - names: ["-f", "--force"]
+    description: overwrite an existing output file
+    rank: 60
+  - names: ["-i", "--index"]
+    description: also write a BGZF index (.gzi) for random access to the uncompressed data
+    rank: 45
+  - names: ["-I", "--index-name"]
+    description: name of the BGZF index file
+    value: { type: file }
+    rank: 30
+  - names: ["-r", "--reindex"]
+    description: write the BGZF index of an already compressed file
+    rank: 35
+  - names: ["-g", "--rebgzip"]
+    description: compress again using an existing BGZF index (with --index-name)
+    rank: 20
+  - names: ["-l", "--compress-level"]
+    description: compression level, 0 to 9 (-1 for the default)
+    value: { type: int }
+    default: -1
+    rank: 45
+  - names: ["-t", "--test"]
+    description: check that a compressed file is intact
+    rank: 40
+  - names: ["-b", "--offset"]
+    description: decompress from this offset of the uncompressed data
+    value: { type: int }
+    rank: 20
+  - names: ["-s", "--size"]
+    description: decompress only this many bytes
+    value: { type: int }
+    rank: 20
+  - names: ["--binary"]
+    description: do not end blocks on line boundaries (binary data)
+    rank: 15
+  - names: ["-h", "--help"]
+    description: print the help and exit
+    rank: 10
+arguments:
+  - name: file
+    variadic: true
+    value: { type: file, format: [vcf, gvcf, bed, gff, gtf, bedgraph, sam, fasta, fastq], optional: true }

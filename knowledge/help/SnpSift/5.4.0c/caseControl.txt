@@ -1,0 +1,9 @@
+SnpSift version 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+
+Usage: java -jar SnpSift.jar caseControl [-v] [-name nameString] { -tfam file.tfam | <CaseControlString> } file.vcf
+Where:
+	<CaseControlString> : A string of {'+', '-', '0'}, one per sample, to identify two groups (case='+', control='-', neutral='0')
+	 -chi2              : Use ChiSquare approximarion instead of Fisher exact test.
+	 -name nameStr      : A name to be added after to 'Cases' or 'Controls' tags
+	 -tfam file.tfam    : A TFAM file having case/control informations (phenotype colmun)
+	file.vcf            : A VCF file (variants and genotype data)

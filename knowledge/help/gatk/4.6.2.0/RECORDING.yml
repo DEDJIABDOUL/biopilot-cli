@@ -1,0 +1,34 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/gatk.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: gatk
+package: gatk4
+version: "4.6.2.0"
+build: py310hdfd78af_1
+channel: noarch
+licence: BSD-3-Clause
+copyright: Broad Institute, https://github.com/broadinstitute/gatk
+recorded_on: 2026-11-08
+platform: linux-64
+conda_env: biopilot-tools-4
+used_by_catalog: true
+files:
+  root.txt: "gatk"
+  list.txt: "gatk --list"
+  HaplotypeCaller.txt: "gatk HaplotypeCaller --help"
+  GenomicsDBImport.txt: "gatk GenomicsDBImport --help"
+  CombineGVCFs.txt: "gatk CombineGVCFs --help"
+  GenotypeGVCFs.txt: "gatk GenotypeGVCFs --help"
+  BaseRecalibrator.txt: "gatk BaseRecalibrator --help"
+  ApplyBQSR.txt: "gatk ApplyBQSR --help"
+  Mutect2.txt: "gatk Mutect2 --help"
+  GetPileupSummaries.txt: "gatk GetPileupSummaries --help"
+  CalculateContamination.txt: "gatk CalculateContamination --help"
+  LearnReadOrientationModel.txt: "gatk LearnReadOrientationModel --help"
+  FilterMutectCalls.txt: "gatk FilterMutectCalls --help"
+  VariantFiltration.txt: "gatk VariantFiltration --help"
+  SelectVariants.txt: "gatk SelectVariants --help"
+  VariantRecalibrator.txt: "gatk VariantRecalibrator --help"
+  ApplyVQSR.txt: "gatk ApplyVQSR --help"
+  LeftAlignAndTrimVariants.txt: "gatk LeftAlignAndTrimVariants --help"

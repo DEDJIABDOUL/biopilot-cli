@@ -1,0 +1,5 @@
+Usage: snpEff databases [galaxy|html]
+
+Options
+	galaxy  : Show databases in a galaxy menu format.
+	html    : Show databases in a HTML format.

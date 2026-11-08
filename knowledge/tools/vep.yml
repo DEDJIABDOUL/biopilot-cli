@@ -1,0 +1,276 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# Ensembl VEP 116.3, written from its documentation (https://www.ensembl.org/info/docs/tools/vep/script/vep_options.html)
+# and its recorded help (knowledge/help/vep/116.3/, Apache-2.0), in our own words (spec decision 31).
+# Its --help lists only a few basic options and sends to the documentation, so no help command is declared:
+# BioPilot keeps these options instead of the few of a Profile. Ranks follow the shared scale of spec §6.4.
+name: vep
+package: ensembl-vep
+description: Ensembl Variant Effect Predictor, annotating the consequences of variants on genes, transcripts and proteins
+version: { args: ["--help"], regex: 'ensembl-vep\s*:\s*(\d[\w.]*)' }
+options:
+  - names: ["-i", "--input_file"]
+    description: "variants to annotate: VCF, HGVS, VEP default format, IDs…"
+    value: { type: file, format: vcf }
+    rank: 95
+  - names: ["-o", "--output_file"]
+    description: "file to write (variant_effect_output.txt by default; STDOUT for standard output)"
+    value: { type: file }
+    rank: 90
+  - names: ["--format"]
+    description: "input format, guessed when not given"
+    value: { type: enum, values: [ensembl, vcf, hgvs, id, region, spdi, vep] }
+    rank: 50
+  - names: ["--vcf"]
+    description: "write VCF, the consequences in an INFO CSQ field"
+    rank: 85
+  - names: ["--tab"]
+    description: "write a tab-separated table"
+    rank: 60
+  - names: ["--json"]
+    description: "write JSON"
+    rank: 50
+  - names: ["--compress_output"]
+    description: "compress the output with this program"
+    value: { type: enum, values: [gzip, bgzip] }
+    rank: 55
+  - names: ["--force_overwrite"]
+    description: "replace an existing output file"
+    rank: 70
+  - names: ["--stats_file"]
+    description: "HTML summary to write (variant_effect_output.txt_summary.html by default)"
+    value: { type: file, format: html }
+    rank: 40
+  - names: ["--no_stats"]
+    description: "no summary file"
+    rank: 45
+  - names: ["--stats_text"]
+    description: "write the summary as text instead of HTML"
+    rank: 20
+  - names: ["--warning_file"]
+    description: "file to write warnings to"
+    value: { type: file }
+    rank: 20
+  - names: ["--fields"]
+    description: "output columns or CSQ subfields, comma-separated"
+    value: { type: string }
+    rank: 40
+  - names: ["--vcf_info_field"]
+    description: "name of the INFO field holding the consequences (CSQ by default; ANN as SnpEff)"
+    value: { type: string }
+    rank: 30
+  - names: ["--minimal"]
+    description: "trim alleles to their minimal form before annotating"
+    rank: 30
+  - names: ["--allele_number"]
+    description: "number the ALT alleles in the output (ALLELE_NUM)"
+    rank: 30
+  - names: ["--cache"]
+    description: "use a local cache of Ensembl data (the usual, fastest mode)"
+    rank: 90
+  - names: ["--offline"]
+    description: "use the cache only, never the database (no network)"
+    rank: 85
+  - names: ["--database"]
+    description: "use the Ensembl database over the network instead of a cache"
+    rank: 30
+  - names: ["--dir"]
+    description: "root folder of VEP's cache and plugins ($HOME/.vep by default)"
+    value: { type: dir }
+    rank: 65
+  - names: ["--dir_cache"]
+    description: "folder of the cache"
+    value: { type: dir }
+    rank: 75
+  - names: ["--dir_plugins"]
+    description: "folder of the plugins"
+    value: { type: dir }
+    rank: 45
+  - names: ["--cache_version"]
+    description: "Ensembl release of the cache to use"
+    value: { type: int }
+    rank: 55
+  - names: ["--merged"]
+    description: "use the merged Ensembl and RefSeq cache"
+    rank: 45
+  - names: ["--refseq"]
+    description: "use the RefSeq cache"
+    rank: 45
+  - names: ["--species"]
+    description: "species of the cache or database"
+    value: { type: string }
+    rank: 70
+  - names: ["--assembly"]
+    description: "genome assembly, when the cache holds several (GRCh37, GRCh38)"
+    value: { type: string }
+    rank: 70
+  - names: ["--fasta"]
+    description: "reference FASTA, for HGVS and sequence checks offline"
+    value: { type: file, format: fasta }
+    rank: 70
+  - names: ["--gtf"]
+    description: "GTF annotation used instead of, or with, the cache (bgzipped and tabix-indexed)"
+    value: { type: file, format: gtf }
+    rank: 45
+  - names: ["--gff"]
+    description: "GFF3 annotation used instead of, or with, the cache (bgzipped and tabix-indexed)"
+    value: { type: file, format: gff }
+    rank: 45
+  - names: ["--custom"]
+    description: "annotate with a custom file: file,short_name,format,type,… (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 55
+  - names: ["--plugin"]
+    description: "run a plugin with its arguments, Name,arg1,… (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 60
+  - names: ["--config"]
+    description: "file of options, one per line"
+    value: { type: file }
+    rank: 30
+  - names: ["--fork"]
+    description: "processes to run"
+    value: { type: int }
+    rank: 80
+  - names: ["--buffer_size"]
+    description: "variants read at a time; lower uses less memory"
+    value: { type: int }
+    rank: 30
+  - names: ["--everything"]
+    description: "turn on the common annotations (sift, polyphen, ccds, hgvs, symbol, numbers, domains, regulatory, canonical, protein, biotype, af, af_gnomade/g, max_af, pubmed, uniprot, mane, tsl, appris, variant_class, gene_phenotype, mirna)"
+    rank: 80
+  - names: ["--symbol"]
+    description: "gene symbol"
+    rank: 70
+  - names: ["--hgvs"]
+    description: "HGVS notations (needs --fasta offline)"
+    rank: 65
+  - names: ["--hgvsg"]
+    description: "genomic HGVS notation"
+    rank: 40
+  - names: ["--sift"]
+    description: "SIFT prediction: p (prediction), s (score) or b (both)"
+    value: { type: enum, values: [p, s, b] }
+    rank: 60
+  - names: ["--polyphen"]
+    description: "PolyPhen prediction: p (prediction), s (score) or b (both)"
+    value: { type: enum, values: [p, s, b] }
+    rank: 60
+  - names: ["--canonical"]
+    description: "flag the canonical transcript"
+    rank: 60
+  - names: ["--mane"]
+    description: "MANE Select and Plus Clinical transcripts"
+    rank: 55
+  - names: ["--biotype"]
+    description: "transcript biotype"
+    rank: 50
+  - names: ["--protein"]
+    description: "Ensembl protein ID"
+    rank: 40
+  - names: ["--ccds"]
+    description: "CCDS transcript ID"
+    rank: 35
+  - names: ["--uniprot"]
+    description: "UniProt IDs"
+    rank: 35
+  - names: ["--tsl"]
+    description: "transcript support level"
+    rank: 35
+  - names: ["--appris"]
+    description: "APPRIS isoform annotation"
+    rank: 30
+  - names: ["--domains"]
+    description: "overlapping protein domains"
+    rank: 40
+  - names: ["--numbers"]
+    description: "affected exon and intron numbers"
+    rank: 45
+  - names: ["--variant_class"]
+    description: "Sequence Ontology variant class"
+    rank: 45
+  - names: ["--regulatory"]
+    description: "overlap with regulatory regions"
+    rank: 40
+  - names: ["--check_existing"]
+    description: "report known variants at the same position (dbSNP IDs, COSMIC…)"
+    rank: 60
+  - names: ["--af"]
+    description: "global allele frequency of known variants (1000 Genomes)"
+    rank: 45
+  - names: ["--af_gnomade"]
+    description: "gnomAD exome allele frequencies of known variants"
+    rank: 55
+  - names: ["--af_gnomadg"]
+    description: "gnomAD genome allele frequencies of known variants"
+    rank: 55
+  - names: ["--max_af"]
+    description: "highest allele frequency over the populations"
+    rank: 50
+  - names: ["--pubmed"]
+    description: "PubMed IDs citing known variants"
+    rank: 30
+  - names: ["--gene_phenotype"]
+    description: "whether the gene is associated with a phenotype"
+    rank: 30
+  - names: ["--total_length"]
+    description: "cDNA, CDS and protein positions with their total lengths"
+    rank: 25
+  - names: ["--xref_refseq"]
+    description: "RefSeq mRNA IDs of Ensembl transcripts"
+    rank: 30
+  - names: ["--nearest"]
+    description: "nearest gene or transcript to an intergenic variant"
+    value: { type: enum, values: [transcript, gene, symbol] }
+    rank: 30
+  - names: ["--distance"]
+    description: "distance up- and downstream within which a transcript is reported, in bp"
+    value: { type: int }
+    rank: 30
+  - names: ["--pick"]
+    description: "one consequence per variant, the most severe after the --pick_order criteria"
+    rank: 70
+  - names: ["--pick_allele"]
+    description: "one consequence per variant allele"
+    rank: 45
+  - names: ["--per_gene"]
+    description: "one consequence per gene"
+    rank: 45
+  - names: ["--pick_allele_gene"]
+    description: "one consequence per variant allele and gene"
+    rank: 45
+  - names: ["--flag_pick"]
+    description: "flag the picked consequence (PICK) and keep the others"
+    rank: 50
+  - names: ["--pick_order"]
+    description: "criteria and their order for --pick, comma-separated (mane_select,canonical,…)"
+    value: { type: string }
+    rank: 35
+  - names: ["--most_severe"]
+    description: "report only the most severe consequence of each variant"
+    rank: 45
+  - names: ["--summary"]
+    description: "report only a comma-separated list of the consequences"
+    rank: 25
+  - names: ["--coding_only"]
+    description: "report only consequences on protein-coding transcripts"
+    rank: 45
+  - names: ["--no_intergenic"]
+    description: "do not report intergenic consequences"
+    rank: 40
+  - names: ["--filter_common"]
+    description: "skip variants that are common in a population (AF of 1% or more)"
+    rank: 40
+  - names: ["--check_ref"]
+    description: "skip variants whose reference allele does not match the FASTA"
+    rank: 30
+  - names: ["--quiet"]
+    description: "no warnings and progress messages"
+    rank: 25
+  - names: ["--verbose"]
+    description: "more messages"
+    rank: 15
+  - names: ["--help"]
+    description: "print the help and exit"
+    rank: 10

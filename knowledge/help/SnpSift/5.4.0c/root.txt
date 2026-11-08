@@ -1,0 +1,43 @@
+SnpSift version 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+
+Usage: java -jar SnpSift.jar [command] params...
+Command is one of:
+	alleleMat     : Create an allele matrix output.
+	annotate      : Annotate 'ID' from a database (e.g. dbSnp). Assumes entries are sorted.
+	annotateMem   : Annotate form a database (created from a VCF file).
+	caseControl   : Compare how many variants are in 'case' and in 'control' groups; calculate p-values.
+	ccs           : Case control summary. Case and control summaries by region, allele frequency and variant's functional effect.
+	concordance   : Concordance metrics between two VCF files.
+	covMat        : Create an covariance matrix output (allele matrix as input).
+	dbnsfp        : Annotate with multiple entries from dbNSFP.
+	extractFields : Extract fields from VCF file into tab separated format.
+	filter        : Filter using arbitrary expressions
+	geneSets      : Annotate using MSigDb gene sets (MSigDb includes: GO, KEGG, Reactome, BioCarta, etc.)
+	gt            : Add Genotype to INFO fields and remove genotype fields when possible.
+	gtfilter      : Filter genotype using arbitrary expressions.
+	gwasCat       : Annotate using GWAS catalog
+	hwe           : Calculate Hardy-Weimberg parameters and perform a godness of fit test.
+	intersect     : Intersect intervals (genomic regions).
+	intervals     : Keep variants that intersect with intervals.
+	intIdx        : Keep variants that intersect with intervals. Index-based method: Used for large VCF file and a few intervals to retrieve
+	join          : Join files by genomic region.
+	op            : Annotate using an operator.
+	phastCons     : Annotate using conservation scores (phastCons).
+	private       : Annotate if a variant is private to a family or group.
+	rmRefGen      : Remove reference genotypes.
+	rmInfo        : Remove INFO fields.
+	sort          : Sort VCF file/s (if multiple input VCFs, merge and sort).
+	split         : Split VCF by chromosome.
+	tstv          : Calculate transiton to transversion ratio.
+	varType       : Annotate variant type (SNP,MNP,INS,DEL or MIXED).
+	vcfCheck      : Check that VCF file is well formed.
+	vcf2tped      : Convert VCF to TPED.
+
+Options common to all SnpSift commands:
+	-d                   : Debug.
+	-download            : Download database, if not available locally. Default: true.
+	-noDownload          : Do not download a database, if not available locally.
+	-noLog               : Do not report usage statistics to server.
+	-h                   : Help.
+	-v                   : Verbose.
+

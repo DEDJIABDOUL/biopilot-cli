@@ -1,0 +1,28 @@
+SnpSift version 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+
+Usage: java -jar SnpSift.jar DbNsfp [options] file.vcf > newFile.vcf
+Options:
+	-a            : Annotate fields, even if the database has an empty value (annotates using '.' for empty).
+	-collapse     : Collapse repeated values from dbNSFP. Default: false
+	-db <file>    : Path to dbNSFP database file (bgzip + tabix).
+	-g <name>     : Genome version.
+	-noCollapse   : Switch off 'collapsing' repeated values from dbNSFP. Default: true
+	-m            : Annotate fields even if there are no database matching entries (annotates using '.').
+	-n            : Invert 'fields to add' selection (i.e. use all fields except the ones specified in option '-f').
+	-f            : A comma separated list of fields to add.
+	                Default fields to add: Uniprot_acc, Interpro_domain, SIFT_pred, Polyphen2_HDIV_pred, Polyphen2_HVAR_pred, LRT_pred, MutationTaster_pred, GERP++_NR, GERP++_RS, phastCons100way_vertebrate, 1000Gp1_AF, 1000Gp1_AFR_AF, 1000Gp1_EUR_AF, 1000Gp1_AMR_AF, 1000Gp1_ASN_AF, ESP6500_AA_AF, ESP6500_EA_AF, MutationTaster_pred, MutationAssessor_pred, FATHMM_pred, PROVEAN_pred, CADD_phred, MetaSVM_pred, 1000Gp3_AC, 1000Gp3_AF, 1000Gp3_AFR_AC, 1000Gp3_AFR_AF, 1000Gp3_EUR_AC, 1000Gp3_EUR_AF, 1000Gp3_AMR_AC, 1000Gp3_AMR_AF, 1000Gp3_EAS_AC, 1000Gp3_EAS_AF, 1000Gp3_SAS_AC, 1000Gp3_SAS_AF, ESP6500_AA_AC, ESP6500_AA_AF, ESP6500_EA_AC, ESP6500_EA_AF, ExAC_AC, ExAC_AF, ExAC_Adj_AC, ExAC_Adj_AF, ExAC_AFR_AC, ExAC_AFR_AF, ExAC_AMR_AC, ExAC_AMR_AF, ExAC_EAS_AC, ExAC_EAS_AF, ExAC_FIN_AC, ExAC_FIN_AF, ExAC_NFE_AC, ExAC_NFE_AF, ExAC_SAS_AC, ExAC_SAS_AF
+
+Options common to all SnpSift commands:
+	-c , -config <file>  : Specify config file
+	-d                   : Debug.
+	-db <file>           : Database file name (for commands that require databases).
+	-download            : Download database, if not available locally. Default: true.
+	-g <name>            : Genome version (for commands that require databases).
+	-noDownload          : Do not download a database, if not available locally.
+	-noLog               : Do not report usage statistics to server.
+	-h                   : Help.
+	-v                   : Verbose.
+
+Note: Databse (dbNSFP.txt.gz) must be bgzip and tabix indexed file.
+      The corresponding index file (dbNSFP.txt.gz.tbi) must be present.
+

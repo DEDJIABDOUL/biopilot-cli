@@ -1,0 +1,36 @@
+snpEff version SnpEff 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+Usage: snpEff build [options] genome_version
+
+Build DB options:
+
+Database format option (default: Auto detect):
+	-embl                        : Use Embl format.
+	-genbank                     : Use GenBank format.
+	-gff2                        : Use GFF2 format (obsolete).
+	-gff3                        : Use GFF3 format.
+	-gtf22                       : Use GTF 2.2 format.
+	-knowngenes                  : Use KnownGenes table from UCSC.
+	-refseq                      : Use RefSeq table from UCSC.
+
+Database build options:
+	-cellType <type>             : Only build regulation tracks for cellType <type>.
+	-maxErrorRate <num>          : Maximum allowed error rate (number between 0.0 and 1.0). Default: 0.05
+	-noCheckCds                  : Skip CDS sequences check.
+	-noCheckProtein              : Skip Protein sequences check.
+	-noStoreSeqs                 : Do not store sequence in binary files. Default: false
+	-onlyReg                     : Only build regulation tracks.
+	-regSortedByType             : The 'regulation.gff' file is sorted by 'regulation type' instead of sorted by chromosome:pos. Default: false
+	-storeSeqs                   : Store sequence in binary files. Default: true
+
+Generic options:
+	-c , -config                 : Specify config file
+	-configOption name=value     : Override a config file option
+	-d , -debug                  : Debug mode (very verbose).
+	-dataDir <path>              : Override data_dir parameter from config file.
+	-download                    : Download a SnpEff database, if not available locally. Default: true
+	-nodownload                  : Do not download a SnpEff database, if not available locally.
+	-h , -help                   : Show this help and exit
+	-noLog                       : Do not report usage statistics to server
+	-q , -quiet                  : Quiet mode (do not show any messages or errors)
+	-v , -verbose                : Verbose mode
+	-version                     : Show version number and exit

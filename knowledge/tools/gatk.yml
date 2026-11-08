@@ -1,0 +1,5997 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# GATK 4.6.2.0, written from its recorded helps: knowledge/help/gatk/4.6.2.0/ (BSD-3-Clause; attribution in
+# RECORDING.yml next to it) and its documentation (https://gatk.broadinstitute.org), in our own words
+# (spec decision 31). Only 16 of its tools are described, and of their arguments the ones in common use:
+# the others are read from the tool's own help once its Profile is computed. A Boolean takes true or false.
+# Ranks follow the shared scale of spec §6.4.
+name: gatk
+package: gatk4
+description: 'Broad Institute Genome Analysis Toolkit: germline and somatic variant calling, base recalibration, filtering'
+version:
+  args: [--version]
+  regex: GATK\) v(\d[\w.]*)
+help: []
+options:
+- names: [--java-options]
+  description: options of the Java virtual machine, in quotes, e.g. "-Xmx8g -XX:ParallelGCThreads=2"
+  value: {type: string}
+  rank: 80
+- names: [--dry-run]
+  description: print the Java command without running it
+  rank: 20
+- names: [--gatk-config-file]
+  description: GATK configuration file
+  value: {type: file}
+  rank: 15
+- names: [--spark-runner]
+  description: 'how Spark tools run: LOCAL, SPARK (spark-submit on a cluster) or GCS (Dataproc)'
+  value:
+    type: enum
+    values: [LOCAL, SPARK, GCS]
+  rank: 25
+- names: [--spark-master]
+  description: Spark master URL, with --spark-runner SPARK
+  value: {type: string}
+  rank: 15
+- names: [--spark-submit-command]
+  description: spark-submit command to use, with --spark-runner SPARK
+  value: {type: string}
+  rank: 10
+- names: [--cluster]
+  description: Dataproc cluster, with --spark-runner GCS (after --)
+  value: {type: string}
+  rank: 10
+- names: [--debug-port]
+  description: port of a Java debug agent
+  value: {type: int}
+  rank: 10
+- names: [--debug-suspend]
+  description: suspend the Java VM until a debugger connects
+  rank: 10
+commands:
+- name: HaplotypeCaller
+  help: [HaplotypeCaller, --help]
+  description: call germline SNVs and indels by local re-assembly of haplotypes; -ERC GVCF for joint genotyping
+  options:
+  - names: [--input, -I]
+    description: BAM or CRAM of reads (repeatable)
+    value:
+      type: file
+      format: [bam, cram]
+    repeatable: true
+    rank: 95
+  - names: [--output, -O]
+    description: VCF to write (.g.vcf.gz with -ERC GVCF)
+    value:
+      type: file
+      format: [vcf, gvcf]
+    rank: 95
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--emit-ref-confidence, -ERC]
+    description: 'reference confidence: GVCF (blocks) or BP_RESOLUTION (every site), for joint genotyping'
+    value:
+      type: enum
+      values: [NONE, BP_RESOLUTION, GVCF]
+    default: NONE
+    rank: 80
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--dbsnp, -D]
+    description: dbSNP VCF, whose IDs fill the ID column
+    value: {type: file, format: vcf}
+    rank: 55
+  - names: [--sample-ploidy, -ploidy]
+    description: ploidy of each sample (number of chromosomes per sample in pools)
+    value: {type: int}
+    default: 2
+    rank: 55
+  - names: [--standard-min-confidence-threshold-for-calling, -stand-call-conf]
+    description: least phred confidence to call a variant
+    value: {type: float}
+    default: 30.0
+    rank: 50
+  - names: [--native-pair-hmm-threads]
+    description: threads of the native pair-HMM
+    value: {type: int}
+    default: 4
+    rank: 50
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--bam-output, -bamout]
+    description: BAM of the reads realigned to the assembled haplotypes, for inspection
+    value: {type: file, format: bam}
+    rank: 45
+  - names: [--annotation, -A]
+    description: add this annotation to the output (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--annotation-group, -G]
+    description: add this group of annotations, e.g. StandardAnnotation, AS_StandardAnnotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--alleles]
+    description: VCF of alleles to genotype in any case (force-calling)
+    value: {type: file, format: vcf}
+    rank: 40
+  - names: [--dont-use-soft-clipped-bases]
+    description: do not use soft-clipped bases (e.g. for RNA-seq)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 40
+  - names: [--pcr-indel-model]
+    description: 'indel error model of PCR: NONE for PCR-free libraries'
+    value:
+      type: enum
+      values: [NONE, HOSTILE, AGGRESSIVE, CONSERVATIVE]
+    default: CONSERVATIVE
+    rank: 40
+  - names: [--max-alternate-alleles]
+    description: most alternate alleles genotyped at a site
+    value: {type: int}
+    default: 6
+    rank: 35
+  - names: [--min-base-quality-score, -mbq]
+    description: least base quality used in calling
+    value: {type: int}
+    default: 10
+    rank: 35
+  - names: [--sample-name, -ALIAS]
+    description: call only the reads of this sample
+    value: {type: string}
+    rank: 30
+  - names: [--output-mode]
+    description: which sites to write
+    value:
+      type: enum
+      values: [EMIT_VARIANTS_ONLY, EMIT_ALL_CONFIDENT_SITES, EMIT_ALL_ACTIVE_SITES]
+    default: EMIT_VARIANTS_ONLY
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--annotations-to-exclude, -AX]
+    description: leave out this annotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--pedigree, -ped]
+    description: PED file of the family structure, for pedigree annotations
+    value: {type: file}
+    rank: 30
+  - names: [--max-reads-per-alignment-start]
+    description: 'downsample to this many reads starting at a position (0: no downsampling)'
+    value: {type: int}
+    default: 50
+    rank: 30
+  - names: [--contamination-fraction-to-filter, -contamination]
+    description: fraction of reads removed as contamination
+    value: {type: float}
+    default: 0.0
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--heterozygosity]
+    description: expected heterozygosity, the prior for SNPs
+    value: {type: float}
+    default: 0.001
+    rank: 25
+  - names: [--dragen-mode]
+    description: settings for DRAGEN-GATK concordance
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--gvcf-gq-bands, -GQB]
+    description: GQ bounds of the reference blocks of a GVCF (repeatable)
+    value: {type: int}
+    repeatable: true
+    rank: 20
+  - names: [--ploidy-regions]
+    description: BED of regions with another ploidy
+    value: {type: file, format: bed}
+    rank: 20
+  - names: [--do-not-run-physical-phasing]
+    description: do not phase nearby variants
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--max-genotype-count]
+    description: most genotypes considered at a site
+    value: {type: int}
+    default: 1024
+    rank: 20
+  - names: [--indel-heterozygosity]
+    description: expected heterozygosity, the prior for indels
+    value: {type: float}
+    default: 0.000125
+    rank: 20
+  - names: [--population-callset, -population]
+    description: VCF of the population's calls, used as genotype priors
+    value: {type: file, format: vcf}
+    rank: 20
+  - names: [--assembly-region-padding]
+    description: bp of padding around each active region
+    value: {type: int}
+    default: 100
+    rank: 20
+  - names: [--kmer-size]
+    description: k-mer size of the assembly graph (repeatable)
+    value: {type: int}
+    repeatable: true
+    rank: 20
+  - names: [--max-mnp-distance, -mnp-dist]
+    description: 'merge SNVs this close into MNPs (0: never)'
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--contamination-fraction-per-sample-file, -contamination-file]
+    description: file of contamination fractions per sample
+    value: {type: file}
+    rank: 15
+  - names: [--comparison, -comp]
+    description: VCF of comparison calls, for annotation (repeatable)
+    value: {type: file, format: vcf}
+    repeatable: true
+    rank: 15
+  - names: [--mapping-quality-threshold-for-genotyping]
+    description: least mapping quality of reads used in genotyping
+    value: {type: int}
+    default: 20
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--enable-all-annotations]
+    description: compute every available annotation
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-annotations]
+    description: turn off the tool's default annotations
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--heterozygosity-stdev]
+    description: standard deviation of the heterozygosity across samples
+    value: {type: float}
+    default: 0.01
+    rank: 15
+  - names: [--genotype-assignment-method, -gam]
+    description: how genotypes are set when likelihoods are given
+    value:
+      type: enum
+      values: [SET_TO_NO_CALL, USE_PLS_TO_ASSIGN, USE_POSTERIORS_ANNOTATION, SET_TO_NO_CALL_NO_ANNOTATIONS, BEST_MATCH_TO_ORIGINAL, DO_NOT_ASSIGN_GENOTYPES,
+        USE_POSTERIOR_PROBABILITIES, PREFER_PLS]
+    rank: 15
+  - names: [--min-assembly-region-size]
+    description: smallest active region, in bp
+    value: {type: int}
+    default: 50
+    rank: 15
+  - names: [--max-assembly-region-size]
+    description: largest active region, in bp
+    value: {type: int}
+    default: 300
+    rank: 15
+  - names: [--force-active]
+    description: treat every region as active
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--assembly-region-out]
+    description: file listing the active regions
+    value: {type: file}
+    rank: 15
+  - names: [--pair-hmm-implementation, -pairHMM]
+    description: pair-HMM implementation
+    value:
+      type: enum
+      values: [EXACT, ORIGINAL, LOGLESS_CACHING, AVX_LOGLESS_CACHING, AVX_LOGLESS_CACHING_OMP, FASTEST_AVAILABLE]
+    default: FASTEST_AVAILABLE
+    rank: 15
+  - names: [--dragstr-params-path]
+    description: DRAGstr parameters from CalibrateDragstrModel
+    value: {type: file}
+    rank: 15
+  - names: [--floor-blocks]
+    description: round GQ of reference blocks down to their band
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--all-site-pls]
+    description: annotate PLs at every site (with BP_RESOLUTION)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--founder-id]
+    description: sample ID of a founder, for pedigree annotations (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--num-reference-samples-if-no-call]
+    description: number of hom-ref samples assumed for no-calls
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--use-posteriors-to-calculate-qual, -gp-qual]
+    description: compute QUAL from genotype posteriors
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-new-qual-calculator, -new-qual]
+    description: 'new QUAL model (deprecated: always on)'
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--annotate-with-num-discovered-alleles]
+    description: annotate the number of alternate alleles discovered
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--graph-output, -graph]
+    description: file of the assembly graphs, for debugging
+    value: {type: file}
+    rank: 10
+  - names: [--debug-assembly, -debug]
+    description: print assembly details
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--smith-waterman]
+    description: Smith-Waterman implementation
+    value:
+      type: enum
+      values: [FASTEST_AVAILABLE, AVX_ENABLED, JAVA]
+    default: FASTEST_AVAILABLE
+    rank: 10
+  - names: [--linked-de-bruijn-graph]
+    description: linked de Bruijn graph assembly (experimental)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--soft-clip-low-quality-ends]
+    description: soft-clip low-quality read ends instead of hard-clipping them
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+- name: Mutect2
+  help: [Mutect2, --help]
+  description: call somatic SNVs and indels in tumour samples, with or without a matched normal
+  options:
+  - names: [--input, -I]
+    description: BAM or CRAM of the tumour and the matched normal (repeatable)
+    value:
+      type: file
+      format: [bam, cram]
+    repeatable: true
+    rank: 95
+  - names: [--output, -O]
+    description: VCF of unfiltered somatic calls (filter it with FilterMutectCalls)
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--normal-sample, -normal]
+    description: sample name (SM) of the matched normal (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 85
+  - names: [--germline-resource]
+    description: population VCF with allele frequencies (gnomAD AF-only), as germline priors
+    value: {type: file, format: vcf}
+    rank: 80
+  - names: [--panel-of-normals, -pon]
+    description: panel-of-normals VCF of recurrent artifacts
+    value: {type: file, format: vcf}
+    rank: 80
+  - names: [--emit-ref-confidence, -ERC]
+    description: 'reference confidence: GVCF (blocks) or BP_RESOLUTION (every site), for joint genotyping'
+    value:
+      type: enum
+      values: [NONE, BP_RESOLUTION, GVCF]
+    default: NONE
+    rank: 80
+  - names: [--f1r2-tar-gz]
+    description: F1R2 counts to write, for LearnReadOrientationModel (FFPE, OxoG)
+    value: {type: file, format: f1r2}
+    rank: 75
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--native-pair-hmm-threads]
+    description: threads of the native pair-HMM
+    value: {type: int}
+    default: 4
+    rank: 50
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--bam-output, -bamout]
+    description: BAM of the reads realigned to the assembled haplotypes, for inspection
+    value: {type: file, format: bam}
+    rank: 45
+  - names: [--mitochondria-mode]
+    description: settings for mitochondrial calling
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 40
+  - names: [--annotation, -A]
+    description: add this annotation to the output (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--annotation-group, -G]
+    description: add this group of annotations, e.g. StandardAnnotation, AS_StandardAnnotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--alleles]
+    description: VCF of alleles to genotype in any case (force-calling)
+    value: {type: file, format: vcf}
+    rank: 40
+  - names: [--dont-use-soft-clipped-bases]
+    description: do not use soft-clipped bases (e.g. for RNA-seq)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 40
+  - names: [--pcr-indel-model]
+    description: 'indel error model of PCR: NONE for PCR-free libraries'
+    value:
+      type: enum
+      values: [NONE, HOSTILE, AGGRESSIVE, CONSERVATIVE]
+    default: CONSERVATIVE
+    rank: 40
+  - names: [--af-of-alleles-not-in-resource, -default-af]
+    description: allele frequency given to alleles absent from the germline resource
+    value: {type: float}
+    default: -1.0
+    rank: 35
+  - names: [--min-base-quality-score, -mbq]
+    description: least base quality used in calling
+    value: {type: int}
+    default: 10
+    rank: 35
+  - names: [--minimum-allele-fraction, -min-AF]
+    description: lowest allele fraction considered
+    value: {type: float}
+    default: 0.0
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--annotations-to-exclude, -AX]
+    description: leave out this annotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--pedigree, -ped]
+    description: PED file of the family structure, for pedigree annotations
+    value: {type: file}
+    rank: 30
+  - names: [--max-reads-per-alignment-start]
+    description: 'downsample to this many reads starting at a position (0: no downsampling)'
+    value: {type: int}
+    default: 50
+    rank: 30
+  - names: [--max-population-af, -max-af]
+    description: alleles of higher population frequency are taken as germline
+    value: {type: float}
+    default: 0.01
+    rank: 25
+  - names: [--tumor-lod-to-emit, -emit-lod]
+    description: least tumour LOD to write a call
+    value: {type: float}
+    default: 3.0
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--tumor-sample, -tumor]
+    description: 'sample name of the tumour (deprecated: found automatically)'
+    value: {type: string}
+    rank: 20
+  - names: [--genotype-germline-sites]
+    description: also genotype germline sites (for some downstream tools)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--genotype-pon-sites]
+    description: also call sites of the panel of normals
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--assembly-region-padding]
+    description: bp of padding around each active region
+    value: {type: int}
+    default: 100
+    rank: 20
+  - names: [--kmer-size]
+    description: k-mer size of the assembly graph (repeatable)
+    value: {type: int}
+    repeatable: true
+    rank: 20
+  - names: [--max-mnp-distance, -mnp-dist]
+    description: 'merge SNVs this close into MNPs (0: never)'
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--initial-tumor-lod, -init-lod]
+    description: least tumour LOD to look at a site
+    value: {type: float}
+    default: 2.0
+    rank: 15
+  - names: [--normal-lod]
+    description: LOD threshold of the normal, to tell germline from somatic
+    value: {type: float}
+    default: 2.2
+    rank: 15
+  - names: [--downsampling-stride, -stride]
+    description: downsample in strides of this many start positions
+    value: {type: int}
+    default: 1
+    rank: 15
+  - names: [--callable-depth]
+    description: least depth for a site to count as callable in the stats
+    value: {type: int}
+    default: 10
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--enable-all-annotations]
+    description: compute every available annotation
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-annotations]
+    description: turn off the tool's default annotations
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--min-assembly-region-size]
+    description: smallest active region, in bp
+    value: {type: int}
+    default: 50
+    rank: 15
+  - names: [--max-assembly-region-size]
+    description: largest active region, in bp
+    value: {type: int}
+    default: 300
+    rank: 15
+  - names: [--force-active]
+    description: treat every region as active
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--assembly-region-out]
+    description: file listing the active regions
+    value: {type: file}
+    rank: 15
+  - names: [--pair-hmm-implementation, -pairHMM]
+    description: pair-HMM implementation
+    value:
+      type: enum
+      values: [EXACT, ORIGINAL, LOGLESS_CACHING, AVX_LOGLESS_CACHING, AVX_LOGLESS_CACHING_OMP, FASTEST_AVAILABLE]
+    default: FASTEST_AVAILABLE
+    rank: 15
+  - names: [--dragstr-params-path]
+    description: DRAGstr parameters from CalibrateDragstrModel
+    value: {type: file}
+    rank: 15
+  - names: [--gvcf-lod-band, -LODB]
+    description: LOD bands of the reference blocks (with -ERC GVCF; repeatable)
+    value: {type: float}
+    repeatable: true
+    rank: 10
+  - names: [--independent-mates]
+    description: count the mates of a pair as independent observations
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--founder-id]
+    description: sample ID of a founder, for pedigree annotations (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--graph-output, -graph]
+    description: file of the assembly graphs, for debugging
+    value: {type: file}
+    rank: 10
+  - names: [--debug-assembly, -debug]
+    description: print assembly details
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--smith-waterman]
+    description: Smith-Waterman implementation
+    value:
+      type: enum
+      values: [FASTEST_AVAILABLE, AVX_ENABLED, JAVA]
+    default: FASTEST_AVAILABLE
+    rank: 10
+  - names: [--linked-de-bruijn-graph]
+    description: linked de Bruijn graph assembly (experimental)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--soft-clip-low-quality-ends]
+    description: soft-clip low-quality read ends instead of hard-clipping them
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+- name: GenomicsDBImport
+  help: [GenomicsDBImport, --help]
+  description: load GVCFs of many samples into a GenomicsDB workspace, for GenotypeGVCFs
+  options:
+  - names: [--genomicsdb-workspace-path]
+    description: workspace folder to create
+    value: {type: dir, format: genomicsdb}
+    rank: 95
+  - names: [--variant, -V]
+    description: a GVCF to load (repeatable)
+    value: {type: file, format: gvcf}
+    repeatable: true
+    rank: 90
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--sample-name-map]
+    description: file of sample names and their GVCF paths, instead of -V
+    value: {type: file}
+    rank: 70
+  - names: [--genomicsdb-update-workspace-path]
+    description: existing workspace to add samples to
+    value: {type: dir, format: genomicsdb}
+    rank: 60
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--batch-size]
+    description: 'samples read at a time (0: all); lower uses less memory'
+    value: {type: int}
+    default: 0
+    rank: 50
+  - names: [--reader-threads]
+    description: threads reading the GVCFs
+    value: {type: int}
+    default: 1
+    rank: 45
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--merge-input-intervals]
+    description: import the intervals together, as one
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 40
+  - names: [--consolidate]
+    description: consolidate the workspace after each batch
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--overwrite-existing-genomicsdb-workspace]
+    description: replace an existing workspace
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--max-num-intervals-to-import-in-parallel]
+    description: intervals imported in parallel
+    value: {type: int}
+    default: 1
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--merge-contigs-into-num-partitions]
+    description: merge small contigs into this many partitions
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--genomicsdb-shared-posixfs-optimizations]
+    description: optimisations for shared file systems (NFS, Lustre)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--validate-sample-name-map]
+    description: check the sample name map
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--output-interval-list-to-file]
+    description: write the intervals of the workspace to this file
+    value: {type: file, format: interval-list}
+    rank: 15
+  - names: [--bypass-feature-reader]
+    description: read the GVCFs with htslib instead of the Java reader
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--header]
+    description: VCF header to use instead of the first GVCF's
+    value: {type: file, format: vcf}
+    rank: 10
+  - names: [--genomicsdb-segment-size]
+    description: buffer size of GenomicsDB, in bytes
+    value: {type: int}
+    rank: 10
+  - names: [--genomicsdb-vcf-buffer-size]
+    description: VCF buffer size of GenomicsDB, in bytes
+    value: {type: int}
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: CombineGVCFs
+  help: [CombineGVCFs, --help]
+  description: merge the GVCFs of several samples into one multi-sample GVCF
+  options:
+  - names: [--output, -O]
+    description: combined GVCF to write
+    value: {type: file, format: gvcf}
+    rank: 95
+  - names: [--variant, -V]
+    description: a GVCF to combine (repeatable)
+    value: {type: file, format: gvcf}
+    repeatable: true
+    rank: 90
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--dbsnp, -D]
+    description: dbSNP VCF, whose IDs fill the ID column
+    value: {type: file, format: vcf}
+    rank: 55
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--annotation, -A]
+    description: add this annotation to the output (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--annotation-group, -G]
+    description: add this group of annotations, e.g. StandardAnnotation, AS_StandardAnnotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--annotations-to-exclude, -AX]
+    description: leave out this annotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--pedigree, -ped]
+    description: PED file of the family structure, for pedigree annotations
+    value: {type: file}
+    rank: 30
+  - names: [--convert-to-base-pair-resolution]
+    description: write every site instead of reference blocks
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--input-is-somatic]
+    description: the GVCFs come from Mutect2, not HaplotypeCaller
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--break-bands-at-multiples-of]
+    description: break reference blocks at multiples of this position
+    value: {type: int}
+    default: 0
+    rank: 15
+  - names: [--ignore-variants-starting-outside-interval]
+    description: leave out variants starting outside the intervals
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--enable-all-annotations]
+    description: compute every available annotation
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-annotations]
+    description: turn off the tool's default annotations
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--call-genotypes]
+    description: output called genotypes (for GVCFs of one sample)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--drop-somatic-filtering-annotations]
+    description: drop Mutect2 filtering annotations
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--combine-variants-distance]
+    description: merge variants within this distance
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--max-distance]
+    description: largest reference block, in bp
+    value: {type: int}
+    rank: 10
+  - names: [--ref-padding]
+    description: bp of reference context around each variant
+    value: {type: int}
+    default: 1
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--founder-id]
+    description: sample ID of a founder, for pedigree annotations (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+- name: GenotypeGVCFs
+  help: [GenotypeGVCFs, --help]
+  description: joint genotyping of GVCFs (a combined GVCF or a GenomicsDB workspace, gendb://folder) into a VCF
+  options:
+  - names: [--variant, -V]
+    description: combined GVCF, or a GenomicsDB workspace as gendb://folder
+    value: {type: file, format: gvcf}
+    rank: 95
+  - names: [--output, -O]
+    description: VCF of joint-called genotypes
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--dbsnp, -D]
+    description: dbSNP VCF, whose IDs fill the ID column
+    value: {type: file, format: vcf}
+    rank: 55
+  - names: [--sample-ploidy, -ploidy]
+    description: ploidy of each sample (number of chromosomes per sample in pools)
+    value: {type: int}
+    default: 2
+    rank: 55
+  - names: [--standard-min-confidence-threshold-for-calling, -stand-call-conf]
+    description: least phred confidence to call a variant
+    value: {type: float}
+    default: 30.0
+    rank: 50
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--include-non-variant-sites, -all-sites]
+    description: also write sites without variation
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 40
+  - names: [--annotation, -A]
+    description: add this annotation to the output (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--annotation-group, -G]
+    description: add this group of annotations, e.g. StandardAnnotation, AS_StandardAnnotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 40
+  - names: [--max-alternate-alleles]
+    description: most alternate alleles genotyped at a site
+    value: {type: int}
+    default: 6
+    rank: 35
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--annotations-to-exclude, -AX]
+    description: leave out this annotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--pedigree, -ped]
+    description: PED file of the family structure, for pedigree annotations
+    value: {type: file}
+    rank: 30
+  - names: [--merge-input-intervals]
+    description: process the intervals together, as one
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--heterozygosity]
+    description: expected heterozygosity, the prior for SNPs
+    value: {type: float}
+    default: 0.001
+    rank: 25
+  - names: [--input-is-somatic]
+    description: the GVCFs come from Mutect2, not HaplotypeCaller
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--only-output-calls-starting-in-intervals]
+    description: write only calls starting inside the intervals
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--max-genotype-count]
+    description: most genotypes considered at a site
+    value: {type: int}
+    default: 1024
+    rank: 20
+  - names: [--indel-heterozygosity]
+    description: expected heterozygosity, the prior for indels
+    value: {type: float}
+    default: 0.000125
+    rank: 20
+  - names: [--population-callset, -population]
+    description: VCF of the population's calls, used as genotype priors
+    value: {type: file, format: vcf}
+    rank: 20
+  - names: [--force-output-intervals]
+    description: intervals written in any case (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 15
+  - names: [--tumor-lod-to-emit, -emit-lod]
+    description: least tumour LOD to write a call (somatic GVCFs)
+    value: {type: float}
+    default: 3.5
+    rank: 15
+  - names: [--genomicsdb-max-alternate-alleles]
+    description: most alternate alleles read from GenomicsDB
+    value: {type: int}
+    rank: 15
+  - names: [--genomicsdb-shared-posixfs-optimizations]
+    description: optimisations for shared file systems (NFS, Lustre)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--enable-all-annotations]
+    description: compute every available annotation
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-annotations]
+    description: turn off the tool's default annotations
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--heterozygosity-stdev]
+    description: standard deviation of the heterozygosity across samples
+    value: {type: float}
+    default: 0.01
+    rank: 15
+  - names: [--genotype-assignment-method, -gam]
+    description: how genotypes are set when likelihoods are given
+    value:
+      type: enum
+      values: [SET_TO_NO_CALL, USE_PLS_TO_ASSIGN, USE_POSTERIORS_ANNOTATION, SET_TO_NO_CALL_NO_ANNOTATIONS, BEST_MATCH_TO_ORIGINAL, DO_NOT_ASSIGN_GENOTYPES,
+        USE_POSTERIOR_PROBABILITIES, PREFER_PLS]
+    rank: 15
+  - names: [--call-genotypes]
+    description: output called genotypes (for GVCFs of one sample)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--keep-combined-raw-annotations, -keep-combined]
+    description: keep the combined raw annotations
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--keep-specific-combined-raw-annotation, -keep-specific-combined]
+    description: keep this combined raw annotation (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--genomicsdb-use-bcf-codec]
+    description: read GenomicsDB with the BCF codec
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--allele-fraction-error]
+    description: margin of error on the allele fraction (somatic input)
+    value: {type: float}
+    default: 0.001
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--founder-id]
+    description: sample ID of a founder, for pedigree annotations (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--num-reference-samples-if-no-call]
+    description: number of hom-ref samples assumed for no-calls
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--use-posteriors-to-calculate-qual, -gp-qual]
+    description: compute QUAL from genotype posteriors
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-new-qual-calculator, -new-qual]
+    description: 'new QUAL model (deprecated: always on)'
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--annotate-with-num-discovered-alleles]
+    description: annotate the number of alternate alleles discovered
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+- name: BaseRecalibrator
+  help: [BaseRecalibrator, --help]
+  description: model the systematic errors of base qualities, for ApplyBQSR
+  options:
+  - names: [--input, -I]
+    description: BAM or CRAM of reads (repeatable)
+    value:
+      type: file
+      format: [bam, cram]
+    repeatable: true
+    rank: 95
+  - names: [--output, -O]
+    description: recalibration table to write
+    value: {type: file, format: gatk-table}
+    rank: 95
+  - names: [--known-sites]
+    description: VCF of known variants, left out of the model (dbSNP, Mills indels; repeatable)
+    value: {type: file, format: vcf}
+    repeatable: true
+    rank: 90
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--use-original-qualities, -OQ]
+    description: use the OQ tag qualities
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--preserve-qscores-less-than]
+    description: leave qualities below this alone
+    value: {type: int}
+    default: 6
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--mismatches-context-size, -mcs]
+    description: context size of mismatches, in bases
+    value: {type: int}
+    default: 2
+    rank: 15
+  - names: [--indels-context-size, -ics]
+    description: context size of indels, in bases
+    value: {type: int}
+    default: 3
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--default-base-qualities]
+    description: quality given to reads without base qualities
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--maximum-cycle-value, -max-cycle]
+    description: largest machine cycle
+    value: {type: int}
+    default: 500
+    rank: 10
+  - names: [--low-quality-tail]
+    description: quality of the low-quality tails left out
+    value: {type: int}
+    default: 2
+    rank: 10
+  - names: [--quantizing-levels]
+    description: number of quantised quality levels
+    value: {type: int}
+    default: 16
+    rank: 10
+  - names: [--mismatches-default-quality]
+    description: default quality of mismatches
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--insertions-default-quality]
+    description: default quality of insertions
+    value: {type: int}
+    default: 45
+    rank: 10
+  - names: [--deletions-default-quality]
+    description: default quality of deletions
+    value: {type: int}
+    default: 45
+    rank: 10
+  - names: [--bqsr-baq-gap-open-penalty]
+    description: BQSR's BAQ gap-open penalty
+    value: {type: float}
+    default: 40.0
+    rank: 10
+  - names: [--binary-tag-name]
+    description: tag marking reads to treat separately
+    value: {type: string}
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: ApplyBQSR
+  help: [ApplyBQSR, --help]
+  description: rewrite base qualities with a BaseRecalibrator table
+  options:
+  - names: [--input, -I]
+    description: BAM or CRAM to recalibrate
+    value:
+      type: file
+      format: [bam, cram]
+    rank: 95
+  - names: [--output, -O]
+    description: recalibrated BAM or CRAM to write
+    value:
+      type: file
+      format: [bam, cram]
+    rank: 95
+  - names: [--bqsr-recal-file, -bqsr]
+    description: recalibration table from BaseRecalibrator
+    value: {type: file, format: gatk-table}
+    rank: 95
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--static-quantized-quals]
+    description: bin qualities to these values (repeatable; e.g. 10 20 30)
+    value: {type: int}
+    repeatable: true
+    rank: 35
+  - names: [--emit-original-quals]
+    description: keep the old qualities in the OQ tag
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 35
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--preserve-qscores-less-than]
+    description: leave qualities below this alone
+    value: {type: int}
+    default: 6
+    rank: 15
+  - names: [--use-original-qualities, -OQ]
+    description: recalibrate from the OQ tag qualities
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--quantize-quals]
+    description: 'quantise to this many levels (0: as the table)'
+    value: {type: int}
+    default: 0
+    rank: 15
+  - names: [--allow-missing-read-group]
+    description: accept reads whose read group is not in the table
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--round-down-quantized]
+    description: round quantised qualities down
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--global-qscore-prior]
+    description: global prior of quality scores
+    value: {type: float}
+    default: -1.0
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: GetPileupSummaries
+  help: [GetPileupSummaries, --help]
+  description: count reference and alternate reads at common germline sites, for CalculateContamination
+  options:
+  - names: [--input, -I]
+    description: BAM or CRAM of the sample (repeatable)
+    value:
+      type: file
+      format: [bam, cram]
+    repeatable: true
+    rank: 95
+  - names: [--output, -O]
+    description: pileup table to write
+    value: {type: file, format: gatk-table}
+    rank: 95
+  - names: [--variant, -V]
+    description: VCF of common biallelic germline sites with allele frequencies (e.g. small_exac_common_3)
+    value: {type: file, format: vcf}
+    rank: 90
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--intervals, -L]
+    description: intervals to summarise, usually the same common sites (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 85
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--minimum-population-allele-frequency, -min-af]
+    description: least population allele frequency of the sites used
+    value: {type: float}
+    default: 0.01
+    rank: 30
+  - names: [--maximum-population-allele-frequency, -max-af]
+    description: largest population allele frequency of the sites used
+    value: {type: float}
+    default: 0.2
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--max-depth-per-sample]
+    description: 'downsample each sample to this depth (0: no limit)'
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: CalculateContamination
+  help: [CalculateContamination, --help]
+  description: estimate the cross-sample contamination of a tumour, for FilterMutectCalls
+  options:
+  - names: [--input, -I]
+    description: pileup table of the tumour, from GetPileupSummaries
+    value: {type: file, format: gatk-table}
+    rank: 95
+  - names: [--output, -O]
+    description: contamination table to write
+    value: {type: file, format: gatk-table}
+    rank: 95
+  - names: [--matched-normal, -matched]
+    description: pileup table of the matched normal
+    value: {type: file, format: gatk-table}
+    rank: 80
+  - names: [--tumor-segmentation, -segments]
+    description: table of minor allele fraction segments to write, for FilterMutectCalls
+    value: {type: file, format: gatk-table}
+    rank: 70
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--low-coverage-ratio-threshold]
+    description: least coverage, relative to the median, of the sites used
+    value: {type: float}
+    default: 0.5
+    rank: 10
+  - names: [--high-coverage-ratio-threshold]
+    description: largest coverage, relative to the mean, of the sites used
+    value: {type: float}
+    default: 3.0
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+- name: LearnReadOrientationModel
+  help: [LearnReadOrientationModel, --help]
+  description: learn the orientation bias priors (FFPE, OxoG) from Mutect2's F1R2 counts
+  options:
+  - names: [--input, -I]
+    description: F1R2 counts from Mutect2 --f1r2-tar-gz (repeatable, one per scatter)
+    value: {type: file, format: f1r2}
+    repeatable: true
+    rank: 95
+  - names: [--output, -O]
+    description: artifact priors to write (.tar.gz), for FilterMutectCalls -ob-priors
+    value: {type: file, format: orientation-model}
+    rank: 95
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--num-em-iterations]
+    description: most iterations of the EM algorithm
+    value: {type: int}
+    default: 20
+    rank: 20
+  - names: [--convergence-threshold]
+    description: stop once the change is below this
+    value: {type: float}
+    default: 0.0001
+    rank: 15
+  - names: [--max-depth]
+    description: largest depth modelled
+    value: {type: int}
+    default: 200
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+- name: FilterMutectCalls
+  help: [FilterMutectCalls, --help]
+  description: filter Mutect2's somatic calls (contamination, orientation bias, artifacts…)
+  options:
+  - names: [--variant, -V]
+    description: unfiltered VCF from Mutect2
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--output, -O]
+    description: filtered VCF to write
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--contamination-table]
+    description: contamination table from CalculateContamination (repeatable)
+    value: {type: file, format: gatk-table}
+    repeatable: true
+    rank: 80
+  - names: [--orientation-bias-artifact-priors, -ob-priors]
+    description: artifact priors from LearnReadOrientationModel (repeatable)
+    value: {type: file, format: orientation-model}
+    repeatable: true
+    rank: 75
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--tumor-segmentation]
+    description: segments from CalculateContamination (repeatable)
+    value: {type: file, format: gatk-table}
+    repeatable: true
+    rank: 70
+  - names: [--stats]
+    description: Mutect2 stats file (by default the input VCF name + .stats)
+    value: {type: file, format: mutect-stats}
+    rank: 60
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--min-allele-fraction]
+    description: filter calls of lower allele fraction
+    value: {type: float}
+    default: 0.0
+    rank: 35
+  - names: [--filtering-stats]
+    description: filtering statistics to write
+    value: {type: file}
+    rank: 30
+  - names: [--threshold-strategy]
+    description: how the filtering threshold is chosen
+    value:
+      type: enum
+      values: [OPTIMAL_F_SCORE, FALSE_DISCOVERY_RATE, CONSTANT]
+    default: OPTIMAL_F_SCORE
+    rank: 30
+  - names: [--mitochondria-mode]
+    description: settings for mitochondrial calling
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--microbial-mode]
+    description: settings for microbial calling
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--f-score-beta]
+    description: weight of recall against precision in the F score
+    value: {type: float}
+    default: 1.0
+    rank: 20
+  - names: [--min-reads-per-strand]
+    description: least alternate reads on each strand
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--unique-alt-read-count, -unique]
+    description: least number of distinct alternate reads (deduplicated)
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--contamination-estimate]
+    description: contamination fraction, instead of a table
+    value: {type: float}
+    default: 0.0
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--false-discovery-rate]
+    description: target FDR of the FALSE_DISCOVERY_RATE strategy
+    value: {type: float}
+    default: 0.05
+    rank: 15
+  - names: [--max-alt-allele-count]
+    description: filter sites with more alternate alleles
+    value: {type: int}
+    default: 1
+    rank: 15
+  - names: [--max-events-in-region]
+    description: filter regions with more events
+    value: {type: int}
+    default: 2
+    rank: 15
+  - names: [--min-median-base-quality]
+    description: least median base quality of alternate reads
+    value: {type: int}
+    default: 20
+    rank: 15
+  - names: [--min-median-mapping-quality]
+    description: least median mapping quality of alternate reads
+    value: {type: int}
+    default: -1
+    rank: 15
+  - names: [--min-median-read-position]
+    description: least median distance of the alternate base to the read end
+    value: {type: int}
+    default: 1
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--normal-p-value-threshold]
+    description: p-value of the normal under which a call is germline
+    value: {type: float}
+    default: 0.001
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: VariantFiltration
+  help: [VariantFiltration, --help]
+  description: set the FILTER of variants by expressions on their fields (hard filtering)
+  options:
+  - names: [--variant, -V]
+    description: VCF to filter
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--output, -O]
+    description: VCF to write
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--filter-expression, -filter]
+    description: JEXL expression; matching variants get the paired --filter-name, e.g. "QD < 2.0" (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 90
+  - names: [--filter-name]
+    description: FILTER name of the expression at the same position (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 90
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--genotype-filter-expression, -G-filter]
+    description: JEXL expression on genotypes, e.g. "DP < 10" (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 55
+  - names: [--genotype-filter-name, -G-filter-name]
+    description: FT name of the genotype expression at the same position (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 55
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--set-filtered-genotype-to-no-call]
+    description: make filtered genotypes no-calls (./.)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 40
+  - names: [--missing-values-evaluate-as-failing]
+    description: a variant missing a field of an expression fails it
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--mask]
+    description: filter variants overlapping the features of this file
+    value:
+      type: file
+      format: [bed, vcf]
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--cluster-size, -cluster]
+    description: number of variants within --cluster-window-size that makes a cluster (filtered SnpCluster)
+    value: {type: int}
+    default: 3
+    rank: 25
+  - names: [--cluster-window-size, -window]
+    description: window of --cluster-size, in bp (0 turns it off)
+    value: {type: int}
+    default: 0
+    rank: 25
+  - names: [--mask-name]
+    description: FILTER name of masked variants
+    value: {type: string}
+    default: Mask
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--invert-filter-expression, -invfilter]
+    description: filter variants that do not match the expressions
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--invalidate-previous-filters]
+    description: clear the FILTER values already set
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--invert-genotype-filter-expression, -invG-filter]
+    description: filter genotypes that do not match the expressions
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--mask-extension]
+    description: bp added around mask features
+    value: {type: int}
+    default: 0
+    rank: 15
+  - names: [--filter-not-in-mask]
+    description: filter variants outside the mask instead
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--apply-allele-specific-filters]
+    description: filter each allele separately (AS annotations)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--mask-description]
+    description: description of the mask filter in the header
+    value: {type: string}
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: SelectVariants
+  help: [SelectVariants, --help]
+  description: select a subset of variants and samples of a VCF (by type, sample, expression, interval)
+  options:
+  - names: [--variant, -V]
+    description: VCF to select from
+    value:
+      type: file
+      format: [vcf, gvcf]
+    rank: 95
+  - names: [--output, -O]
+    description: VCF to write
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--select-type-to-include, -select-type]
+    description: keep only this variant type (repeatable)
+    value:
+      type: enum
+      values: [INDEL, SNP, MIXED, MNP, SYMBOLIC, NO_VARIATION]
+    repeatable: true
+    rank: 85
+  - names: [--sample-name, -sn]
+    description: keep this sample (repeatable; a .args file of names works)
+    value: {type: string}
+    repeatable: true
+    rank: 75
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--exclude-filtered]
+    description: drop variants whose FILTER is not PASS
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 70
+  - names: [--select]
+    description: keep variants matching this JEXL expression, e.g. "QUAL > 30.0" (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 65
+  - names: [--exclude-non-variants]
+    description: drop sites where no kept sample has an alternate allele
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 60
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--restrict-alleles-to]
+    description: keep only sites of this allele count
+    value:
+      type: enum
+      values: [ALL, BIALLELIC, MULTIALLELIC]
+    default: ALL
+    rank: 55
+  - names: [--exclude-sample-name, -xl-sn]
+    description: drop this sample (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 50
+  - names: [--select-type-to-exclude, -xl-select-type]
+    description: drop this variant type (repeatable)
+    value:
+      type: enum
+      values: [INDEL, SNP, MIXED, MNP, SYMBOLIC, NO_VARIATION]
+    repeatable: true
+    rank: 45
+  - names: [--remove-unused-alternates]
+    description: drop alternate alleles no kept sample carries
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 45
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--sample-expressions, -se]
+    description: keep the samples matching this regular expression (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--select-genotype-expressions, -select-genotype]
+    description: keep variants with a genotype matching this JEXL expression (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--invertSelect, -invert-select]
+    description: keep the variants that fail the --select expressions
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--keep-ids, -ids]
+    description: keep the variants of the IDs listed in this file
+    value: {type: file}
+    rank: 30
+  - names: [--concordance, -conc]
+    description: keep the variants also present in this VCF
+    value: {type: file, format: vcf}
+    rank: 30
+  - names: [--discordance, -disc]
+    description: keep the variants absent from this VCF
+    value: {type: file, format: vcf}
+    rank: 30
+  - names: [--set-filtered-gt-to-nocall]
+    description: make filtered genotypes no-calls
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--max-nocall-fraction]
+    description: drop sites with a larger fraction of no-call samples
+    value: {type: float}
+    default: 1.0
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--exclude-ids, -xl-ids]
+    description: drop the variants of the IDs listed in this file
+    value: {type: file}
+    rank: 25
+  - names: [--max-nocall-number]
+    description: drop sites with more no-call samples
+    value: {type: int}
+    rank: 25
+  - names: [--min-indel-size]
+    description: drop indels shorter than this
+    value: {type: int}
+    default: 0
+    rank: 25
+  - names: [--max-indel-size]
+    description: drop indels longer than this
+    value: {type: int}
+    rank: 25
+  - names: [--drop-info-annotation, -DA]
+    description: drop this INFO field (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--drop-genotype-annotation, -DGA]
+    description: drop this FORMAT field (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--exclude-sample-expressions, -xl-se]
+    description: drop the samples matching this regular expression (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 20
+  - names: [--select-random-fraction, -fraction]
+    description: keep this fraction of the variants, chosen at random
+    value: {type: float}
+    default: 0.0
+    rank: 20
+  - names: [--mendelian-violation]
+    description: keep the variants violating Mendelian inheritance (with --pedigree)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--pedigree, -ped]
+    description: PED file of the family structure
+    value: {type: file}
+    rank: 20
+  - names: [--keep-original-ac]
+    description: keep the original AC, AN and AF in INFO as AC_Orig…
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--keep-original-dp]
+    description: keep the original DP in INFO as DP_Orig
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--preserve-alleles]
+    description: do not trim alleles
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: VariantRecalibrator
+  help: [VariantRecalibrator, --help]
+  description: build the VQSR model of true variants from training resources, for ApplyVQSR
+  options:
+  - names: [--variant, -V]
+    description: VCF to recalibrate (repeatable)
+    value: {type: file, format: vcf}
+    repeatable: true
+    rank: 95
+  - names: [--output, -O]
+    description: recalibration table to write
+    value: {type: file, format: vqsr-recal}
+    rank: 95
+  - names: [--tranches-file]
+    description: tranches to write
+    value: {type: file, format: vqsr-tranches}
+    rank: 95
+  - names: [--resource]
+    description: training resource, name,known=…,training=…,truth=…,prior=…:file.vcf (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 90
+  - names: [--use-annotation, -an]
+    description: annotation used by the model, e.g. QD, MQ, FS, SOR, MQRankSum, ReadPosRankSum (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 90
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--mode]
+    description: recalibrate SNPs or indels
+    value:
+      type: enum
+      values: [SNP, INDEL, BOTH]
+    default: SNP
+    rank: 85
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--truth-sensitivity-tranche, -tranche]
+    description: tranche of truth sensitivity, e.g. 100.0 99.9 99.0 90.0 (repeatable)
+    value: {type: float}
+    repeatable: true
+    rank: 55
+  - names: [--max-gaussians]
+    description: Gaussians of the positive model (4 for indels, fewer for small data sets)
+    value: {type: int}
+    default: 8
+    rank: 50
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--rscript-file]
+    description: R script of the model plots to write
+    value: {type: file}
+    rank: 40
+  - names: [--use-allele-specific-annotations, -AS]
+    description: allele-specific annotations (AS_QD…)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 35
+  - names: [--trust-all-polymorphic]
+    description: trust that every training site is polymorphic
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--dont-run-rscript]
+    description: do not run the R script
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--target-titv, -titv]
+    description: expected Ts/Tv of the data, for the plots
+    value: {type: float}
+    default: 2.15
+    rank: 20
+  - names: [--aggregate]
+    description: more VCFs used in the model but not recalibrated (repeatable)
+    value: {type: file, format: vcf}
+    repeatable: true
+    rank: 20
+  - names: [--max-negative-gaussians]
+    description: Gaussians of the negative model
+    value: {type: int}
+    default: 2
+    rank: 20
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--maximum-training-variants]
+    description: most variants used in training
+    value: {type: int}
+    default: 2500000
+    rank: 15
+  - names: [--minimum-bad-variants]
+    description: least number of variants in the negative model
+    value: {type: int}
+    default: 1000
+    rank: 15
+  - names: [--input-model]
+    description: model from --output-model, to reuse
+    value: {type: file}
+    rank: 15
+  - names: [--output-model]
+    description: model to write, for reuse
+    value: {type: file}
+    rank: 15
+  - names: [--ignore-filter]
+    description: also use variants with this FILTER (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 15
+  - names: [--ignore-all-filters]
+    description: use variants whatever their FILTER
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--max-iterations]
+    description: most iterations of the EM algorithm
+    value: {type: int}
+    default: 150
+    rank: 10
+  - names: [--bad-lod-score-cutoff, -bad-lod-cutoff]
+    description: LOD below which variants feed the negative model
+    value: {type: float}
+    default: -5.0
+    rank: 10
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: ApplyVQSR
+  help: [ApplyVQSR, --help]
+  description: filter variants with a VariantRecalibrator model, at a truth sensitivity level
+  options:
+  - names: [--variant, -V]
+    description: VCF to filter
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--output, -O]
+    description: filtered VCF to write
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--recal-file]
+    description: recalibration table from VariantRecalibrator
+    value: {type: file, format: vqsr-recal}
+    rank: 95
+  - names: [--tranches-file]
+    description: tranches from VariantRecalibrator
+    value: {type: file, format: vqsr-tranches}
+    rank: 90
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--truth-sensitivity-filter-level, -ts-filter-level]
+    description: truth sensitivity to keep, e.g. 99.7 for SNPs, 99.0 for indels
+    value: {type: float}
+    rank: 85
+  - names: [--mode]
+    description: apply to SNPs or indels, as the model
+    value:
+      type: enum
+      values: [SNP, INDEL, BOTH]
+    default: SNP
+    rank: 85
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--use-allele-specific-annotations, -AS]
+    description: allele-specific model
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--exclude-filtered]
+    description: drop the filtered variants instead of marking them
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--lod-score-cutoff]
+    description: VQSLOD threshold, instead of the truth sensitivity
+    value: {type: float}
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--ignore-filter]
+    description: also recalibrate variants with this FILTER (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 15
+  - names: [--ignore-all-filters]
+    description: recalibrate variants whatever their FILTER
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+- name: LeftAlignAndTrimVariants
+  help: [LeftAlignAndTrimVariants, --help]
+  description: left-align and trim indels, and split multiallelic sites
+  options:
+  - names: [--variant, -V]
+    description: VCF to normalise
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--output, -O]
+    description: VCF to write
+    value: {type: file, format: vcf}
+    rank: 95
+  - names: [--reference, -R]
+    description: reference FASTA, with its .fai and .dict
+    value: {type: file, format: fasta}
+    rank: 90
+  - names: [--split-multi-allelics]
+    description: split multiallelic sites into biallelic records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 75
+  - names: [--intervals, -L]
+    description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 75
+  - names: [--input, -I]
+    description: input file (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 60
+  - names: [--exclude-intervals, -XL]
+    description: intervals to leave out, as for --intervals (repeatable)
+    value:
+      type: file
+      format: [interval-list, bed, vcf]
+    repeatable: true
+    rank: 45
+  - names: [--interval-padding, -ip]
+    description: bp added on both sides of each interval
+    value: {type: int}
+    default: 0
+    rank: 45
+  - names: [--tmp-dir]
+    description: folder for temporary files
+    value: {type: dir}
+    rank: 45
+  - names: [--dont-trim-alleles, -no-trim]
+    description: only left-align, do not trim common bases
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 40
+  - names: [--keep-original-ac]
+    description: keep the original AC, AN and AF when splitting
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 30
+  - names: [--interval-set-rule, -isr]
+    description: 'how several interval lists combine: UNION or INTERSECTION'
+    value:
+      type: enum
+      values: [UNION, INTERSECTION]
+    default: UNION
+    rank: 30
+  - names: [--interval-merging-rule, -imr]
+    description: merge abutting intervals (ALL) or only overlapping ones (OVERLAPPING_ONLY)
+    value:
+      type: enum
+      values: [ALL, OVERLAPPING_ONLY]
+    default: ALL
+    rank: 30
+  - names: [--read-filter, -RF]
+    description: add a read filter by name (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 30
+  - names: [--create-output-variant-index, -OVI]
+    description: write an index of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--create-output-bam-index, -OBI]
+    description: write an index of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 30
+  - names: [--max-indel-length]
+    description: longest indel left-aligned
+    value: {type: int}
+    default: 200
+    rank: 25
+  - names: [--disable-read-filter, -DF]
+    description: turn off one of the tool's default read filters (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 25
+  - names: [--read-validation-stringency, -VS]
+    description: 'how strictly input records are checked: STRICT, LENIENT or SILENT'
+    value:
+      type: enum
+      values: [STRICT, LENIENT, SILENT]
+    default: SILENT
+    rank: 25
+  - names: [--sequence-dictionary]
+    description: sequence dictionary (.dict) to use instead of the inputs'
+    value: {type: file, format: dict}
+    rank: 25
+  - names: [--sites-only-vcf-output]
+    description: write the VCF without genotypes (sites only)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 25
+  - names: [--interval-exclusion-padding, -ixp]
+    description: bp added on both sides of each excluded interval
+    value: {type: int}
+    default: 0
+    rank: 20
+  - names: [--read-index]
+    description: index of the input reads, when not next to them (repeatable)
+    value:
+      type: file
+      format: [bai, crai, csi]
+    repeatable: true
+    rank: 20
+  - names: [--lenient, -LE]
+    description: accept slightly malformed input VCF records
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 20
+  - names: [--minimum-mapping-quality]
+    description: least mapping quality of the MappingQualityReadFilter
+    value: {type: int}
+    rank: 20
+  - names: [--max-leading-bases]
+    description: most leading bases trimmed
+    value: {type: int}
+    default: 1000
+    rank: 15
+  - names: [--disable-tool-default-read-filters]
+    description: turn off all of the tool's default read filters
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--disable-sequence-dictionary-validation]
+    description: do not check that the inputs' sequence dictionaries agree
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--arguments_file]
+    description: file of arguments added to the command line (repeatable)
+    value: {type: file}
+    repeatable: true
+    rank: 15
+  - names: [--verbosity]
+    description: log level
+    value:
+      type: enum
+      values: [ERROR, WARNING, INFO, DEBUG]
+    default: INFO
+    rank: 15
+  - names: [--QUIET]
+    description: no job summary on standard error
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 15
+  - names: [--variant-output-filtering]
+    description: which variants to write by their position relative to the intervals
+    value:
+      type: enum
+      values: [STARTS_IN, ENDS_IN, OVERLAPS, CONTAINED]
+    rank: 15
+  - names: [--inverted-read-filter, -XRF]
+    description: keep the reads that fail this filter (repeatable)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--create-output-variant-md5, -OVM]
+    description: write an MD5 digest of the output VCF
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--create-output-bam-md5, -OBM]
+    description: write an MD5 digest of the output BAM
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--add-output-vcf-command-line]
+    description: record the command line in the output VCF header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--add-output-sam-program-record]
+    description: record the program in the output BAM header
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'true'
+    rank: 10
+  - names: [--disable-bam-index-caching, -DBIC]
+    description: do not cache BAM indexes (less memory, slower with many intervals)
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--seconds-between-progress-updates]
+    description: seconds between progress messages
+    value: {type: float}
+    default: 10.0
+    rank: 10
+  - names: [--max-variants-per-shard]
+    description: variants per shard of the output VCF (0 for one file)
+    value: {type: int}
+    default: 0
+    rank: 10
+  - names: [--cloud-prefetch-buffer, -CPB]
+    description: prefetch buffer for cloud inputs, in MB
+    value: {type: int}
+    default: 40
+    rank: 10
+  - names: [--cloud-index-prefetch-buffer, -CIPB]
+    description: prefetch buffer for cloud indexes, in MB
+    value: {type: int}
+    default: -1
+    rank: 10
+  - names: [--gcs-max-retries, -gcs-retries]
+    description: retries of Google Cloud Storage requests
+    value: {type: int}
+    default: 20
+    rank: 10
+  - names: [--gcs-project-for-requester-pays]
+    description: Google Cloud project billed for requester-pays buckets
+    value: {type: string}
+    rank: 10
+  - names: [--gatk-config-file]
+    description: GATK configuration file
+    value: {type: file}
+    rank: 10
+  - names: [--use-jdk-deflater, -jdk-deflater]
+    description: JDK compressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--use-jdk-inflater, -jdk-inflater]
+    description: JDK decompressor instead of Intel's
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--help, -h]
+    description: print the help of the tool and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--version]
+    description: print the version and exit
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--showHidden]
+    description: also show hidden arguments in the help
+    value:
+      type: enum
+      values: ['true', 'false']
+    default: 'false'
+    rank: 10
+  - names: [--sample]
+    description: keep only reads of this sample (with the SampleReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--library]
+    description: keep only reads of this library (with the LibraryReadFilter)
+    value: {type: string}
+    repeatable: true
+    rank: 10
+  - names: [--keep-read-group]
+    description: keep only reads of this read group (with the ReadGroupReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--read-name]
+    description: keep only reads of this name (with the ReadNameReadFilter)
+    value: {type: string}
+    rank: 10
+  - names: [--min-read-length]
+    description: least read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10
+  - names: [--max-read-length]
+    description: largest read length of the ReadLengthReadFilter
+    value: {type: int}
+    rank: 10

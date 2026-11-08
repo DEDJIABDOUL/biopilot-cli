@@ -1,0 +1,331 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# freebayes 1.3.8, written from its recorded help: knowledge/help/freebayes/1.3.8/ (MIT; attribution in
+# RECORDING.yml next to it) and its documentation (https://github.com/freebayes/freebayes), in our own
+# words (spec decision 31). Ranks follow the shared scale of spec §6.4. The input filters marked "for
+# testing" by the help (--throw-away-*) are ranked low: they hide data from the model.
+name: freebayes
+description: Bayesian haplotype-based caller of SNVs, indels and complex variants from short-read alignments
+platforms: [illumina]
+version: { args: ["--version"], regex: 'version:\s*v?(\d[\w.]*)' }
+help: ["-h"]
+options:
+  # -- input
+  - names: ["-f", "--fasta-reference"]
+    description: reference FASTA (indexed with samtools faidx; the index is made when missing)
+    value: { type: file, format: fasta }
+    rank: 95
+  - names: ["-b", "--bam"]
+    description: an alignment file to analyse (repeatable; BAM files may also follow the options)
+    value: { type: file, format: [bam, cram] }
+    repeatable: true
+    rank: 85
+  - names: ["-L", "--bam-list"]
+    description: file listing the alignment files to analyse, one per line
+    value: { type: file }
+    rank: 55
+  - names: ["-c", "--stdin"]
+    description: read the BAM from standard input
+    rank: 30
+  - names: ["-t", "--targets"]
+    description: analyse only the regions of this BED file
+    value: { type: file, format: bed }
+    rank: 75
+  - names: ["-r", "--region"]
+    description: "analyse only this region, chrom:start-end (0-based, end excluded)"
+    value: { type: string }
+    rank: 75
+  - names: ["-s", "--samples"]
+    description: analyse only the samples listed in this file, one per line
+    value: { type: file }
+    rank: 45
+  - names: ["--populations"]
+    description: file of sample and population pairs, to model each population apart
+    value: { type: file }
+    rank: 30
+  - names: ["-A", "--cnv-map"]
+    description: BED-like file of copy numbers per sample or per region, overriding --ploidy
+    value: { type: file, format: bed }
+    rank: 40
+  # -- output
+  - names: ["-v", "--vcf"]
+    description: VCF to write (standard output by default)
+    value: { type: file, format: vcf }
+    rank: 90
+  - names: ["--gvcf"]
+    description: write a gVCF, with records for uncalled regions too
+    rank: 70
+  - names: ["--gvcf-chunk"]
+    description: in gVCF output, a record every this many bases
+    value: { type: int }
+    rank: 35
+  - names: ["-&", "--gvcf-dont-use-chunk"]
+    description: in gVCF output, true writes a record for every base (as GATK EMIT_ALL_SITES)
+    value: { type: enum, values: ["true", "false"] }
+    rank: 30
+  - names: ["-@", "--variant-input"]
+    description: VCF of known variants, reported even without enough support (bgzipped and indexed)
+    value: { type: file, format: vcf }
+    rank: 55
+  - names: ["-l", "--only-use-input-alleles"]
+    description: call only the sites and alleles of --variant-input (genotyping at known sites)
+    rank: 50
+  - names: ["--haplotype-basis-alleles"]
+    description: VCF whose alleles alone build complex and haplotype alleles
+    value: { type: file, format: vcf }
+    rank: 25
+  - names: ["--report-all-haplotype-alleles"]
+    description: at haplotype sites, report every allele considered, not only the called ones
+    rank: 25
+  - names: ["--report-monomorphic"]
+    description: also report sites with no variant, and every allele considered
+    rank: 35
+  - names: ["-P", "--pvar"]
+    description: report a site only if its polymorphism probability is above this (filter the VCF afterwards instead)
+    value: { type: float }
+    default: 0.0
+    rank: 25
+  - names: ["--strict-vcf"]
+    description: strict VCF output (integer FORMAT/GQ)
+    rank: 35
+  # -- population model
+  - names: ["-p", "--ploidy"]
+    description: default ploidy of the samples
+    value: { type: int }
+    default: 2
+    rank: 75
+  - names: ["-T", "--theta"]
+    description: expected mutation rate (pairwise diversity), the prior of the model
+    value: { type: float }
+    default: 0.001
+    rank: 30
+  - names: ["-J", "--pooled-discrete"]
+    description: pooled samples, modelled with discrete genotypes (set --ploidy to the alleles per pool)
+    rank: 50
+  - names: ["-K", "--pooled-continuous"]
+    description: frequency-based calling, reporting every allele that passes the input filters (pools, tumours)
+    rank: 50
+  # -- reference allele
+  - names: ["-Z", "--use-reference-allele"]
+    description: count the reference allele as another sample of the population
+    rank: 20
+  - names: ["--reference-quality"]
+    description: mapping and base quality given to the reference allele, MQ,BQ
+    value: { type: string }
+    default: "100,60"
+    rank: 15
+  # -- allele scope
+  - names: ["-n", "--use-best-n-alleles"]
+    description: evaluate only the N best SNP alleles (0 for all); speeds up high-depth data
+    value: { type: int }
+    default: 0
+    rank: 45
+  - names: ["-E", "--max-complex-gap", "--haplotype-length"]
+    description: longest run of matches inside a haplotype call (-1 turns clumping off)
+    value: { type: int }
+    default: 3
+    rank: 40
+  - names: ["--min-repeat-size"]
+    description: shortest repeat, in bp, across which observations are assembled
+    value: { type: int }
+    default: 5
+    rank: 20
+  - names: ["--min-repeat-entropy"]
+    description: extend haplotypes until their entropy exceeds this, in bits per bp (0 turns it off)
+    value: { type: float }
+    default: 1
+    rank: 25
+  - names: ["--no-partial-observations"]
+    description: ignore observations that do not span the whole detection window
+    rank: 20
+  - names: ["-I", "--throw-away-snp-obs"]
+    description: drop SNP observations from the input (for testing)
+    rank: 10
+  - names: ["-i", "--throw-away-indels-obs"]
+    description: drop indel observations from the input (for testing)
+    rank: 10
+  - names: ["-X", "--throw-away-mnp-obs"]
+    description: drop MNP observations from the input (for testing)
+    rank: 10
+  - names: ["-u", "--throw-away-complex-obs"]
+    description: drop complex allele observations from the input (for testing)
+    rank: 10
+  # -- indel realignment
+  - names: ["-O", "--dont-left-align-indels"]
+    description: do not left-align indels
+    rank: 20
+  # -- input filters
+  - names: ["-0", "--standard-filters"]
+    description: stringent quality filters, as -m 30 -q 20 -R 0 -S 0
+    rank: 60
+  - names: ["-m", "--min-mapping-quality"]
+    description: ignore alignments of lower mapping quality
+    value: { type: int }
+    default: 1
+    rank: 65
+  - names: ["-q", "--min-base-quality"]
+    description: ignore alleles supported by bases of lower quality
+    value: { type: int }
+    default: 0
+    rank: 65
+  - names: ["-F", "--min-alternate-fraction"]
+    description: least fraction of a sample's observations supporting an alternate allele to evaluate a site
+    value: { type: float }
+    default: 0.05
+    rank: 65
+  - names: ["-C", "--min-alternate-count"]
+    description: least number of a sample's observations supporting an alternate allele to evaluate a site
+    value: { type: int }
+    default: 2
+    rank: 65
+  - names: ["-3", "--min-alternate-qsum"]
+    description: least sum of qualities of a sample's alternate observations to evaluate a site
+    value: { type: int }
+    default: 0
+    rank: 30
+  - names: ["-G", "--min-alternate-total"]
+    description: least number of alternate observations over all samples to use an allele
+    value: { type: int }
+    default: 1
+    rank: 40
+  - names: ["--min-coverage"]
+    description: least depth to process a site
+    value: { type: int }
+    default: 0
+    rank: 50
+  - names: ["--limit-coverage"]
+    description: downsample each sample to this depth where it is higher
+    value: { type: int }
+    rank: 50
+  - names: ["-g", "--skip-coverage"]
+    description: skip alignments over positions deeper than this (also affects nearby calls)
+    value: { type: int }
+    rank: 50
+  - names: ["-4", "--use-duplicate-reads"]
+    description: include reads marked as duplicates
+    rank: 40
+  - names: ["-R", "--min-supporting-allele-qsum"]
+    description: least sum of qualities of the observations supporting an allele
+    value: { type: int }
+    default: 0
+    rank: 25
+  - names: ["-Y", "--min-supporting-mapping-qsum"]
+    description: least sum of mapping qualities of the reads supporting an allele
+    value: { type: int }
+    default: 0
+    rank: 25
+  - names: ["-Q", "--mismatch-base-quality-threshold"]
+    description: base quality from which a mismatch counts toward --read-mismatch-limit
+    value: { type: int }
+    default: 10
+    rank: 20
+  - names: ["-U", "--read-mismatch-limit"]
+    description: drop reads with more mismatches of quality --mismatch-base-quality-threshold or higher
+    value: { type: int }
+    rank: 25
+  - names: ["-z", "--read-max-mismatch-fraction"]
+    description: drop reads whose fraction of such mismatches exceeds this (0 to 1)
+    value: { type: float }
+    default: 1.0
+    rank: 25
+  - names: ["-$", "--read-snp-limit"]
+    description: drop reads with more base mismatches than this, gaps not counted
+    value: { type: int }
+    rank: 20
+  - names: ["-e", "--read-indel-limit"]
+    description: drop reads with more separate gaps than this
+    value: { type: int }
+    rank: 20
+  - names: ["--trim-complex-tail"]
+    description: trim the tails of complex alleles
+    rank: 20
+  # -- priors
+  - names: ["-k", "--no-population-priors"]
+    description: no population priors (as --pooled-discrete --hwe-priors-off, without the Ewens component)
+    rank: 30
+  - names: ["-w", "--hwe-priors-off"]
+    description: no Hardy-Weinberg prior on genotype combinations
+    rank: 30
+  - names: ["-V", "--binomial-obs-priors-off"]
+    description: no priors on read placement, strand balance and read position
+    rank: 25
+  - names: ["-a", "--allele-balance-priors-off"]
+    description: no prior on the balance of observations between alleles
+    rank: 25
+  # -- genotype likelihoods
+  - names: ["--observation-bias"]
+    description: file of length-dependent allele observation biases
+    value: { type: file }
+    rank: 15
+  - names: ["--base-quality-cap"]
+    description: cap base qualities at this value when estimating observation quality
+    value: { type: int }
+    rank: 20
+  - names: ["--prob-contamination"]
+    description: contamination estimate used for every sample
+    value: { type: float }
+    default: 10e-9
+    rank: 25
+  - names: ["--legacy-gls"]
+    description: genotype likelihoods computed as in polybayes
+    rank: 10
+  - names: ["--contamination-estimates"]
+    description: file of contamination estimates per sample (e.g. from VerifyBamID)
+    value: { type: file }
+    rank: 30
+  # -- algorithm
+  - names: ["-=", "--genotype-qualities"]
+    description: compute genotype qualities and report them as FORMAT/GQ
+    rank: 55
+  - names: ["--report-genotype-likelihood-max"]
+    description: report the maximum-likelihood genotypes
+    rank: 25
+  - names: ["-B", "--genotyping-max-iterations"]
+    description: most iterations of the genotyping step
+    value: { type: int }
+    default: 1000
+    rank: 20
+  - names: ["--genotyping-max-banddepth"]
+    description: integrate genotypes down to the Nth best likelihood only
+    value: { type: int }
+    default: 6
+    rank: 15
+  - names: ["-W", "--posterior-integration-limits"]
+    description: posterior integration bounds, N samples with their Mth best likelihood (N,M)
+    value: { type: string }
+    default: "1,3"
+    rank: 15
+  - names: ["-N", "--exclude-unobserved-genotypes"]
+    description: skip genotyping samples with no supporting reads
+    rank: 25
+  - names: ["-S", "--genotype-variant-threshold"]
+    description: integrate only samples whose second-best genotype is within log(N) of the best
+    value: { type: float }
+    rank: 15
+  - names: ["-j", "--use-mapping-quality"]
+    description: use the mapping quality of alleles in data likelihoods
+    rank: 25
+  - names: ["-H", "--harmonic-indel-quality"]
+    description: indel quality from a distance-weighted sum of flanking base qualities
+    rank: 20
+  - names: ["-D", "--read-dependence-factor"]
+    description: scale successive observations by this factor, for non-independent reads
+    value: { type: float }
+    default: 0.9
+    rank: 15
+  # -- other
+  - names: ["-d", "--debug"]
+    description: print debugging output
+    rank: 10
+  - names: ["-dd"]
+    description: print more debugging output (debug builds only)
+    rank: 10
+  - names: ["-h", "--help"]
+    description: print the help and exit
+    rank: 10
+  - names: ["--version"]
+    description: print the version and exit
+    rank: 10
+arguments:
+  - name: in.bam
+    variadic: true
+    value: { type: file, format: [bam, cram], optional: true }

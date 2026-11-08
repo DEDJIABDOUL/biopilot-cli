@@ -30,8 +30,6 @@ The first stable release: terminal autocompletion for bioinformatics, fitted to 
 - **Measured:** every target of spec §11 checked in CI (`npm run perf:targets`): session startup +32 ms and memory +2 MB over the original engine, warm suggestions under 1 ms.
 - **Offline and private:** no network, no telemetry; only file names are read; only the Catalog tools' declared help and version commands are run.
 
-Built on [Microsoft Inshellisense](https://github.com/microsoft/inshellisense) 0.0.4 (MIT); the engine changes are listed in spec §5.
-
 ## 0.1.0
 
 First public release: phases 0 to 5 (Catalog, version-aware and project-aware suggestions, one-line install).

@@ -16,9 +16,7 @@ const OPTION_LINE = /^(\s*)(--?[A-Za-z0-9@?][^\s]*.*)$/;
 // A bracket is a variant (`--region[s]-file`, `--color[s]`), unless it ends the name and names a value's type
 // (`-t[int]`, filtlong).
 const VALUE_TYPE = "(?:int|integer|float|double|long|num|number|str|string|file|path|dir)";
-const NAME = new RegExp(
-  `^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\\[(?!${VALUE_TYPE}\\]$)[a-z]+\\](?=[A-Za-z0-9_.-]|$))*)(\\[?=.*|\\[${VALUE_TYPE}\\])?$`,
-);
+const NAME = new RegExp(`^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\\[(?!${VALUE_TYPE}\\]$)[a-z]+\\](?=[A-Za-z0-9_.-]|$))*)(\\[?=.*|\\[${VALUE_TYPE}\\])?$`);
 /** fastp's way to say an option takes a value: `(string [=])`, `(int [=4])` at the end of the description. */
 const CMDLINE_VALUE = /\((?:string|int|long|float|double)(?: \[=[^\]]*\])?\)\s*$/;
 

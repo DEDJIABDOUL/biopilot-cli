@@ -18,7 +18,7 @@ cmd.argument("<tool>").action(async (tool: string) => {
   const opened = openCatalog();
   const binary = resolveBinary(tool, process.env.PATH);
   const learnedStore = opened.available && !opened.catalog.getTool(tool) ? openUserStore({ create: false }) : undefined;
-  const query = opened.available ? opened.catalog.getToolQuery(tool) ?? learnedStore?.getLearnedTool(tool)?.query : undefined;
+  const query = opened.available ? (opened.catalog.getToolQuery(tool) ?? learnedStore?.getLearnedTool(tool)?.query) : undefined;
   learnedStore?.close();
   // Never a folder: the data folder exists in an installed BioPilot, and a computation finishing after its
   // folder was removed (tests, uninstall) must not bring it back.

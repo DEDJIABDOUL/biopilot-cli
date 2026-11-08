@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`resize recovery restores input and suggestions after becoming too narrow: 21 column view 1`] = `"> git st"`;
 

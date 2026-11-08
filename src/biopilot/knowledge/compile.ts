@@ -521,7 +521,7 @@ const writeCatalogFile = (tools: ToolSource[], formats: FormatSource[], tempPath
               argument.defaultValue ?? null,
               argument.since ?? null,
               argument.until ?? null,
-              argument.mateOf ? argumentPosition.get(argument.mateOf) ?? null : null,
+              argument.mateOf ? (argumentPosition.get(argument.mateOf) ?? null) : null,
             );
             argument.value?.values.forEach((item, ord) => insertArgumentValue.run(commandId, position, ord, item.value, item.description ?? null));
           });

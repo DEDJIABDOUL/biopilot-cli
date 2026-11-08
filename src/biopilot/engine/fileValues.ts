@@ -143,7 +143,7 @@ export const fileGenerator = (value: ValueSpec, context: FileValueContext, getCa
       const { shell, listing, typedDir } = folders(tokens, generatorContext.currentWorkingDirectory);
       const project = detectProject(shell ?? listing, catalog);
       const { matching, folders: dirs, others } = candidates(project, shell ?? listing, listing, typedDir, value, catalog);
-      const relative = (file: string) => toPosix(path.relative(typedDir ? listing : shell ?? listing, file));
+      const relative = (file: string) => toPosix(path.relative(typedDir ? listing : (shell ?? listing), file));
       const inListing = (file: string) => !relative(file).startsWith("..") && (!typedDir || !relative(file).includes("/"));
       const suggestions: Fig.Suggestion[] = [];
 
@@ -177,8 +177,8 @@ export const fileGenerator = (value: ValueSpec, context: FileValueContext, getCa
           candidate.file === mateFile || candidate.file === reference
             ? MATE_PRIORITY
             : role !== null && candidate.readNumber === role
-            ? PREFERRED_PRIORITY
-            : FORMAT_PRIORITY;
+              ? PREFERRED_PRIORITY
+              : FORMAT_PRIORITY;
         suggestions.push({ name: candidate.name, type: candidate.type, priority });
       }
       return [...suggestions, ...dirs.map((candidate) => ({ name: candidate.name, type: "folder" as const, priority: FOLDER_PRIORITY }))];

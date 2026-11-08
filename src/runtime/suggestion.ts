@@ -221,7 +221,7 @@ const generatorSuggestions = async (
 ): Promise<Suggestion[]> => {
   const generators = generator instanceof Array ? generator : generator ? [generator] : [];
   const tokens = allTokens.map((t) => t.token);
-  const activeToken = allTokens.at(-1)?.complete === false ? allTokens.at(-1)?.token ?? "" : "";
+  const activeToken = allTokens.at(-1)?.complete === false ? (allTokens.at(-1)?.token ?? "") : "";
   signal?.throwIfAborted();
   return (
     await Promise.all(

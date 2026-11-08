@@ -70,7 +70,7 @@ export const schemaValidator = (schemaFile: string): ((data: unknown) => ErrorOb
       const ajv = new Ajv({ allErrors: true, strict: true, strictRequired: false, allowUnionTypes: true });
       validate = ajv.compile(JSON.parse(fs.readFileSync(path.join(SCHEMAS_DIR, schemaFile), "utf-8")));
     }
-    return validate(data) ? [] : validate.errors ?? [];
+    return validate(data) ? [] : (validate.errors ?? []);
   };
 };
 

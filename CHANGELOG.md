@@ -3,6 +3,7 @@
 ## 1.1.4
 
 - **Fix:** on Linux systems older than glibc 2.34 — RHEL, Rocky and Alma Linux 8, Ubuntu 20.04, Debian 10 and 11, common on HPC clusters and compute servers — the Catalog could not open: the SQLite addon came prebuilt for newer systems. It is now built for glibc 2.28, as the README always said, and each release is tested on Rocky Linux 8 and Ubuntu 20.04 before it is published. Nothing changes on newer systems or on macOS.
+- **Fix:** `biopilot search … | head` (or any reader that stops early) no longer ends with an `EPIPE` stack trace.
 
 ## 1.1.3
 

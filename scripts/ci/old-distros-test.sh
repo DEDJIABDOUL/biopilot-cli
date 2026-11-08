@@ -22,7 +22,9 @@ for image in "${images[@]}"; do
     biopilot --version
     biopilot reinit > /dev/null
     biopilot info fastp | head -n 3
-    biopilot search adapter --tool fastp | head -n 3
+    # A reader that stops early (head) must not make BioPilot fail.
+    biopilot search adapter 2> /tmp/search.err | head -n 3
+    if [ -s /tmp/search.err ]; then cat /tmp/search.err >&2; exit 1; fi
     biopilot status > /dev/null
     biopilot learn --list > /dev/null
     test -s "$HOME/.local/share/biopilot/knowledge.db"'

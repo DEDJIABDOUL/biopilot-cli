@@ -24,6 +24,13 @@ import learn from "./biopilot/cli/learn.js";
 import search from "./biopilot/cli/search.js";
 import uninstall from "./biopilot/cli/uninstall.js"; // BIOPILOT: M9 replaces the engine's uninstall
 
+// BIOPILOT: 1.1.4 `biopilot search adapter | head`: once the reader has gone, stop quietly instead of
+// failing on the closed pipe with a stack trace.
+process.stdout.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code === "EPIPE") process.exit(0);
+  throw error;
+});
+
 const program = new Command();
 
 const hiddenOption = (flags: string, description: string) => {

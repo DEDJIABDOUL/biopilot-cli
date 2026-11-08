@@ -18,10 +18,6 @@ formats:
   - name: cram
     description: alignments, reference-compressed
     pattern: '\.cram$'
-  # lot 3: a gVCF is recognised before a plain VCF (the first matching pattern wins)
-  - name: gvcf
-    description: genomic VCF (GATK -ERC GVCF), every site with reference blocks
-    pattern: '\.g\.vcf(\.gz)?$'
   - name: vcf
     description: variant calls, text
     pattern: '\.vcf(\.gz)?$'
@@ -114,35 +110,3 @@ formats:
     description: BLAST nucleotide database, named by its prefix
     kind: prefix
     suffixes: [".nhr", ".nin", ".nsq"]
-  # lot 3: variants, intervals and annotation
-  - name: bedgraph
-    description: coverage or signal per interval
-    pattern: '\.(bedgraph|bdg|bg)(\.gz)?$'
-  - name: genome
-    description: sequence names and lengths, one per line (bedtools genome file, chrom.sizes)
-    pattern: '(\.genome|\.chrom\.sizes|\.sizes)$'
-  - name: gatk-table
-    description: GATK table (base recalibration, pileup summaries, contamination, segments)
-    pattern: '\.table$'
-  - name: f1r2
-    description: Mutect2 F1R2 counts, for LearnReadOrientationModel
-    pattern: '\.f1r2\.tar\.gz$'
-  - name: orientation-model
-    description: read orientation artifact priors, from LearnReadOrientationModel
-    pattern: '(artifact[-_]prior|read[-_]orientation[-_]model)[^/]*\.tar\.gz$'
-  - name: mutect-stats
-    description: Mutect2 calling statistics, for FilterMutectCalls
-    pattern: '\.vcf(\.gz)?\.stats$'
-  - name: vqsr-tranches
-    description: VQSR tranches, from VariantRecalibrator
-    pattern: '\.tranches$'
-  - name: vqsr-recal
-    description: VQSR recalibration table (VCF-like), from VariantRecalibrator
-    pattern: '\.recal(\.vcf)?(\.gz)?$'
-  - name: genomicsdb
-    description: GATK GenomicsDB workspace folder
-    kind: dir
-    marker: callset.json
-  - name: toml
-    description: TOML configuration (vcfanno)
-    pattern: '\.toml$'

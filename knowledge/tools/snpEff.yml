@@ -1,0 +1,468 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# SnpEff 5.4c, written from its recorded helps: knowledge/help/snpEff/5.4.0c/ (LGPL-3.0; attribution in
+# RECORDING.yml next to it) and its documentation (https://pcingola.github.io/SnpEff/), in our own words
+# (spec decision 31). Ranks follow the shared scale of spec §6.4.
+# Without a command, snpEff runs `ann`: `snpEff GRCh38.105 in.vcf`. The generic and database options,
+# shared by several commands, are written once with a YAML anchor (&name) and repeated with an alias.
+name: snpEff
+package: snpeff
+description: annotate variants with their effects on genes and proteins, from a SnpEff genome database
+version: { args: ["-version"], regex: 'SnpEff\s+(\d[\w.]*)' }
+help: ["-h"]
+options:
+  # -- generic
+  - &config
+    names: ["-c", "-config"]
+    description: SnpEff configuration file (snpEff.config)
+    value: { type: file }
+    rank: 50
+  - &configOption
+    names: ["-configOption"]
+    description: override an option of the configuration file, name=value
+    value: { type: string }
+    rank: 30
+  - &dataDir
+    names: ["-dataDir"]
+    description: folder of the databases, instead of data_dir in the configuration
+    value: { type: dir }
+    rank: 60
+  - &download
+    names: ["-download"]
+    description: download the genome database when it is missing (the default)
+    rank: 20
+  - &nodownload
+    names: ["-nodownload"]
+    description: never download a missing genome database
+    rank: 45
+  - &noLog
+    names: ["-noLog"]
+    description: do not send usage statistics to the SnpEff server
+    rank: 55
+  - &quiet
+    names: ["-q", "-quiet"]
+    description: no messages
+    rank: 30
+  - &verbose
+    names: ["-v", "-verbose"]
+    description: more messages
+    rank: 40
+  - &debug
+    names: ["-d", "-debug"]
+    description: debug messages (very verbose)
+    rank: 10
+  - &help
+    names: ["-h", "-help"]
+    description: print the help and exit
+    rank: 10
+  - &version
+    names: ["-version"]
+    description: print the version and exit
+    rank: 10
+  # -- database
+  - names: ["-canon"]
+    description: only canonical transcripts
+    rank: 60
+  - names: ["-canonList"]
+    description: only canonical transcripts, some replaced by those of this gene_id/transcript_id file
+    value: { type: file }
+    rank: 30
+  - names: ["-tag"]
+    description: only transcripts with this tag (repeatable)
+    value: { type: string }
+    repeatable: true
+    rank: 25
+  - names: ["-notag"]
+    description: leave out transcripts with this tag (repeatable)
+    value: { type: string }
+    repeatable: true
+    rank: 25
+  - names: ["-interval"]
+    description: annotate also with custom intervals of a TXT, BED, BigBed, VCF or GFF file (repeatable)
+    value: { type: file, format: [bed, vcf, gff] }
+    repeatable: true
+    rank: 45
+  - names: ["-maxTSL"]
+    description: only transcripts with a Transcript Support Level below this
+    value: { type: int }
+    rank: 30
+  - names: ["-onlyProtein"]
+    description: only protein-coding transcripts
+    rank: 45
+  - names: ["-onlyTr"]
+    description: only the transcripts listed in this file, one ID per line
+    value: { type: file }
+    rank: 35
+  - names: ["-strict"]
+    description: only transcripts whose sequence was validated
+    rank: 30
+  - names: ["-noGenome"]
+    description: load no genome database (annotate with custom files only)
+    rank: 20
+  - names: ["-noExpandIUB"]
+    description: do not expand IUB ambiguity codes in the variants
+    rank: 15
+  - names: ["-interaction"]
+    description: annotate protein interactions (needs the interaction database; the default)
+    rank: 15
+  - names: ["-noInteraction"]
+    description: no protein interaction annotations
+    rank: 20
+  - names: ["-motif"]
+    description: annotate motifs (needs the motif database; the default)
+    rank: 15
+  - names: ["-noMotif"]
+    description: no motif annotations
+    rank: 20
+  - names: ["-nextProt"]
+    description: annotate with NextProt (needs the NextProt database)
+    rank: 20
+  - names: ["-noNextProt"]
+    description: no NextProt annotations
+    rank: 20
+  - names: ["-reg"]
+    description: regulation track to use (repeatable)
+    value: { type: string }
+    repeatable: true
+    rank: 25
+  - names: ["-onlyReg"]
+    description: only regulation tracks
+    rank: 20
+  - names: ["-ss", "-spliceSiteSize"]
+    description: size of splice sites (donor and acceptor), in bases
+    value: { type: int }
+    default: 2
+    rank: 30
+  - names: ["-spliceRegionExonSize"]
+    description: size of the splice region inside exons, in bases
+    value: { type: int }
+    default: 3
+    rank: 20
+  - names: ["-spliceRegionIntronMin"]
+    description: smallest splice region inside introns, in bases
+    value: { type: int }
+    default: 3
+    rank: 20
+  - names: ["-spliceRegionIntronMax"]
+    description: largest splice region inside introns, in bases
+    value: { type: int }
+    default: 8
+    rank: 20
+  - names: ["-ud", "-upDownStreamLen"]
+    description: length of the upstream and downstream regions, in bases
+    value: { type: int }
+    rank: 40
+arguments:
+  - name: genome_version
+    description: name of the genome database, e.g. GRCh38.105 (snpEff databases lists them)
+    value: { type: string }
+  - name: input.vcf
+    value: { type: file, format: [vcf, bed], optional: true }
+commands:
+  - name: ann
+    help: ["ann", "-h"]
+    description: annotate variants with their effects (the default command; eff is the same)
+    options:
+      - names: ["-o"]
+        description: "output format: vcf, gatk, bed or bedAnn"
+        value: { type: enum, values: [vcf, gatk, bed, bedAnn] }
+        default: vcf
+        rank: 60
+      - names: ["-i"]
+        description: "input format: vcf or bed"
+        value: { type: enum, values: [vcf, bed] }
+        default: vcf
+        rank: 50
+      - names: ["-s", "-stats", "-htmlStats"]
+        description: HTML summary to write (snpEff_summary.html by default)
+        value: { type: file, format: html }
+        rank: 65
+      - names: ["-csvStats"]
+        description: CSV summary to write (for MultiQC)
+        value: { type: file }
+        rank: 60
+      - names: ["-noStats"]
+        description: no summary file (faster)
+        rank: 60
+      - names: ["-fi", "-filterInterval"]
+        description: annotate only the variants inside the intervals of this file (repeatable)
+        value: { type: file, format: bed }
+        repeatable: true
+        rank: 50
+      - names: ["-no-downstream"]
+        description: do not report DOWNSTREAM effects
+        rank: 45
+      - names: ["-no-upstream"]
+        description: do not report UPSTREAM effects
+        rank: 45
+      - names: ["-no-intergenic"]
+        description: do not report INTERGENIC effects
+        rank: 45
+      - names: ["-no-intron"]
+        description: do not report INTRON effects
+        rank: 45
+      - names: ["-no-utr"]
+        description: do not report 5' and 3' UTR effects
+        rank: 40
+      - names: ["-no"]
+        description: do not report this effect type (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 35
+      - names: ["-chr"]
+        description: prefix added to chromosome names (TXT output only)
+        value: { type: string }
+        rank: 15
+      - names: ["-classic"]
+        description: old-style annotations instead of Sequence Ontology and HGVS
+        rank: 15
+      - names: ["-fileList"]
+        description: the input file lists the files to annotate
+        rank: 20
+      - names: ["-cancer"]
+        description: compare somatic and germline samples (cancer)
+        rank: 45
+      - names: ["-cancerSamples"]
+        description: two-column file of original and derived samples, for -cancer
+        value: { type: file }
+        rank: 35
+      - names: ["-fastaProt"]
+        description: FASTA of the resulting protein sequences to write
+        value: { type: file, format: fasta }
+        rank: 25
+      - names: ["-fastaProtNoRef"]
+        description: leave the reference proteins out of -fastaProt
+        rank: 15
+      - names: ["-formatEff"]
+        description: old EFF field instead of ANN
+        rank: 20
+      - names: ["-geneId"]
+        description: gene IDs instead of gene names in the VCF
+        rank: 35
+      - names: ["-hgvs"]
+        description: HGVS notation of protein changes (the default)
+        rank: 20
+      - names: ["-noHgvs"]
+        description: no HGVS annotations
+        rank: 30
+      - names: ["-hgvsOld"]
+        description: old HGVS notation
+        rank: 15
+      - names: ["-hgvs1LetterAa"]
+        description: one-letter amino acid codes in HGVS notation
+        rank: 35
+      - names: ["-hgvsTrId"]
+        description: transcript ID in HGVS notation
+        rank: 30
+      - names: ["-noShiftHgvs"]
+        description: do not shift variants to their most 3' position, as HGVS does
+        rank: 15
+      - names: ["-lof"]
+        description: add loss-of-function (LOF) and nonsense-mediated decay (NMD) tags
+        rank: 45
+      - names: ["-noLof"]
+        description: no LOF and NMD tags
+        rank: 30
+      - names: ["-noOut"]
+        description: write no annotated output (debugging)
+        rank: 10
+      - names: ["-oicr"]
+        description: add the OICR tag to the VCF
+        rank: 15
+      - names: ["-sequenceOntology"]
+        description: Sequence Ontology terms (the default)
+        rank: 15
+      - *config
+      - *configOption
+      - *dataDir
+      - *download
+      - *nodownload
+      - *noLog
+      - *quiet
+      - *verbose
+      - *debug
+      - *help
+      - *version
+      - names: ["-canon"]
+        description: only canonical transcripts
+        rank: 60
+      - names: ["-canonList"]
+        description: only canonical transcripts, some replaced by those of this gene_id/transcript_id file
+        value: { type: file }
+        rank: 30
+      - names: ["-tag"]
+        description: only transcripts with this tag (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 25
+      - names: ["-notag"]
+        description: leave out transcripts with this tag (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 25
+      - names: ["-interval"]
+        description: annotate also with custom intervals of a TXT, BED, BigBed, VCF or GFF file (repeatable)
+        value: { type: file, format: [bed, vcf, gff] }
+        repeatable: true
+        rank: 45
+      - names: ["-maxTSL"]
+        description: only transcripts with a Transcript Support Level below this
+        value: { type: int }
+        rank: 30
+      - names: ["-onlyProtein"]
+        description: only protein-coding transcripts
+        rank: 45
+      - names: ["-onlyTr"]
+        description: only the transcripts listed in this file, one ID per line
+        value: { type: file }
+        rank: 35
+      - names: ["-strict"]
+        description: only transcripts whose sequence was validated
+        rank: 30
+      - names: ["-noGenome"]
+        description: load no genome database (annotate with custom files only)
+        rank: 20
+      - names: ["-noExpandIUB"]
+        description: do not expand IUB ambiguity codes in the variants
+        rank: 15
+      - names: ["-interaction"]
+        description: annotate protein interactions (needs the interaction database; the default)
+        rank: 15
+      - names: ["-noInteraction"]
+        description: no protein interaction annotations
+        rank: 20
+      - names: ["-motif"]
+        description: annotate motifs (needs the motif database; the default)
+        rank: 15
+      - names: ["-noMotif"]
+        description: no motif annotations
+        rank: 20
+      - names: ["-nextProt"]
+        description: annotate with NextProt (needs the NextProt database)
+        rank: 20
+      - names: ["-noNextProt"]
+        description: no NextProt annotations
+        rank: 20
+      - names: ["-reg"]
+        description: regulation track to use (repeatable)
+        value: { type: string }
+        repeatable: true
+        rank: 25
+      - names: ["-onlyReg"]
+        description: only regulation tracks
+        rank: 20
+      - names: ["-ss", "-spliceSiteSize"]
+        description: size of splice sites (donor and acceptor), in bases
+        value: { type: int }
+        default: 2
+        rank: 30
+      - names: ["-spliceRegionExonSize"]
+        description: size of the splice region inside exons, in bases
+        value: { type: int }
+        default: 3
+        rank: 20
+      - names: ["-spliceRegionIntronMin"]
+        description: smallest splice region inside introns, in bases
+        value: { type: int }
+        default: 3
+        rank: 20
+      - names: ["-spliceRegionIntronMax"]
+        description: largest splice region inside introns, in bases
+        value: { type: int }
+        default: 8
+        rank: 20
+      - names: ["-ud", "-upDownStreamLen"]
+        description: length of the upstream and downstream regions, in bases
+        value: { type: int }
+        rank: 40
+    arguments:
+      - name: genome_version
+        description: name of the genome database, e.g. GRCh38.105
+        value: { type: string }
+      - name: input.vcf
+        value: { type: file, format: [vcf, bed], optional: true }
+  - name: build
+    help: ["build", "-h"]
+    description: build a genome database from its annotation and sequences (GTF, GFF3, GenBank…)
+    options:
+      - names: ["-gtf22"]
+        description: annotation in GTF 2.2
+        rank: 80
+      - names: ["-gff3"]
+        description: annotation in GFF3
+        rank: 80
+      - names: ["-genbank"]
+        description: annotation in GenBank
+        rank: 70
+      - names: ["-embl"]
+        description: annotation in EMBL
+        rank: 40
+      - names: ["-refseq"]
+        description: UCSC RefSeq table
+        rank: 40
+      - names: ["-knowngenes"]
+        description: UCSC KnownGenes table
+        rank: 30
+      - names: ["-gff2"]
+        description: annotation in GFF2 (obsolete)
+        rank: 15
+      - names: ["-noCheckCds"]
+        description: skip the check of CDS sequences
+        rank: 50
+      - names: ["-noCheckProtein"]
+        description: skip the check of protein sequences
+        rank: 50
+      - names: ["-maxErrorRate"]
+        description: highest error rate allowed by the checks, 0 to 1
+        value: { type: float }
+        default: 0.05
+        rank: 35
+      - names: ["-storeSeqs"]
+        description: store sequences in the database (the default)
+        rank: 15
+      - names: ["-noStoreSeqs"]
+        description: do not store sequences in the database
+        rank: 20
+      - names: ["-onlyReg"]
+        description: build only regulation tracks
+        rank: 15
+      - names: ["-cellType"]
+        description: build regulation tracks for this cell type only
+        value: { type: string }
+        rank: 15
+      - names: ["-regSortedByType"]
+        description: regulation.gff is sorted by regulation type, not by position
+        rank: 10
+      - *config
+      - *configOption
+      - *dataDir
+      - *download
+      - *nodownload
+      - *noLog
+      - *quiet
+      - *verbose
+      - *debug
+      - *help
+      - *version
+    arguments:
+      - name: genome_version
+        description: name of the database to build, as declared in snpEff.config
+        value: { type: string }
+  - name: download
+    help: ["download", "-h"]
+    description: download a genome database
+    options:
+      - *config
+      - *dataDir
+      - *noLog
+      - *quiet
+      - *verbose
+    arguments:
+      - name: genome_version
+        description: name of the database to download, e.g. GRCh38.105
+        value: { type: string }
+  - name: databases
+    help: ["databases", "-h"]
+    description: list the genome databases known to the configuration
+    arguments:
+      - name: format
+        value: { type: enum, values: [galaxy, html], optional: true }

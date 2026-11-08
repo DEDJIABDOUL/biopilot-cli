@@ -7,7 +7,7 @@ Terminal autocompletion for bioinformatics. While you type a command, BioPilot s
 - **Project-aware:** files of the expected format first, R1/R2 mates paired, output names derived from inputs.
 - **Keeps general completion:** git, cd, ls and other commands still complete as usual; bioinformatics tools come first.
 
-Version 1.1. 34 tools are built in: bcftools, blastn, bowtie2, bowtie2-build, busco, bwa, bwa-mem2, chopper, cutadapt, fastp, fastqc, filtlong, flye, hisat2, hisat2-build, medaka, medaka_consensus, medaka_variant, megahit, minimap2, mosdepth, multiqc, NanoPlot, picard, porechop, qualimap, quast, salmon, samtools, seqkit, seqtk, spades.py, STAR and trimmomatic. Any other installed tool can be added with `biopilot learn`.
+Version 1.1. 44 tools are built in: bcftools, bedtools, bgzip, blastn, bowtie2, bowtie2-build, busco, bwa, bwa-mem2, chopper, cutadapt, fastp, fastqc, filtlong, flye, freebayes, gatk, hisat2, hisat2-build, medaka, medaka_consensus, medaka_variant, megahit, minimap2, mosdepth, multiqc, NanoPlot, picard, porechop, qualimap, quast, salmon, samtools, seqkit, seqtk, SnpEff (snpEff), SnpSift, spades.py, STAR, tabix, trimmomatic, vcfanno, VCFtools (vcftools) and VEP (vep). Any other installed tool can be added with `biopilot learn`.
 
 ## Contents
 
@@ -232,7 +232,7 @@ If you installed with npm, run `npm update -g biopilot-cli` instead.
 To install a specific version, set `BIOPILOT_VERSION` for the script, for example:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.1 sh
+curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.2 sh
 ```
 
 ## Uninstall

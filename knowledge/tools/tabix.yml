@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# tabix (htslib 1.21), written from its recorded help: knowledge/help/tabix/1.21/ (MIT; attribution in
+# RECORDING.yml next to it) and the htslib documentation (https://www.htslib.org/doc/tabix.html), in our
+# own words (spec decision 31). Ranks follow the shared scale of spec §6.4.
+name: tabix
+package: htslib
+description: index a bgzip-compressed VCF, BED, GFF or SAM file by position, and query regions of it
+version: { args: ["--version"], regex: 'tabix \(htslib\) (\d[\w.]*)' }
+help: []
+options:
+  - names: ["-p", "--preset"]
+    description: "layout of the file to index: vcf, bed, gff, sam or gaf (sets the columns)"
+    value: { type: enum, values: [vcf, bed, gff, sam, gaf] }
+    rank: 90
+  - names: ["-f", "--force"]
+    description: replace an existing index
+    rank: 70
+  - names: ["-C", "--csi"]
+    description: write a CSI index instead of TBI (needed for chromosomes over 512 Mb)
+    rank: 60
+  - names: ["-h", "--print-header"]
+    description: also print the header lines with the records of a query
+    rank: 70
+  - names: ["-H", "--only-header"]
+    description: print only the header lines
+    rank: 50
+  - names: ["-l", "--list-chroms"]
+    description: list the sequence names in the index
+    rank: 60
+  - names: ["-R", "--regions"]
+    description: query the regions of a BED or region file, using the index
+    value: { type: file, format: bed }
+    rank: 60
+  - names: ["-T", "--targets"]
+    description: like --regions, but reads the whole file instead of jumping with the index
+    value: { type: file, format: bed }
+    rank: 40
+  - names: ["-r", "--reheader"]
+    description: print the file with its header replaced by the content of this file
+    value: { type: file }
+    rank: 30
+  - names: ["-s", "--sequence"]
+    description: column of the sequence name, for a custom layout (ignored with --preset)
+    value: { type: int }
+    default: 1
+    rank: 35
+  - names: ["-b", "--begin"]
+    description: column of the start position, for a custom layout
+    value: { type: int }
+    default: 4
+    rank: 35
+  - names: ["-e", "--end"]
+    description: column of the end position, for a custom layout (the start column when there is none)
+    value: { type: int }
+    default: 5
+    rank: 35
+  - names: ["-0", "--zero-based"]
+    description: positions are 0-based (BED-like) rather than 1-based
+    rank: 35
+  - names: ["-c", "--comment"]
+    description: lines starting with this character are skipped as comments
+    value: { type: string }
+    rank: 30
+  - names: ["-S", "--skip-lines"]
+    description: number of lines to skip at the top of the file
+    value: { type: int }
+    default: 0
+    rank: 30
+  - names: ["-m", "--min-shift"]
+    description: smallest bin of a CSI index, as a power of 2
+    value: { type: int }
+    default: 14
+    rank: 20
+  - names: ["-D"]
+    description: do not download the index of a remote file
+    rank: 20
+  - names: ["--cache"]
+    description: cache size for remote files, in megabytes (0 turns it off)
+    value: { type: int }
+    default: 10
+    rank: 20
+  - names: ["--separate-regions"]
+    description: print the records of each queried region separately
+    rank: 30
+  - names: ["--verbosity"]
+    description: log level
+    value: { type: int }
+    default: 3
+    rank: 10
+  - names: ["-@", "--threads"]
+    description: additional threads
+    value: { type: int }
+    default: 0
+    rank: 50
+arguments:
+  - name: file
+    value: { type: file, format: [vcf, gvcf, bed, gff, gtf, bedgraph, sam] }
+  - name: region
+    variadic: true
+    value: { type: string, optional: true }

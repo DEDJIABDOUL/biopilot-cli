@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# vcfanno 0.3.9, written from its recorded help: knowledge/help/vcfanno/0.3.9/ (MIT; attribution in
+# RECORDING.yml next to it) and its documentation (https://github.com/brentp/vcfanno), in our own words
+# (spec decision 31). Ranks follow the shared scale of spec §6.4.
+name: vcfanno
+description: annotate a VCF with fields of other VCF, BED or BAM files, as set by a TOML configuration
+version: { args: [], regex: 'vcfanno version (\d[\w.]*)' }
+help: ["-h"]
+options:
+  - names: ["-p"]
+    description: processes to use
+    value: { type: int }
+    default: 2
+    rank: 75
+  - names: ["-lua"]
+    description: Lua file of custom functions used as ops in the configuration
+    value: { type: file }
+    rank: 50
+  - names: ["-base-path"]
+    description: folder prepended to the annotation file paths of the configuration
+    value: { type: dir }
+    rank: 50
+  - names: ["-ends"]
+    description: also annotate the start and end of structural variants, not only the whole interval
+    rank: 40
+  - names: ["-permissive-overlap"]
+    description: annotate with an overlapping variant even when its REF and ALT alleles differ
+    rank: 35
+arguments:
+  - name: config.toml
+    value: { type: file, format: toml }
+  - name: input.vcf
+    value: { type: file, format: vcf }

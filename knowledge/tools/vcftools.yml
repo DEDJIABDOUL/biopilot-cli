@@ -1,0 +1,493 @@
+# yaml-language-server: $schema=../../schemas/tool.schema.json
+# VCFtools 0.1.16, written from its manual page (vcftools.1 of the bioconda package) and documentation
+# (https://vcftools.github.io/man_latest.html), in our own words (spec decision 31); VCFtools is LGPL-3.0.
+# Its --help lists no option, so no help command is declared: BioPilot keeps these options and never
+# replaces them by an empty Profile. Ranks follow the shared scale of spec §6.4.
+name: vcftools
+description: filter VCF files by site, sample and genotype, compute population statistics, and convert them
+version: { args: ["--version"], regex: 'VCFtools \((\d[\w.]*)\)' }
+options:
+  - names: ["--vcf"]
+    description: "VCF to read (uncompressed)"
+    value: { type: file, format: vcf }
+    rank: 95
+  - names: ["--gzvcf"]
+    description: "gzip-compressed VCF to read"
+    value: { type: file, format: vcf }
+    rank: 95
+  - names: ["--bcf"]
+    description: "BCF to read"
+    value: { type: file, format: bcf }
+    rank: 80
+  - names: ["--out"]
+    description: "prefix of the output files"
+    value: { type: string }
+    rank: 90
+  - names: ["--stdout"]
+    description: "write to standard output instead of files"
+    rank: 60
+  - names: ["--temp"]
+    description: "folder for temporary files"
+    value: { type: dir }
+    rank: 20
+  - names: ["--recode"]
+    description: "write the kept sites and samples as a new VCF"
+    rank: 85
+  - names: ["--recode-bcf"]
+    description: "write the kept sites and samples as a new BCF"
+    rank: 55
+  - names: ["--recode-INFO-all"]
+    description: "keep every INFO field in the recoded file"
+    rank: 70
+  - names: ["--recode-INFO"]
+    description: "keep this INFO field in the recoded file (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 40
+  - names: ["--chr"]
+    description: "keep only this chromosome (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 70
+  - names: ["--not-chr"]
+    description: "drop this chromosome (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 45
+  - names: ["--from-bp"]
+    description: "keep sites from this position (with a single --chr)"
+    value: { type: int }
+    rank: 45
+  - names: ["--to-bp"]
+    description: "keep sites up to this position (with a single --chr)"
+    value: { type: int }
+    rank: 45
+  - names: ["--positions"]
+    description: "keep the sites listed in this file of chromosome and position"
+    value: { type: file }
+    rank: 55
+  - names: ["--exclude-positions"]
+    description: "drop the sites listed in this file of chromosome and position"
+    value: { type: file }
+    rank: 40
+  - names: ["--positions-overlap"]
+    description: "keep sites whose reference allele overlaps a listed position"
+    value: { type: file }
+    rank: 25
+  - names: ["--exclude-positions-overlap"]
+    description: "drop sites whose reference allele overlaps a listed position"
+    value: { type: file }
+    rank: 20
+  - names: ["--bed"]
+    description: "keep the sites inside the regions of this BED file"
+    value: { type: file, format: bed }
+    rank: 65
+  - names: ["--exclude-bed"]
+    description: "drop the sites inside the regions of this BED file"
+    value: { type: file, format: bed }
+    rank: 50
+  - names: ["--thin"]
+    description: "keep no two sites closer than this many bp"
+    value: { type: int }
+    rank: 45
+  - names: ["--mask"]
+    description: "FASTA-like mask: sites whose mask value exceeds --mask-min are dropped"
+    value: { type: file }
+    rank: 20
+  - names: ["--invert-mask"]
+    description: "as --mask, with the mask inverted"
+    value: { type: file }
+    rank: 15
+  - names: ["--mask-min"]
+    description: "threshold of --mask"
+    value: { type: int }
+    rank: 15
+  - names: ["--snp"]
+    description: "keep the site with this ID (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 40
+  - names: ["--snps"]
+    description: "keep the site IDs listed in this file"
+    value: { type: file }
+    rank: 45
+  - names: ["--exclude"]
+    description: "drop the site IDs listed in this file"
+    value: { type: file }
+    rank: 40
+  - names: ["--keep-only-indels"]
+    description: "keep only indels"
+    rank: 55
+  - names: ["--remove-indels"]
+    description: "drop indels, keeping SNPs and other variants"
+    rank: 65
+  - names: ["--remove-filtered-all"]
+    description: "drop every site whose FILTER is not PASS"
+    rank: 65
+  - names: ["--keep-filtered"]
+    description: "keep sites with this FILTER flag (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 35
+  - names: ["--remove-filtered"]
+    description: "drop sites with this FILTER flag (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 35
+  - names: ["--keep-INFO"]
+    description: "keep sites with this INFO flag (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 25
+  - names: ["--remove-INFO"]
+    description: "drop sites with this INFO flag (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 25
+  - names: ["--maf"]
+    description: "keep sites with a minor allele frequency of at least this"
+    value: { type: float }
+    rank: 75
+  - names: ["--max-maf"]
+    description: "keep sites with a minor allele frequency of at most this"
+    value: { type: float }
+    rank: 50
+  - names: ["--non-ref-af"]
+    description: "keep sites where every non-reference allele has at least this frequency"
+    value: { type: float }
+    rank: 25
+  - names: ["--max-non-ref-af"]
+    description: "keep sites where every non-reference allele has at most this frequency"
+    value: { type: float }
+    rank: 20
+  - names: ["--non-ref-ac"]
+    description: "keep sites where every non-reference allele has at least this count"
+    value: { type: int }
+    rank: 20
+  - names: ["--max-non-ref-ac"]
+    description: "keep sites where every non-reference allele has at most this count"
+    value: { type: int }
+    rank: 20
+  - names: ["--non-ref-af-any"]
+    description: "keep sites where some non-reference allele has at least this frequency"
+    value: { type: float }
+    rank: 20
+  - names: ["--max-non-ref-af-any"]
+    description: "keep sites where some non-reference allele has at most this frequency"
+    value: { type: float }
+    rank: 15
+  - names: ["--non-ref-ac-any"]
+    description: "keep sites where some non-reference allele has at least this count"
+    value: { type: int }
+    rank: 15
+  - names: ["--max-non-ref-ac-any"]
+    description: "keep sites where some non-reference allele has at most this count"
+    value: { type: int }
+    rank: 15
+  - names: ["--mac"]
+    description: "keep sites with a minor allele count of at least this"
+    value: { type: int }
+    rank: 55
+  - names: ["--max-mac"]
+    description: "keep sites with a minor allele count of at most this"
+    value: { type: int }
+    rank: 35
+  - names: ["--min-alleles"]
+    description: "keep sites with at least this many alleles (2 with --max-alleles 2: biallelic)"
+    value: { type: int }
+    rank: 60
+  - names: ["--max-alleles"]
+    description: "keep sites with at most this many alleles"
+    value: { type: int }
+    rank: 60
+  - names: ["--min-meanDP"]
+    description: "keep sites whose mean depth over samples is at least this"
+    value: { type: float }
+    rank: 55
+  - names: ["--max-meanDP"]
+    description: "keep sites whose mean depth over samples is at most this"
+    value: { type: float }
+    rank: 50
+  - names: ["--hwe"]
+    description: "drop sites whose Hardy-Weinberg exact test p-value is below this"
+    value: { type: float }
+    rank: 55
+  - names: ["--max-missing"]
+    description: "keep sites genotyped in at least this fraction of samples (1: no missing data)"
+    value: { type: float }
+    rank: 70
+  - names: ["--max-missing-count"]
+    description: "keep sites missing in at most this many samples"
+    value: { type: int }
+    rank: 40
+  - names: ["--phased"]
+    description: "keep only phased sites and samples"
+    rank: 35
+  - names: ["--minQ"]
+    description: "keep sites whose QUAL is at least this"
+    value: { type: float }
+    rank: 70
+  - names: ["--indv"]
+    description: "keep this sample (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 50
+  - names: ["--remove-indv"]
+    description: "drop this sample (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 45
+  - names: ["--keep"]
+    description: "keep the samples listed in this file, one per line (repeatable)"
+    value: { type: file }
+    repeatable: true
+    rank: 65
+  - names: ["--remove"]
+    description: "drop the samples listed in this file, one per line (repeatable)"
+    value: { type: file }
+    repeatable: true
+    rank: 55
+  - names: ["--max-indv"]
+    description: "keep at most this many samples, chosen at random"
+    value: { type: int }
+    rank: 20
+  - names: ["--remove-filtered-geno-all"]
+    description: "drop genotypes whose FORMAT/FT is not PASS"
+    rank: 30
+  - names: ["--remove-filtered-geno"]
+    description: "drop genotypes with this FT flag"
+    value: { type: string }
+    rank: 20
+  - names: ["--minGQ"]
+    description: "drop genotypes of quality below this"
+    value: { type: float }
+    rank: 55
+  - names: ["--minDP"]
+    description: "drop genotypes of depth below this"
+    value: { type: float }
+    rank: 60
+  - names: ["--maxDP"]
+    description: "drop genotypes of depth above this"
+    value: { type: float }
+    rank: 45
+  - names: ["--freq"]
+    description: "allele frequencies per site (.frq)"
+    rank: 70
+  - names: ["--freq2"]
+    description: "allele frequencies per site, without allele names"
+    rank: 40
+  - names: ["--counts"]
+    description: "allele counts per site (.frq.count)"
+    rank: 55
+  - names: ["--counts2"]
+    description: "allele counts per site, without allele names"
+    rank: 30
+  - names: ["--derived"]
+    description: "frequencies of the derived allele, given AA in INFO (with --freq or --counts)"
+    rank: 20
+  - names: ["--depth"]
+    description: "mean depth per sample (.idepth)"
+    rank: 60
+  - names: ["--site-depth"]
+    description: "total depth per site (.ldepth)"
+    rank: 50
+  - names: ["--site-mean-depth"]
+    description: "mean depth per site (.ldepth.mean)"
+    rank: 55
+  - names: ["--geno-depth"]
+    description: "depth of every genotype (.gdepth)"
+    rank: 30
+  - names: ["--site-quality"]
+    description: "QUAL of each site (.lqual)"
+    rank: 50
+  - names: ["--missing-indv"]
+    description: "missing data per sample (.imiss)"
+    rank: 60
+  - names: ["--missing-site"]
+    description: "missing data per site (.lmiss)"
+    rank: 60
+  - names: ["--het"]
+    description: "heterozygosity and inbreeding coefficient F per sample (.het)"
+    rank: 60
+  - names: ["--hardy"]
+    description: "Hardy-Weinberg p-values per site (.hwe)"
+    rank: 45
+  - names: ["--relatedness"]
+    description: "relatedness of sample pairs, Yang et al. (.relatedness)"
+    rank: 40
+  - names: ["--relatedness2"]
+    description: "relatedness of sample pairs, KING method (.relatedness2)"
+    rank: 45
+  - names: ["--singletons"]
+    description: "singletons and private doubletons (.singletons)"
+    rank: 40
+  - names: ["--SNPdensity"]
+    description: "number and density of SNPs in windows of this size (.snpden)"
+    value: { type: int }
+    rank: 40
+  - names: ["--TsTv"]
+    description: "transition/transversion ratio in windows of this size"
+    value: { type: int }
+    rank: 40
+  - names: ["--TsTv-summary"]
+    description: "transition/transversion summary (.TsTv.summary)"
+    rank: 45
+  - names: ["--TsTv-by-count"]
+    description: "Ts/Tv by alternative allele count"
+    rank: 20
+  - names: ["--TsTv-by-qual"]
+    description: "Ts/Tv by QUAL"
+    rank: 20
+  - names: ["--FILTER-summary"]
+    description: "number of SNPs and Ts/Tv per FILTER"
+    rank: 35
+  - names: ["--site-pi"]
+    description: "nucleotide diversity per site (.sites.pi)"
+    rank: 45
+  - names: ["--window-pi"]
+    description: "nucleotide diversity in windows of this size (.windowed.pi)"
+    value: { type: int }
+    rank: 50
+  - names: ["--window-pi-step"]
+    description: "step between --window-pi windows"
+    value: { type: int }
+    rank: 35
+  - names: ["--weir-fst-pop"]
+    description: "file of the samples of one population, for Weir and Cockerham's Fst (give two or more)"
+    value: { type: file }
+    repeatable: true
+    rank: 55
+  - names: ["--fst-window-size"]
+    description: "Fst in windows of this size"
+    value: { type: int }
+    rank: 40
+  - names: ["--fst-window-step"]
+    description: "step between Fst windows"
+    value: { type: int }
+    rank: 30
+  - names: ["--TajimaD"]
+    description: "Tajima's D in windows of this size (.Tajima.D)"
+    value: { type: int }
+    rank: 45
+  - names: ["--indv-freq-burden"]
+    description: "number of variants per frequency, per sample"
+    rank: 15
+  - names: ["--LROH"]
+    description: "long runs of homozygosity (with a single --chr)"
+    rank: 25
+  - names: ["--hist-indel-len"]
+    description: "histogram of indel lengths"
+    rank: 25
+  - names: ["--kept-sites"]
+    description: "list the kept sites (.kept.sites)"
+    rank: 30
+  - names: ["--removed-sites"]
+    description: "list the dropped sites (.removed.sites)"
+    rank: 30
+  - names: ["--hap-r2"]
+    description: "linkage disequilibrium r2 of phased haplotypes, between pairs of sites"
+    rank: 40
+  - names: ["--geno-r2"]
+    description: "linkage disequilibrium r2 of genotypes, between pairs of sites"
+    rank: 45
+  - names: ["--geno-chisq"]
+    description: "linkage disequilibrium chi-square test of genotypes, for multiallelic sites"
+    rank: 20
+  - names: ["--ld-window"]
+    description: "largest distance between linked sites, in sites"
+    value: { type: int }
+    rank: 35
+  - names: ["--ld-window-bp"]
+    description: "largest distance between linked sites, in bp"
+    value: { type: int }
+    rank: 40
+  - names: ["--ld-window-min"]
+    description: "smallest distance between linked sites, in sites"
+    value: { type: int }
+    rank: 20
+  - names: ["--ld-window-bp-min"]
+    description: "smallest distance between linked sites, in bp"
+    value: { type: int }
+    rank: 20
+  - names: ["--min-r2"]
+    description: "report only pairs with r2 of at least this"
+    value: { type: float }
+    rank: 35
+  - names: ["--mendel"]
+    description: "Mendelian errors of the trios of this PED file"
+    value: { type: file }
+    rank: 30
+  - names: ["--extract-FORMAT-info"]
+    description: "table of this FORMAT field per sample and site"
+    value: { type: string }
+    rank: 45
+  - names: ["--get-INFO"]
+    description: "table of this INFO field per site (repeatable)"
+    value: { type: string }
+    repeatable: true
+    rank: 45
+  - names: ["--012"]
+    description: "genotypes as a 0/1/2 matrix (.012)"
+    rank: 50
+  - names: ["--plink"]
+    description: "PLINK PED and MAP files"
+    rank: 55
+  - names: ["--plink-tped"]
+    description: "PLINK transposed TPED and TFAM files"
+    rank: 40
+  - names: ["--chrom-map"]
+    description: "file mapping chromosome names to integers, for the PLINK output"
+    value: { type: file }
+    rank: 25
+  - names: ["--IMPUTE"]
+    description: "haplotypes in IMPUTE format (phased data)"
+    rank: 25
+  - names: ["--BEAGLE-GL"]
+    description: "genotype likelihoods for BEAGLE (with a single --chr)"
+    rank: 25
+  - names: ["--BEAGLE-PL"]
+    description: "phred-scaled genotype likelihoods for BEAGLE (with a single --chr)"
+    rank: 20
+  - names: ["--ldhat"]
+    description: "phased haplotypes in LDhat format"
+    rank: 15
+  - names: ["--ldhat-geno"]
+    description: "unphased genotypes in LDhat format"
+    rank: 15
+  - names: ["--ldhelmet"]
+    description: "phased haplotypes in LDhelmet format"
+    rank: 15
+  - names: ["--diff"]
+    description: "VCF to compare with"
+    value: { type: file, format: vcf }
+    rank: 40
+  - names: ["--gzdiff"]
+    description: "gzip-compressed VCF to compare with"
+    value: { type: file, format: vcf }
+    rank: 40
+  - names: ["--diff-bcf"]
+    description: "BCF to compare with"
+    value: { type: file, format: bcf }
+    rank: 25
+  - names: ["--diff-site"]
+    description: "sites shared or unique between the two files"
+    rank: 35
+  - names: ["--diff-indv"]
+    description: "samples shared or unique between the two files"
+    rank: 30
+  - names: ["--diff-site-discordance"]
+    description: "genotype discordance per site"
+    rank: 30
+  - names: ["--diff-indv-discordance"]
+    description: "genotype discordance per sample"
+    rank: 30
+  - names: ["--diff-indv-map"]
+    description: "file mapping sample names between the two files"
+    value: { type: file }
+    rank: 15
+  - names: ["--diff-discordance-matrix"]
+    description: "discordance matrix of the shared biallelic sites"
+    rank: 20
+  - names: ["--diff-switch-error"]
+    description: "phasing switch errors between the two files"
+    rank: 20

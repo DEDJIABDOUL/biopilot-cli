@@ -1,0 +1,35 @@
+SnpSift version 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+
+Usage: java -jar SnpSift.jar Annotate [options] database.vcf file.vcf > newFile.vcf
+
+Database options:
+	database.vcf         : Use 'database.vcf' file as annotations database. Note: The VCF file can be bgzipped and tabix-indexed.
+	-dbsnp               : Use DbSnp database.
+	-clinvar             : Use ClinVar database.
+
+Command Options:
+	-a                   : Annotate fields, even if the database has an empty value (annotates using '.' for empty).
+	-exists <tag>        : Annotate whether the variant exists or not in the database (using 'tag' as an INFO field FLAG).
+	-id                  : Only annotate ID field. Default: true
+	-info <list>         : Annotate using a list of info fields (list is a comma separated list of fields). Default: ALL.
+	-name str            : Prepend 'str' to all annotated INFO fields. Default: ''.
+	-maxBlockSize <int>  : Use 'max block size' when creating index ('-sorted' command line option). Default: 16384
+	-noAlt               : Do not use REF and ALT fields when comparing database.vcf entries to file.vcf entries. Default: false
+	-noId                : Do not annotate ID field. Default: false
+	-noInfo              : Do not annotate INFO fields. Default: false
+	-sorted              : VCF database is sorted and uncompressed. Default: false
+	-tabix               : VCF database is tabix-indexed. Default: false
+
+Options common to all SnpSift commands:
+	-c , -config <file>  : Specify config file
+	-d                   : Debug.
+	-db <file>           : Database file name (for commands that require databases).
+	-download            : Download database, if not available locally. Default: true.
+	-noDownload          : Do not download a database, if not available locally.
+	-noLog               : Do not report usage statistics to server.
+	-h                   : Help.
+	-v                   : Verbose.
+
+Note: According the the VCF's database format provided, SnpSift annotate uses different strategies
+	  i) plain VCF       : SnpSift indexes the VCF file (creating an index file *.sidx).
+	 ii) bgzip+tabix     : SnpSift uses tabix's index.

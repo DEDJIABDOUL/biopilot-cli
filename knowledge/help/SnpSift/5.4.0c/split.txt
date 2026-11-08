@@ -1,0 +1,7 @@
+SnpSift version 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+
+Usage: java -jar SnpSift.jar splitChr [-j] [-l <num>] file.vcf [file_2.vcf ... file_N.vcf]
+Options:
+	-j         : Join all files in command line (output = STDOUT).
+	-l <num>   : Split by 'num' lines.
+	Default    : Split by chromosome (one file per chromosome).

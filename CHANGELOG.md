@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2
+
+- **Catalog: 10 more tools** for variants, intervals and annotation — bedtools (its 18 most used subcommands), tabix, bgzip, GATK (16 tools: HaplotypeCaller, GenomicsDBImport, CombineGVCFs, GenotypeGVCFs, BaseRecalibrator, ApplyBQSR, Mutect2, GetPileupSummaries, CalculateContamination, LearnReadOrientationModel, FilterMutectCalls, VariantFiltration, SelectVariants, VariantRecalibrator, ApplyVQSR, LeftAlignAndTrimVariants), freebayes, VCFtools, SnpEff, SnpSift, VEP and vcfanno — written from their recorded helps and documentation. 44 tools in all.
+- **New file formats:** gVCF (`.g.vcf.gz`, offered first to GenotypeGVCFs and CombineGVCFs, and still to the tools reading VCFs), BedGraph, genome files (`.genome`, `chrom.sizes`), GATK tables, Mutect2's F1R2 counts, orientation priors and stats, VQSR tranches and recalibration files, GenomicsDB workspaces, TOML.
+- **Help reader:** GATK's arguments with dashes in their names (it read 61 of HaplotypeCaller's 209), `-a|--addFilter` (SnpSift), freebayes' `-&`, `-$` and `-=`; example command lines and `java -jar` no longer read as options. Profiles of 1.1.1 are read again once.
+
 ## 1.1.1
 
 - **Fix:** once BioPilot had read an installed tool's own help (`biopilot sync`, or in the background), options its help reader missed were no longer suggested: the index and reads of bowtie2 and hisat2 (`-x`, `-1`, `-2`, `-U`, `-S`, the `-gz`/`-bz2` outputs), the filters of `samtools view` (`-q`, `-f`, `-L`…) and of `bcftools view` (`-i`, `-e`, `-f`…), `bwa index -a`, Trimmomatic's `-threads`, `-phred33` and `-trimlog`, and options of seqtk. The help reader now reads options named only on the usage line, bcftools' `-f,   --apply-filters` and `-i/e, --include/--exclude`, a first option on the `Options:` line, and descriptions starting with `...` (samtools). A test checks every Catalog option against its tool's recorded help.

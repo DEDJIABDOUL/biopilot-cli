@@ -1,0 +1,6 @@
+SnpSift version 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+
+Usage: java -jar SnpSift.jar intervals [-x] file_1.bed file_2.bed ... file_N.bed
+Options:
+		-i <file> :	VCF file. Default STDIN
+		-x        :	Exclude VCF entries in intervals

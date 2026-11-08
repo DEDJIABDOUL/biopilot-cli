@@ -198,6 +198,45 @@ describe("--help parser", () => {
     expect(byName(parse("seqtk", "1.5", "sample.txt"), "-s")).toMatchObject({ takesValue: true, description: "RNG seed [11]" });
   });
 
+  test("GATK: names with dashes, the description on the lines below, a value at the margin of the description", () => {
+    const options = parse("gatk", "4.6.2.0", "HaplotypeCaller.txt");
+    expect(byName(options, "--emit-ref-confidence")).toMatchObject({ names: ["--emit-ref-confidence", "-ERC"], takesValue: true });
+    expect(byName(options, "--emit-ref-confidence")?.description).toMatch(/^Mode for emitting reference confidence/);
+    expect(byName(options, "--use-jdk-inflater")).toMatchObject({ names: ["--use-jdk-inflater", "-jdk-inflater"] });
+    expect(options).toHaveLength(209);
+    const names = parse("gatk", "4.6.2.0", "Mutect2.txt").flatMap((option) => option.names);
+    expect(names).not.toContain("-encode"); // `-encode argument.` wraps a description
+    expect(names.filter((name) => /^-\d/.test(name))).toEqual([]); // `-260.`: a default value below its argument
+  });
+
+  test("freebayes: options named by a symbol, `-&`, `-$`, `-=`; the rest of an example command line is not an option", () => {
+    const options = parse("freebayes", "1.3.8", "root.txt");
+    expect(byName(options, "-=")).toMatchObject({ names: ["-=", "--genotype-qualities"], takesValue: false });
+    expect(byName(options, "-&")).toMatchObject({ names: ["-&", "--gvcf-dont-use-chunk"], takesValue: true });
+    expect(byName(options, "-$")).toMatchObject({ names: ["-$", "--read-snp-limit"], takesValue: true });
+    expect(byName(options, "--pooled-continuous")).toMatchObject({ names: ["-K", "--pooled-continuous"] });
+    expect(byName(options, "--min-alternate-fraction")).toMatchObject({ names: ["-F", "--min-alternate-fraction"] });
+  });
+
+  test("SnpSift: `-a|--addFilter <str>`, and `java -jar SnpSift.jar` does not give it Java's -jar", () => {
+    const options = parse("SnpSift", "5.4.0c", "filter.txt");
+    expect(byName(options, "--addFilter")).toMatchObject({ names: ["-a", "--addFilter"], takesValue: true });
+    expect(byName(options, "--inverse")).toMatchObject({ names: ["-n", "--inverse"], takesValue: false });
+    expect(byName(options, "-jar")).toBeUndefined();
+    expect(byName(parse("bcftools", "1.25", "call.txt"), "-G")).toMatchObject({ names: ["-G", "--group-samples"], takesValue: true }); // `FILE|-`
+  });
+
+  test("VEP: `-i | --input_file`", () => {
+    expect(byName(parse("vep", "116.3", "root.txt"), "-i")).toMatchObject({ names: ["-i", "--input_file"] });
+  });
+
+  test("bedtools: -a and -b, -i, named only on the usage line", () => {
+    const intersect = parse("bedtools", "2.31.1", "intersect.txt");
+    expect(byName(intersect, "-a")).toMatchObject({ takesValue: true });
+    expect(byName(intersect, "-b")).toMatchObject({ takesValue: true });
+    expect(byName(parse("bedtools", "2.31.1", "merge.txt"), "-i")).toMatchObject({ takesValue: true });
+  });
+
   test("bowtie2's note: --un, --al, --un-conc and --al-conc have -gz and -bz2 variants", () => {
     const options = parse("bowtie2", "2.5.5", "root.txt");
     for (const name of ["--un-gz", "--un-bz2", "--al-gz", "--al-bz2", "--un-conc-gz", "--un-conc-bz2", "--al-conc-gz", "--al-conc-bz2"])

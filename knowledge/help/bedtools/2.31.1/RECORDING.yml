@@ -1,0 +1,35 @@
+# Raw help recordings of a tool, kept as test data and as the source of
+# knowledge/tools/bedtools.yml. The .txt files are the tool's own text (stdout and
+# stderr together, as printed) and are never edited; they remain under the
+# tool's licence, credited below.
+tool: bedtools
+package: bedtools
+version: "2.31.1"
+build: hf5e1c6e_2
+channel: linux-64
+licence: MIT
+copyright: Aaron Quinlan and contributors (quinlanlab.org), https://github.com/arq5x/bedtools2
+recorded_on: 2026-11-08
+platform: linux-64
+conda_env: biopilot-tools-4
+used_by_catalog: true
+files:
+  root.txt: "bedtools --help"
+  intersect.txt: "bedtools intersect -h"
+  merge.txt: "bedtools merge -h"
+  sort.txt: "bedtools sort -h"
+  subtract.txt: "bedtools subtract -h"
+  closest.txt: "bedtools closest -h"
+  window.txt: "bedtools window -h"
+  coverage.txt: "bedtools coverage -h"
+  genomecov.txt: "bedtools genomecov -h"
+  multicov.txt: "bedtools multicov -h"
+  getfasta.txt: "bedtools getfasta -h"
+  maskfasta.txt: "bedtools maskfasta -h"
+  slop.txt: "bedtools slop -h"
+  flank.txt: "bedtools flank -h"
+  complement.txt: "bedtools complement -h"
+  makewindows.txt: "bedtools makewindows -h"
+  map.txt: "bedtools map -h"
+  bamtobed.txt: "bedtools bamtobed -h"
+  bamtofastq.txt: "bedtools bamtofastq -h"

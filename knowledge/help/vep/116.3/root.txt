@@ -1,0 +1,43 @@
+#----------------------------------#
+# ENSEMBL VARIANT EFFECT PREDICTOR #
+#----------------------------------#
+
+Versions:
+  ensembl              : 116.0d85231
+  ensembl-compara      : 116.4038708
+  ensembl-funcgen      : 116.90049ea
+  ensembl-io           : 116.6afb5dc
+  ensembl-variation    : 116.db7394a
+  ensembl-vep          : 116.3
+
+Help: dev@ensembl.org , helpdesk@ensembl.org
+Twitter: @ensembl
+
+http://www.ensembl.org/info/docs/tools/vep/script/index.html
+
+Usage:
+./vep [--cache|--offline|--database] [arguments]
+
+Basic options
+=============
+
+--help                 Display this message and quit
+
+-i | --input_file      Input file
+-o | --output_file     Output file
+--force_overwrite      Force overwriting of output file
+--species [species]    Species to use [default: "human"]
+
+--everything           Shortcut switch to turn on commonly used options. See web
+                       documentation for details [default: off]
+--fork [num_forks]     Use forking to improve script runtime
+
+For full option documentation see:
+http://www.ensembl.org/info/docs/tools/vep/script/vep_options.html
+
+If you use Ensembl VEP, please cite our most recent publication to help us continue to support development:
+
+McLaren W, Gil L, Hunt SE, Riat HS, Ritchie GR, Thormann A, Flicek P, Cunningham F.
+The Ensembl Variant Effect Predictor.
+Genome Biology Jun 6;17(1):122. (2016)
+https://doi.org/10.1186/s13059-016-0974-4

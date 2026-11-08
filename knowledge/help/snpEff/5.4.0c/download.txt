@@ -1,0 +1,2 @@
+snpEff version SnpEff 5.4c (build 2026-02-23 07:25), by Pablo Cingolani
+Usage: snpEff download [options] {snpeff | genome_version}

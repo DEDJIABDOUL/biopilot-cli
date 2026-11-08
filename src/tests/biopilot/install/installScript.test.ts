@@ -15,11 +15,14 @@ import { tempDir } from "../helpers.js";
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 const script = path.join(repoRoot, "install.sh");
 
-/** The test's release key: install.sh checks the signature with it (BIOPILOT_TEST_PUBLIC_KEY_FILE). */
+/** The test's release key, written into a copy of install.sh in place of BioPilot's (no setting replaces it). */
 const releaseKey = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
 const otherKey = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
 const publicKeyFile = path.join(tempDir(), "release.pub.pem");
 fs.writeFileSync(publicKeyFile, releaseKey.publicKey.export({ type: "spki", format: "pem" }));
+const EMBEDDED_KEY = /RELEASE_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----[\s\S]*?-----END PUBLIC KEY-----"/;
+const testScript = path.join(tempDir(), "install.sh");
+fs.writeFileSync(testScript, fs.readFileSync(script, "utf-8").replace(EMBEDDED_KEY, `RELEASE_PUBLIC_KEY="${fs.readFileSync(publicKeyFile, "utf-8").trim()}"`));
 
 /** Signs a release folder's SHA256SUMS the way the release workflow does (ECDSA P-256, SHA-256, DER). */
 const sign = (dir: string, key = releaseKey.privateKey) =>
@@ -47,10 +50,10 @@ esac
   return dir;
 };
 
-const install = (releaseDir: string, env: Record<string, string> = {}) => {
+const install = (releaseDir: string, env: Record<string, string> = {}, scriptFile = testScript) => {
   const home = tempDir();
   for (const rc of [".bashrc", ".zshrc"]) fs.writeFileSync(path.join(home, rc), "# my own settings\n");
-  const run = spawnSync("sh", [script], {
+  const run = spawnSync("sh", [scriptFile], {
     env: {
       PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
       HOME: home,
@@ -58,7 +61,6 @@ const install = (releaseDir: string, env: Record<string, string> = {}) => {
       BIOPILOT_DOWNLOAD_URL: `file://${releaseDir}`,
       BIOPILOT_TEST_UNAME_S: "Linux",
       BIOPILOT_TEST_UNAME_M: "x86_64",
-      BIOPILOT_TEST_PUBLIC_KEY_FILE: publicKeyFile,
       ...env,
     },
     encoding: "utf-8",
@@ -67,6 +69,13 @@ const install = (releaseDir: string, env: Record<string, string> = {}) => {
 };
 
 describe("install.sh", () => {
+  test("trusts only its own key: a key named in the environment is ignored", () => {
+    const { home, code, stderr } = install(release("biopilot-linux-x64"), { BIOPILOT_TEST_PUBLIC_KEY_FILE: publicKeyFile }, script);
+    expect(code).not.toBe(0);
+    expect(stderr).toMatch(/release signature is not valid/);
+    expect(fs.existsSync(path.join(home, ".local", "bin", "biopilot"))).toBe(false);
+  });
+
   test("installs the binary of the platform into ~/.local/bin, with its resources, and prints the init line", () => {
     const { home, code, stdout, stderr } = install(release("biopilot-linux-x64"));
     expect({ code, stderr }).toEqual({ code: 0, stderr: "" });

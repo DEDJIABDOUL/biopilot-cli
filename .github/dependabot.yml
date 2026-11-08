@@ -9,3 +9,16 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+  # BIOPILOT: security and version updates of the npm dependencies too (the engine's and the build's).
+  - package-ecosystem: "npm"
+    directory: "/"
+    groups:
+      development:
+        dependency-type: "development"
+      production:
+        dependency-type: "production"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5

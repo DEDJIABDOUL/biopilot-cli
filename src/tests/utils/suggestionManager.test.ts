@@ -114,3 +114,31 @@ test("does not consume suggestion bindings when the UI is hidden", async () => {
   expect(manager.update({ name: "tab", sequence: "\t", shift: false, ctrl: false }, false)).toBe(false);
   expect(writes).toEqual([]);
 });
+
+// BIOPILOT: file names and tools' helps come from outside BioPilot; their control characters must not reach
+// the terminal (OSC 52 would write the clipboard, OSC 0 the title).
+test("control characters of a suggestion's name and description are not written to the terminal", async () => {
+  const osc52 = "\x1b]52;c;cGF5bG9hZA==\x07";
+  const terminal = {
+    cwd: process.cwd(),
+    cols: 120,
+    getCommandState: () => ({ commandText: "fastp -i ", cursorTerminated: true, hasOutput: false }),
+    getCursorState: () => ({ cursorX: 0 }),
+  } as unknown as ISTerm;
+  const runtime = Promise.resolve({
+    getSuggestions: async (): Promise<SuggestionBlob> => ({
+      suggestions: [{ name: `reads${osc52}.fq`, allNames: [], icon: "*", priority: 50, description: `a help ${osc52}\x1b]0;title\x07\x9bline` }],
+    }),
+    clearTransientSuggestionState: () => {},
+  });
+  const manager = new SuggestionManager(terminal, Shell.Bash, runtime);
+  await manager.exec();
+  const rendered = manager
+    .render("below", 0)
+    .map((patch) => patch.data)
+    .join("\n");
+  expect(rendered).toContain("reads?]52;c;cGF5bG9hZA==?.fq");
+  expect(rendered).not.toContain("\x1b]");
+  expect(rendered).not.toContain("\x07");
+  expect(rendered).not.toContain("\x9b");
+});

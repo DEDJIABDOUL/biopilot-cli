@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.3
+
+- **Security:** file names and tools' helps are shown with their control characters replaced by `?`. A file name or a help carrying an escape sequence could otherwise send commands to the terminal when BioPilot showed it (writing the clipboard with OSC 52, changing the title, moving the cursor).
+- **Security:** `install.sh` trusts only the release key it carries: the `BIOPILOT_TEST_PUBLIC_KEY_FILE` setting, meant for tests, no longer replaces it.
+- **Security:** a User store moved to a new data directory stays readable by its owner only.
+- **Build:** js-yaml and brace-expansion of the development tools updated (high-severity advisories; they are not part of BioPilot); CI's token is read-only and checkouts keep no credentials; Dependabot also watches the npm dependencies.
+- **Documentation:** for commands outside the Catalog, the completion specs inherited from Inshellisense may run the command being typed to list its values (`git checkout ` runs `git branch`); the guide and the 1.0.0 notes said otherwise.
+
 ## 1.1.2
 
 - **Catalog: 10 more tools** for variants, intervals and annotation — bedtools (its 18 most used subcommands), tabix, bgzip, GATK (16 tools: HaplotypeCaller, GenomicsDBImport, CombineGVCFs, GenotypeGVCFs, BaseRecalibrator, ApplyBQSR, Mutect2, GetPileupSummaries, CalculateContamination, LearnReadOrientationModel, FilterMutectCalls, VariantFiltration, SelectVariants, VariantRecalibrator, ApplyVQSR, LeftAlignAndTrimVariants), freebayes, VCFtools, SnpEff, SnpSift, VEP and vcfanno — written from their recorded helps and documentation. 44 tools in all.
@@ -39,7 +47,7 @@ The first stable release: terminal autocompletion for bioinformatics, fitted to 
 - **Status line** under a bio tool's suggestions: version, its source, environment, warnings; `statusLine = false` turns it off.
 - **One-line install** (`install.sh`, standalone binaries for Linux x64/arm64 and macOS arm64/x64, SHA-256 checked, no admin rights), `biopilot doctor`, `biopilot uninstall`.
 - **Measured:** every target of spec §11 checked in CI (`npm run perf:targets`): session startup +32 ms and memory +2 MB over the original engine, warm suggestions under 1 ms.
-- **Offline and private:** no network, no telemetry; only file names are read; only the Catalog tools' declared help and version commands are run.
+- **Offline and private:** no network, no telemetry; only file names are read; of the Catalog tools, only their declared help and version commands are run (for other commands, the completion specs inherited from Inshellisense may run them to list values, e.g. `git branch` — corrected in 1.1.3).
 
 Built on [Microsoft Inshellisense](https://github.com/microsoft/inshellisense) 0.0.4 (MIT); the engine changes are listed in spec §5.
 

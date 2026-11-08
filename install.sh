@@ -90,11 +90,8 @@ download "$base/SHA256SUMS.sig" "$work/SHA256SUMS.sig" 2> /dev/null || fail "cou
 
 # The checksums must be signed by BioPilot's release key; then the binary must match them.
 command -v openssl > /dev/null 2>&1 || fail "openssl is needed to check the release signature"
-if [ -n "${BIOPILOT_TEST_PUBLIC_KEY_FILE:-}" ]; then
-  cp "$BIOPILOT_TEST_PUBLIC_KEY_FILE" "$work/release.pub.pem"
-else
-  printf '%s\n' "$RELEASE_PUBLIC_KEY" > "$work/release.pub.pem"
-fi
+# Only the key written above is trusted: no setting replaces it (tests sign with a copy of this script).
+printf '%s\n' "$RELEASE_PUBLIC_KEY" > "$work/release.pub.pem"
 openssl dgst -sha256 -verify "$work/release.pub.pem" -signature "$work/SHA256SUMS.sig" "$work/SHA256SUMS" > /dev/null 2>&1 ||
   fail "the release signature is not valid: nothing was installed"
 expected=$(awk -v file="$asset" '$2 == file || $2 == "*" file { print $1 }' "$work/SHA256SUMS")

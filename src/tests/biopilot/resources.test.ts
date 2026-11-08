@@ -51,6 +51,16 @@ describe("User store when the data directory moves", () => {
     expect(fs.existsSync(path.join(from, USER_STORE_FILE_NAME))).toBe(false);
   });
 
+  test("stays readable by its owner only, whatever the umask", () => {
+    const from = tempDir();
+    const to = path.join(tempDir(), "biopilot");
+    fs.writeFileSync(path.join(from, USER_STORE_FILE_NAME), "usage", { mode: 0o644 });
+    fs.writeFileSync(path.join(from, `${USER_STORE_FILE_NAME}-wal`), "journal", { mode: 0o644 });
+    moveUserStore(from, to);
+    expect(fs.statSync(path.join(to, USER_STORE_FILE_NAME)).mode & 0o777).toBe(0o600);
+    expect(fs.statSync(path.join(to, `${USER_STORE_FILE_NAME}-wal`)).mode & 0o777).toBe(0o600);
+  });
+
   test("never overwrites a User store already in the new directory", () => {
     const from = tempDir();
     const to = tempDir();

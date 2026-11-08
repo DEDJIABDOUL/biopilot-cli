@@ -6,7 +6,8 @@
 # GCC 11's libstdc++, so the Catalog could not open on RHEL/Rocky 8, Ubuntu 20.04 or Debian 10-11. This
 # rebuilds it from the package's own sources in a manylinux_2_28 container (glibc 2.28, a GCC toolset that
 # links the newer parts of libstdc++ in), with the runner's Node.js, and puts it where `npm run package`
-# takes it. A Node-API addon: one build serves every Node 22.
+# takes it. A Node-API addon: one build serves every Node 22. force_build=1: the package skips the build
+# when it ships a prebuilt addon for the host.
 # Usage: scripts/ci/build-sqlite-addon.sh   (on a Linux runner, after npm ci, before npm run package)
 
 set -euo pipefail
@@ -29,7 +30,7 @@ docker run --rm \
   "$image" bash -euo pipefail -c '
     export PATH=/opt/node/bin:/opt/python/cp312-cp312/bin:$PATH
     rm -rf build
-    node '"${node_gyp/#$node_root//opt/node}"' rebuild --release --nodedir=/opt/node --jobs=max
+    node '"${node_gyp/#$node_root//opt/node}"' rebuild --release --nodedir=/opt/node --jobs=max -- -Dforce_build=1
     chown -R '"$(id -u):$(id -g)"' build'
 
 cp "$addon_dir/build/Release/better_sqlite3.node" "$addon_dir/prebuilds/linux-$arch.node"

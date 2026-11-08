@@ -17,7 +17,7 @@ import { Shell } from "../../../utils/shell.js";
 import { compileRepositoryCatalog, tempDir, writeFakeCondaEnv, writeFakeTool, outsideAnyProject } from "../helpers.js";
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..", "..", "..", "..");
-const recorded = (version: string) => fs.readFileSync(path.join(repoRoot, "knowledge", "help", "fastp", version, "root.txt"), "utf-8");
+const recorded = (version: string, tool = "fastp") => fs.readFileSync(path.join(repoRoot, "knowledge", "help", tool, version, "root.txt"), "utf-8");
 
 type Runtime = typeof import("../../../runtime/runtime.js");
 let runtime: Runtime;
@@ -32,15 +32,15 @@ const fastpEnv = (name: string, version: string, help = recorded(version)) => {
   return env.bin;
 };
 
-/** What `biopilot sync` does, for the fastp found in `bin`. */
-const sync = async (bin: string) => {
+/** What `biopilot sync` does, for the tool (fastp by default) found in `bin`. */
+const sync = async (bin: string, tool = "fastp") => {
   const opened = openCatalog(catalogPath);
   const userStore = openUserStore({ create: true, file: store });
   if (!opened.available || !userStore) throw new Error("test setup");
-  const binary = resolveBinary("fastp", bin);
-  const query = opened.catalog.getToolQuery("fastp");
+  const binary = resolveBinary(tool, bin);
+  const query = opened.catalog.getToolQuery(tool);
   if (!binary || !query) throw new Error("test setup");
-  await computeProfiles("fastp", binary, query, userStore);
+  await computeProfiles(tool, binary, query, userStore);
   userStore.close();
   opened.catalog.close();
 };
@@ -52,11 +52,18 @@ const versionOnly023 = fastpEnv("unsynced-0.23.4", "0.23.4");
 const extraHelp = `${recorded("0.23.4")}      --brand-new-flag                 a flag this release added\n`;
 const withNewFlag = fastpEnv("new-flag", "0.24.0", extraHelp);
 const emptyHelp = fastpEnv("empty-help", "0.25.0", "fastp: no help today\n");
+/** bowtie2 2.5.5, whose index and reads are named only on the usage line of its help (1.1.0 lost them). */
+const bowtie2 = (() => {
+  const env = writeFakeCondaEnv(root, "bowtie2", "bowtie2", "2.5.5");
+  writeFakeTool(env.bin, "bowtie2", { "--help": recorded("2.5.5", "bowtie2"), "--version": "bowtie2-align-s version 2.5.5\n" });
+  return env.bin;
+})();
 
 beforeAll(async () => {
   process.env.BIOPILOT_CATALOG = catalogPath;
   process.env.BIOPILOT_USER_STORE = store;
   for (const bin of [synced023, synced020, withNewFlag, emptyHelp]) await sync(bin);
+  await sync(bowtie2, "bowtie2");
   runtime = await import("../../../runtime/runtime.js");
 });
 
@@ -90,6 +97,11 @@ describe("suggestions follow the active binary", () => {
 
   test("a help that gave no option falls back to the Catalog", async () => {
     expect(await names("fastp --de", emptyHelp)).toContain("--dedup");
+  });
+
+  test("options the help names only on its usage line stay once its Profile is computed (bowtie2's -x, -1, -2)", async () => {
+    const options = await names("bowtie2 -", bowtie2);
+    for (const name of ["-x", "-1", "-2", "-U", "-S", "--un-conc-gz"]) expect(options).toContain(name);
   });
 
   test("a tool missing from the machine keeps the Catalog's options", async () => {

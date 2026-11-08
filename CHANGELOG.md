@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- **Fix:** once BioPilot had read an installed tool's own help (`biopilot sync`, or in the background), options its help reader missed were no longer suggested: the index and reads of bowtie2 and hisat2 (`-x`, `-1`, `-2`, `-U`, `-S`, the `-gz`/`-bz2` outputs), the filters of `samtools view` (`-q`, `-f`, `-L`…) and of `bcftools view` (`-i`, `-e`, `-f`…), `bwa index -a`, Trimmomatic's `-threads`, `-phred33` and `-trimlog`, and options of seqtk. The help reader now reads options named only on the usage line, bcftools' `-f,   --apply-filters` and `-i/e, --include/--exclude`, a first option on the `Options:` line, and descriptions starting with `...` (samtools). A test checks every Catalog option against its tool's recorded help.
+- The Profiles read by 1.1.0 are dropped once, at the first start: they are read again from your tools' helps when next needed, or at once with `biopilot sync`. Learned tools, detected versions and usage are kept.
+
 ## 1.1.0
 
 - **`biopilot learn <tool>`:** imports an installed tool that is not in the Catalog from its own help: its subcommands (one level), its version command and its real options per version. It is then completed like a built-in tool, in the session where it was learned too. `--list`, `--forget <tool>`. BioPilot never runs a tool you merely type.

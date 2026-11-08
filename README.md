@@ -273,6 +273,4 @@ node build/index.js
 
 ## Credits and license
 
-BioPilot CLI is a light fork of [Microsoft Inshellisense](https://github.com/microsoft/inshellisense). The engine (terminal handling, command parsing, rendering) comes from Inshellisense; BioPilot's changes to it are listed in the specification and marked `BIOPILOT:` in the code. BioPilot is not affiliated with or endorsed by Microsoft.
-
 BioPilot CLI is released under the MIT license. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).

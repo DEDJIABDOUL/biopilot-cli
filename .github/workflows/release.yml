@@ -50,9 +50,19 @@ jobs:
           node-version: 22.21.1
 
       - run: npm ci
+      # BIOPILOT: 1.1.4 the better-sqlite3 addon rebuilt for glibc 2.28 (the npm package's needs 2.34).
+      - name: Rebuild the SQLite addon for glibc 2.28
+        if: runner.os == 'Linux'
+        run: scripts/ci/build-sqlite-addon.sh
       - run: npm run build:db
       - run: npm run build
       - run: npm run package
+
+      - name: The binary needs no more than glibc 2.28, and runs on Rocky Linux 8 and Ubuntu 20.04
+        if: runner.os == 'Linux'
+        run: |
+          scripts/ci/check-glibc.sh "pkg/biopilot-${{ matrix.target }}"
+          scripts/ci/old-distros-test.sh "pkg/biopilot-${{ matrix.target }}"
 
       - name: The binary runs and answers from its embedded Catalog
         shell: bash

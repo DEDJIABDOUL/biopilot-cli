@@ -88,9 +88,18 @@ jobs:
           node-version: 22.21.1
 
       - run: npm ci
+      # BIOPILOT: 1.1.4 as in the release: the SQLite addon rebuilt for glibc 2.28, checked on old systems.
+      - name: Rebuild the SQLite addon for glibc 2.28
+        if: runner.os == 'Linux'
+        run: scripts/ci/build-sqlite-addon.sh
       - run: npm run build:db
       - run: npm run build
       - run: npm run package
+      - name: The binary needs no more than glibc 2.28, and runs on Rocky Linux 8 and Ubuntu 20.04
+        if: runner.os == 'Linux'
+        run: |
+          scripts/ci/check-glibc.sh pkg/biopilot-linux-x64
+          scripts/ci/old-distros-test.sh pkg/biopilot-linux-x64
       - run: scripts/ci/install-test.sh
       - run: npm run package:base
       - run: scripts/ci/npm-test.sh  # BIOPILOT: 1.1, npm install -g biopilot-cli

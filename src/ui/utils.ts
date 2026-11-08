@@ -3,6 +3,14 @@
 
 import { resetColor } from "../utils/ansi.js";
 import wrapAnsi from "wrap-ansi";
+
+// BIOPILOT: suggestions show text from outside BioPilot (file names, tools' helps, versions): a control
+// character in it (ESC, BEL, C1) would reach the terminal as a command (OSC 52 clipboard write, title,
+// cursor moves). Each one is shown as a visible "?" instead; a tab or carriage return becomes a space, a line
+// break stays (descriptions wrap on it).
+// eslint-disable-next-line no-control-regex -- control characters are what is replaced
+const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
+export const displayText = (text: string): string => text.replace(/[\t\r]/g, " ").replace(CONTROL, "?");
 import chalk from "chalk";
 import { wcswidth } from "../utils/unicode.js";
 import { getConfig } from "../utils/config.js";

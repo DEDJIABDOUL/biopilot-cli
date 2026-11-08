@@ -3,7 +3,7 @@
 
 import { Suggestion, SuggestionBlob } from "../runtime/model.js";
 import type { ISTerm, ISTermPatch } from "../isterm/pty.js";
-import { renderBox, truncateText, truncateMultilineText } from "./utils.js";
+import { renderBox, truncateText, truncateMultilineText, displayText } from "./utils.js";
 import chalk from "chalk";
 import { Shell } from "../utils/shell.js";
 import log from "../utils/log.js";
@@ -139,18 +139,18 @@ export class SuggestionManager {
 
   private _renderArgumentDescription(description: string | undefined) {
     if (!description) return [];
-    return renderBox([truncateText(description, descriptionWidth - borderWidth)], descriptionWidth);
+    return renderBox([truncateText(displayText(description), descriptionWidth - borderWidth)], descriptionWidth);
   }
 
   private _renderDescription(description: string | undefined) {
     if (!description) return "";
-    return renderBox(truncateMultilineText(description, descriptionWidth - borderWidth, descriptionHeight), descriptionWidth);
+    return renderBox(truncateMultilineText(displayText(description), descriptionWidth - borderWidth, descriptionHeight), descriptionWidth);
   }
 
   private _renderSuggestions(suggestions: Suggestion[], activeSuggestionIdx: number) {
     return renderBox(
       suggestions.map((suggestion, idx) => {
-        const suggestionText = `${suggestion.icon} ${suggestion.name}`;
+        const suggestionText = `${suggestion.icon} ${displayText(suggestion.name)}`;
         const truncatedSuggestion = truncateText(suggestionText, suggestionWidth - 2);
         return idx == activeSuggestionIdx ? chalk.bgHex(getConfig().activeSuggestionBackgroundColor)(truncatedSuggestion) : truncatedSuggestion;
       }),
@@ -223,7 +223,7 @@ export class SuggestionManager {
     // BIOPILOT: M7 the status line, under the box (above it when the list opens upward), when it fits.
     if (this.#statusLine && ui.length < availableRows) {
       const width = suggestionWidth + (descriptionUI.length > 0 ? descriptionWidth : 0);
-      const row = { startX: padding, length: width, data: chalk.dim(truncateText(` ${this.#statusLine}`, width).padEnd(width)) };
+      const row = { startX: padding, length: width, data: chalk.dim(truncateText(` ${displayText(this.#statusLine)}`, width).padEnd(width)) };
       if (direction == "above") ui.unshift(row);
       else ui.push(row);
     }

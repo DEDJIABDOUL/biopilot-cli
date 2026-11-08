@@ -43,7 +43,12 @@ echo "download: $size bytes (budget $MAX_DOWNLOAD_BYTES)"
 clean() { env -i HOME="$home" PATH=/usr/bin:/bin:/usr/sbin:/sbin SHELL=/bin/bash "$@"; }
 
 start=$(date +%s)
-clean BIOPILOT_DOWNLOAD_URL="file://$release" BIOPILOT_TEST_PUBLIC_KEY_FILE="$work/key.pub.pem" sh install.sh
+# install.sh trusts only its embedded key: a copy of it carries the throwaway key instead.
+awk -v keyfile="$work/key.pub.pem" '
+  /^RELEASE_PUBLIC_KEY="/ { skip = 1; key = ""; while ((getline line < keyfile) > 0) key = key (key == "" ? "" : "\n") line; print "RELEASE_PUBLIC_KEY=\"" key "\"" }
+  skip { if ($0 ~ /-----END PUBLIC KEY-----"$/) skip = 0; next }
+  { print }' install.sh > "$work/install.sh"
+clean BIOPILOT_DOWNLOAD_URL="file://$release" sh "$work/install.sh"
 seconds=$(($(date +%s) - start))
 echo "installation: ${seconds} s (budget ${MAX_INSTALL_SECONDS} s)"
 [ "$seconds" -lt "$MAX_INSTALL_SECONDS" ] || { echo "the installation is over budget" >&2; exit 1; }

@@ -40,3 +40,12 @@ describe("truncateText", () => {
     expect(truncateText("美国人美国人", 10)).toBe("美国人美… ");
   });
 });
+
+describe("displayText", () => {
+  test("control characters become ?, tabs and carriage returns spaces, line breaks stay", async () => {
+    const { displayText } = await import("../../ui/utils");
+    expect(displayText("a\x1b]52;c;x\x07b")).toBe("a?]52;c;x?b");
+    expect(displayText("a\tb\rc\nd\x7fe\x9bf\x00g")).toBe("a b c\nd?e?f?g");
+    expect(displayText("--min-MQ  ≥ 30 é")).toBe("--min-MQ  ≥ 30 é");
+  });
+});

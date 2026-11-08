@@ -44,7 +44,9 @@ export const moveUserStore = (fromDir: string, toDir: string): void => {
   for (const suffix of ["-wal", "-shm", "-journal", ""]) {
     const source = path.join(fromDir, USER_STORE_FILE_NAME + suffix);
     if (!fs.existsSync(source)) continue;
-    fs.copyFileSync(source, path.join(toDir, USER_STORE_FILE_NAME + suffix));
+    const target = path.join(toDir, USER_STORE_FILE_NAME + suffix);
+    fs.copyFileSync(source, target);
+    fs.chmodSync(target, 0o600); // the usage history stays private, as when the store was made
     fs.rmSync(source);
   }
 };

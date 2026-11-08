@@ -65,10 +65,10 @@ const valueArg = (value: ValueSpec, name: string, description: string | undefine
   ...((value.type === "file" || value.type === "dir") && value.formats.length > 0
     ? { generators: fileGenerator(value, files, getCatalog) }
     : value.type === "file"
-    ? { template: "filepaths" as const }
-    : value.type === "dir"
-    ? { template: "folders" as const }
-    : {}),
+      ? { template: "filepaths" as const }
+      : value.type === "dir"
+        ? { template: "folders" as const }
+        : {}),
   ...(value.values.length > 0 ? { suggestions: mapLocal(value.values, (v) => ({ name: v.value, description: v.description ?? undefined })) } : {}),
 });
 
@@ -236,12 +236,12 @@ const currentLearnedTools = (now = Date.now()): Map<string, LearnedTool> => {
 /** The binary the shell would run for a Tool, and its version; nothing when it is not installed. */
 const installedFor = (current: Catalog, tool: string, learned?: ToolQuery): { binary: Binary; installed: Installed } | undefined => {
   const binary = resolveBinary(tool, sessionEnvironment().PATH);
-  const query = binary ? learned ?? current.getToolQuery(tool) : undefined;
+  const query = binary ? (learned ?? current.getToolQuery(tool)) : undefined;
   if (!binary || !query) return;
   const store = getUserStore();
   if (versions.get(binary.fingerprint) === undefined) {
     const fromConda = condaMetaVersion(binary, query.package);
-    const probed = fromConda ? undefined : store?.probedVersion(binary.fingerprint) ?? undefined;
+    const probed = fromConda ? undefined : (store?.probedVersion(binary.fingerprint) ?? undefined);
     versions.set(
       binary.fingerprint,
       fromConda ? { version: fromConda, source: "conda-meta" } : probed ? { version: probed, source: "version-command" } : undefined,

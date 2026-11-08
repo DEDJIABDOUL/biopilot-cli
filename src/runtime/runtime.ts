@@ -5,7 +5,7 @@ import figSpecList, {
   diffVersionedCompletions as figVersionedSpeclist,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-} from "@withfig/autocomplete/build/index.js";
+} from "@withfig/autocomplete"; // BIOPILOT: the package now exports its index as "." only
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseCommand, CommandToken } from "./parser.js";

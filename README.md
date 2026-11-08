@@ -15,7 +15,6 @@ Version 1.1. 34 tools are built in: bcftools, blastn, bowtie2, bowtie2-build, bu
 - [Install on Ubuntu and other Linux distributions](#install-on-ubuntu-and-other-linux-distributions)
 - [Install on macOS](#install-on-macos)
 - [Install on Windows (WSL)](#install-on-windows-wsl)
-- [Install with npm](#install-with-npm)
 - [Start BioPilot](#start-biopilot)
 - [Use BioPilot](#use-biopilot)
 - [Stop BioPilot](#stop-biopilot)
@@ -111,22 +110,6 @@ BioPilot runs in the Windows Subsystem for Linux (WSL), which provides a real Li
 3. Close the Ubuntu terminal and open it again. Continue with [Start BioPilot](#start-biopilot).
 
 Windows Terminal, available from the Microsoft Store, gives the best display of the suggestions.
-
-## Install with npm
-
-If you already use Node.js (version 18 or later), you can install BioPilot with npm instead of the script, on Linux, macOS or WSL:
-
-```shell
-npm install -g biopilot-cli
-```
-
-npm installs the same standalone program as the script, for your system. Then make BioPilot start in every new terminal, for bash:
-
-```shell
-biopilot init bash | tail -n 1 >> ~/.bashrc
-```
-
-For zsh, use `init zsh` and `~/.zshrc`; for fish, `init fish` and `~/.config/fish/config.fish`. Open a new terminal and continue with [Start BioPilot](#start-biopilot).
 
 ## Start BioPilot
 
@@ -227,8 +210,6 @@ curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/insta
 
 Then open a new terminal. Your settings and data are kept. If a terminal reports `biopilot resources out of date`, run `biopilot reinit`.
 
-If you installed with npm, run `npm update -g biopilot-cli` instead.
-
 To install a specific version, set `BIOPILOT_VERSION` for the script, for example:
 
 ```shell
@@ -242,8 +223,6 @@ biopilot uninstall
 ```
 
 BioPilot lists everything it will remove and asks for confirmation: the program, its settings, its data, and the start line in your shell's startup file. The rest of your files are not touched. To skip the confirmation, run `biopilot uninstall --yes`.
-
-If you installed with npm, `biopilot uninstall` removes the settings, data and start line; then remove the program itself with `npm uninstall -g biopilot-cli`.
 
 ## Documentation
 

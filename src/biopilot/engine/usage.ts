@@ -6,6 +6,7 @@
 
 import { openUserStore, type UserStore } from "../profile/userStore.js";
 import { getCatalog } from "./catalogAccess.js";
+import { learnedOptionUsage } from "./catalogSpec.js";
 
 /** Spec §8.3: the usage bonus never exceeds +15. */
 export const USAGE_BONUS_CAP = 15;
@@ -31,17 +32,15 @@ export const usageCounts = (tool: string, command: string): Map<string, number> 
 };
 
 /**
- * A learned tool's option: its canonical name is the one the suggestion shows (the help's long name first),
- * its command the subcommand named on the line, if any.
+ * A learned tool's option: counted under the command and canonical name its spec ranks it by, whatever name
+ * the user typed (`-o` for `--output`).
  */
 const recordLearned = (toolName: string, words: readonly string[], optionName: string) => {
-  const learned = getStore(false)?.getLearnedTool(toolName);
-  if (!learned) return;
-  const sub = words.find((word) => !word.startsWith("-"));
-  const command = sub && learned.subcommands.some((s) => s.name === sub) ? sub : "";
-  const known = usageCounts(toolName, command);
-  known.set(optionName, (known.get(optionName) ?? 0) + 1);
-  getStore(true)?.addUsage(toolName, command, optionName);
+  const found = learnedOptionUsage(toolName, words, optionName);
+  if (!found) return;
+  const known = usageCounts(toolName, found.command);
+  known.set(found.canonicalName, (known.get(found.canonicalName) ?? 0) + 1);
+  getStore(true)?.addUsage(toolName, found.command, found.canonicalName);
 };
 
 /**

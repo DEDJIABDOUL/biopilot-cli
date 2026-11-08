@@ -76,16 +76,13 @@ export const runSearch = async (args: readonly string[], io: StatusIO): Promise<
   }
   let results: Result[];
   try {
-    results = opened.catalog
-      .searchOptions(query.join(" "), tool ? 200 : LIMIT)
-      .filter((found) => !tool || found.command.tool === tool)
-      .map(({ command, option }) => ({
-        tool: command.tool,
-        command: command.path,
-        names: [option.canonicalName, ...option.aliases.filter((alias) => alias !== option.canonicalName)],
-        description: option.description,
-        source: "catalog" as const,
-      }));
+    results = opened.catalog.searchOptions(query.join(" "), LIMIT, tool).map(({ command, option }) => ({
+      tool: command.tool,
+      command: command.path,
+      names: [option.canonicalName, ...option.aliases.filter((alias) => alias !== option.canonicalName)],
+      description: option.description,
+      source: "catalog" as const,
+    }));
   } finally {
     opened.catalog.close();
   }

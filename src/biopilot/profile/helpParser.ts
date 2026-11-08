@@ -13,8 +13,10 @@ export type HelpOption = { names: string[]; takesValue: boolean; description: st
 /** An option line: indentation, then a dash and a name character (`-@`, `-5`, `--in1`). */
 const OPTION_LINE = /^(\s*)(--?[A-Za-z0-9@?][^\s]*.*)$/;
 /** An option name, possibly with a value glued on (`--opt=VAL`, `--opt[=VAL]`) or `[s]` in its middle. */
-// A bracket inside a name is a variant (`--region[s]-file`); at its end, the value's type (`-t[int]`, filtlong).
-const NAME = /^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\[[a-z]+\](?=[A-Za-z0-9_.-]))*)(\[?=.*|\[[a-z]+\])?$/;
+// A bracket is a variant (`--region[s]-file`, `--color[s]`), unless it ends the name and names a value's type
+// (`-t[int]`, filtlong).
+const VALUE_TYPE = "(?:int|integer|float|double|long|num|number|str|string|file|path|dir)";
+const NAME = new RegExp(`^(--?[A-Za-z0-9@?](?:[A-Za-z0-9_.@?-]|\\[(?!${VALUE_TYPE}\\]$)[a-z]+\\](?=[A-Za-z0-9_.-]|$))*)(\\[?=.*|\\[${VALUE_TYPE}\\])?$`);
 /** fastp's way to say an option takes a value: `(string [=])`, `(int [=4])` at the end of the description. */
 const CMDLINE_VALUE = /\((?:string|int|long|float|double)(?: \[=[^\]]*\])?\)\s*$/;
 
@@ -96,6 +98,9 @@ export const parseHelp = (text: string): HelpOption[] => {
     if (!barclay && !line) continue;
     const indent = line ? line[1].length : 0;
     const [specText, rest] = barclay ? [barclay[1], barclay[2].trim() || null] : splitLine(line![2]);
+    // Unindented (QUAST): only with a column after the names, so that wrapped prose at the margin
+    // (`--polish-target option.`) is not read as an option.
+    if (!barclay && indent === 0 && rest === null) continue;
     const spec = readSpec(specText);
     if (!spec || rest?.startsWith("...")) continue;
     let inline = rest;

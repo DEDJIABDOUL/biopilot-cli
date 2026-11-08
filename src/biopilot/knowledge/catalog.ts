@@ -143,8 +143,9 @@ export interface Catalog {
   /**
    * Searches options of every tool by the words of their names and descriptions: every word must match,
    * the last one as a prefix. Best matches first. Any text is accepted; nothing to search finds nothing.
+   * `tool`: only that Tool's options.
    */
-  searchOptions(text: string, limit?: number): SearchResult[];
+  searchOptions(text: string, limit?: number, tool?: string): SearchResult[];
   /** Declared file formats, in declaration order. */
   listFormats(): Format[];
   /** Format of a single file, from its name (kind `file` only; first match in declaration order). */
@@ -326,6 +327,9 @@ class SqliteCatalog implements Catalog {
       search: db.prepare<[string, number], { id: number; command_id: number }>(
         "SELECT f.rowid AS id, o.command_id FROM options_fts f JOIN options o ON o.id = f.rowid WHERE options_fts MATCH ? ORDER BY bm25(options_fts), o.id LIMIT ?",
       ),
+      searchInTool: db.prepare<[string, string, number], { id: number; command_id: number }>(
+        "SELECT f.rowid AS id, o.command_id FROM options_fts f JOIN options o ON o.id = f.rowid JOIN commands c ON c.id = o.command_id JOIN tools t ON t.id = c.tool_id WHERE options_fts MATCH ? AND t.name = ? ORDER BY bm25(options_fts), o.id LIMIT ?",
+      ),
       optionById: db.prepare<[number], OptionRow>(`${OPTION_SELECT} WHERE o.id = ?`),
       commandById: db.prepare<[number], { parent_id: number | null; name: string; description: string | null; tool: string }>(
         "SELECT c.parent_id, c.name, c.description, t.name AS tool FROM commands c JOIN tools t ON t.id = c.tool_id WHERE c.id = ?",
@@ -442,14 +446,15 @@ class SqliteCatalog implements Catalog {
     return row ? this.#toOption(row) : undefined;
   }
 
-  searchOptions(text: string, limit = 20): SearchResult[] {
+  searchOptions(text: string, limit = 20, tool?: string): SearchResult[] {
     // Words only (the index tokenises names and descriptions the same way), each quoted so that no
     // character of the user's text can be read as FTS5 query syntax.
     const words = text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
     if (words.length === 0) return [];
     const query = words.map((word, i) => `"${word}"${i === words.length - 1 ? "*" : ""}`).join(" ");
     // A result whose option or command is missing (damaged Catalog) is skipped, never thrown.
-    return this.#statements.search.all(query, limit).flatMap((row) => {
+    const rows = tool === undefined ? this.#statements.search.all(query, limit) : this.#statements.searchInTool.all(query, tool, limit);
+    return rows.flatMap((row) => {
       const command = this.#commandFromId(row.command_id);
       const option = this.#statements.optionById.get(row.id);
       return command && option ? [{ command, option: this.#toOption(option) }] : [];

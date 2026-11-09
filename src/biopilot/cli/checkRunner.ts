@@ -5,9 +5,12 @@
 // before it runs. Exit code 0 without a warning, 1 with at least one, 2 when the line cannot be analysed.
 
 import fs from "node:fs";
-import { checkLine, type CheckContext } from "../check/check.js";
+import { checkLine, type CheckContext, type Installed } from "../check/check.js";
 import { availableCpus } from "../check/cpus.js";
-import { openCatalog } from "../knowledge/catalog.js";
+import { resolveBinary } from "../env/resolver.js";
+import { condaMetaVersion } from "../env/version.js";
+import { openCatalog, type Catalog } from "../knowledge/catalog.js";
+import { openUserStore, versionKey, type UserStore } from "../profile/userStore.js";
 import type { StatusIO } from "./statusRunner.js";
 
 /** Version of the `--json` output contract (schemas/check-output.schema.json). */
@@ -17,6 +20,21 @@ const USAGE = 'usage: biopilot check [--json] "<command line>"\n';
 export const EXIT_NO_WARNING = 0;
 export const EXIT_WARNINGS = 1;
 export const EXIT_NOT_ANALYSED = 2;
+
+/**
+ * What is installed of a Tool, as completion sees it (spec §6.5): the binary the shell would run, its
+ * version from conda-meta or an earlier probe, and its Profiles in the User store. Nothing is run.
+ */
+const installedLookup =
+  (catalog: Catalog, store: UserStore | undefined, env: NodeJS.ProcessEnv) =>
+  (tool: string): Installed | undefined => {
+    const binary = resolveBinary(tool, env.PATH);
+    const query = binary ? catalog.getToolQuery(tool) : undefined;
+    if (!binary || !query) return;
+    const version = condaMetaVersion(binary, query.package) ?? store?.probedVersion(binary.fingerprint) ?? undefined;
+    const key = versionKey(version, binary.fingerprint);
+    return { version, profile: (command) => store?.getProfile(tool, key, command)?.options };
+  };
 
 /** The real file system and CPUs, for a command line typed in `cwd`. */
 export const checkContext = (cwd: string, env: NodeJS.ProcessEnv): CheckContext => ({
@@ -59,11 +77,14 @@ export const runCheck = async (args: readonly string[], io: StatusIO, context?: 
     return EXIT_NOT_ANALYSED;
   }
   let result;
+  const store = context ? undefined : openUserStore({ create: false });
   try {
-    result = checkLine(line, opened.catalog, context ?? checkContext(io.cwd, io.env));
+    const ctx = context ?? { ...checkContext(io.cwd, io.env), installed: installedLookup(opened.catalog, store, io.env) };
+    result = checkLine(line, opened.catalog, ctx);
   } catch {
     result = { ok: false as const, reason: "the line could not be analysed" };
   } finally {
+    store?.close();
     opened.catalog.close();
   }
   if (!result.ok) {

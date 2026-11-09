@@ -32,7 +32,16 @@
         "required": ["rule", "severity", "tool", "command", "subjects", "message"],
         "properties": {
           "rule": {
-            "enum": ["read-pair", "output-is-input", "output-folder-missing", "input-missing", "reference-index", "threads-above-cpus"]
+            "enum": [
+              "read-pair",
+              "output-is-input",
+              "output-folder-missing",
+              "input-missing",
+              "reference-index",
+              "threads-above-cpus",
+              "option-version",
+              "option-deprecated"
+            ]
           },
           "severity": { "enum": ["warning", "info"], "description": "Only warning makes the exit code 1." },
           "tool": { "type": "string" },

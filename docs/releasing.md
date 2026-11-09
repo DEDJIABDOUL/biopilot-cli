@@ -10,13 +10,13 @@ The 1.1 line continues up to **1.1.10** before 1.2.0. Its versions carry new Cat
 
 | Version | Content |
 |---|---|
-| 1.1.5 | Catalog lot 4; contribution files, release policy, Bioconda recipe |
-| 1.1.6 | Catalog lot 5 (the last lot) |
-| 1.1.7 | completion after wrapper commands; README demo |
+| 1.1.5 | Catalog lots 4 and 5 (the last lots); README demo; `biopilot check` and its warnings; contribution files, release policy, Bioconda recipe |
+| 1.1.6 | to be defined (fixes and feedback on 1.1.5 first) |
+| 1.1.7 | completion after wrapper commands |
 | 1.1.8 | native mode (completion without the session) |
 | 1.1.9 | version source `module` (Lmod); Bioconda install documented |
 | 1.1.10 | stabilisation: fixes and feedback from users only, no new feature |
-| **1.2.0** | `biopilot check` and its warnings |
+| **1.2.0** | to be defined |
 
 - **About one version every two weeks**, never less than one week after the previous one.
 - **A fix that cannot wait** (a regression, an installation failure, a security problem, or a suggestion that can make a command run on the wrong file) goes into the next version at once, which is then released early with only that fix.

@@ -12,7 +12,7 @@ Thank you for helping. BioPilot is useful only if it knows the tools you use, so
 | Fix a bug or build a feature | Pick an issue labelled `good first issue` or `help wanted`, say in a comment that you take it, then open a pull request | varies |
 | Report a security problem | **Do not open an issue.** See [SECURITY.md](./SECURITY.md) | — |
 
-Issues labelled `ready-for-agent` or `ready-for-human` are fully specified and can be started. Issues labelled `needs-triage` or `needs-info` are still being discussed: comment there first.
+Issues labelled `ready-for-human` are fully specified, validated by a maintainer, and can be started. Issues labelled `needs-triage` or `needs-info` are still being discussed: comment there first.
 
 ## Set up the development environment
 

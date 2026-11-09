@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Release policy:** about one version every two weeks; the 1.1 line continues up to 1.1.10 (Catalog lots 4 and 5, wrapper commands, native mode, Lmod), then 1.2.0 (`biopilot check`) and Semantic Versioning with one minor release about every four weeks. See [Releasing](./docs/releasing.md).
+- **Release policy:** about one version every two weeks; the 1.1 line continues up to 1.1.10 (1.1.5: Catalog lots 4 and 5, README demo, `biopilot check`; then wrapper commands, native mode, Lmod), then 1.2.0 and Semantic Versioning with one minor release about every four weeks. See [Releasing](./docs/releasing.md).
 - **Contributing:** `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (private reporting), `CITATION.cff`, and a tool request issue template.
 - **Bioconda:** the recipe for `conda install -c bioconda biopilot-cli`, in `recipes/bioconda/`, to be submitted to bioconda-recipes.
 

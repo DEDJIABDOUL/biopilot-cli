@@ -31,6 +31,7 @@
     "perf:catalog": "tsx ./scripts/perf/catalog.ts",
     "perf:targets": "tsx ./scripts/perf/targets.ts",
     "perf:profile": "npm run build && node --cpu-prof --heap-prof --import=tsx ./scripts/perf/run.ts",
+    "demo": "npm run build:db && npm run build && tsx ./scripts/demo/run.ts",
     "debug": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --inspect --import=tsx src/index.ts -V"
   },
   "repository": {

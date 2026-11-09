@@ -12,7 +12,7 @@ help: ["--help"]
 arguments:
   - name: input_reads
     description: long reads to filter (FASTQ, compressed or not); the result goes to standard output
-    value: { type: file, format: fastq }
+    value: { type: file, format: fastq, io: output }
 options:
   - names: ["-t", "--target_bases"]
     description: keep the best reads up to this many bases in total

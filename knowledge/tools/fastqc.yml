@@ -14,17 +14,18 @@ arguments:
     # FastQC also reads fast5 folders (see --fast5); FASTQ is by far the most common input.
     description: read files to check
     variadic: true
-    value: { type: file, format: [fastq, bam, sam] }
+    value: { type: file, format: [fastq, bam, sam], io: input }
 options:
   - names: ["--outdir"]
     description: folder for all reports; it must already exist (by default each report goes next to its input)
-    value: { type: dir }
+    value: { type: dir, io: output }
     rank: 90
   - names: ["-t", "--threads"]
     description: total CPU threads; one file uses at most 4 (capped by the CPUs available)
     value: { type: int }
     default: 4
     rank: 75
+    threads: true
   - names: ["-q", "--quiet"]
     description: print only errors, no progress
     rank: 45

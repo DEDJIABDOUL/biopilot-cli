@@ -14,7 +14,7 @@ options:
   # --- Main options ----------------------------------------------------------
   - names: ["-i", "--input"]
     description: reads to process - a FASTQ or FASTA file, or a folder searched recursively for FASTQ files
-    value: { type: file, format: [fastq, fasta] }
+    value: { type: file, format: [fastq, fasta], io: input }
     rank: 95
   - names: ["-o", "--output"]
     description: file for the trimmed reads, FASTQ or FASTA; printed to standard output when omitted
@@ -51,6 +51,7 @@ options:
     description: number of threads used to align reads against the adapters
     value: { type: int }
     rank: 75
+    threads: true
   # --- Barcode binning -------------------------------------------------------
   - names: ["-b", "--barcode_dir"]
     description: demultiplex - write the reads of each barcode to its own file in this folder (not with --output)

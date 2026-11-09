@@ -14,11 +14,11 @@ arguments:
   - name: contigs
     description: assemblies to assess (FASTA)
     variadic: true
-    value: { type: file, format: fasta }
+    value: { type: file, format: fasta, io: input }
 options:
   - names: [ -o, --output-dir ]
     description: output folder (quast_results/results_<date> by default)
-    value: { type: dir }
+    value: { type: dir, io: output }
     rank: 92
   - names: [ -r ]
     description: reference genome
@@ -37,6 +37,7 @@ options:
     description: threads (a quarter of the CPUs by default)
     value: { type: int }
     rank: 85
+    threads: true
   - names: [ -s, --split-scaffolds ]
     description: also assess the scaffolds split at runs of N
     rank: 30

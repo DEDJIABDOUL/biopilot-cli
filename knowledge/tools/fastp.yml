@@ -15,7 +15,7 @@ options:
   # --- Inputs and outputs -----------------------------------------------------
   - names: ["-i", "--in1"]
     description: FASTQ file of read 1 (or of single-end reads) to clean
-    value: { type: file, format: fastq, read_role: 1 }
+    value: { type: file, format: fastq, read_role: 1, io: input }
     rank: 95
   - names: ["-o", "--out1"]
     description: where to write the cleaned read 1 reads
@@ -113,6 +113,7 @@ options:
     value: { type: int }
     default: 3
     rank: 75
+    threads: true
   - names: ["-z", "--compression"]
     description: gzip level of the outputs, from 1 (fastest) to 9 (smallest)
     value: { type: int, values: ["1", "4", "6", "9"] }

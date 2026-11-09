@@ -68,6 +68,10 @@ _Avoid_: Paired files, pair
 One of the two files of a read pair, identified by its role: R1 or R2.
 _Avoid_: Partner, sibling
 
+**Warning**:
+A finding of `biopilot check` about a command line before it runs: the rule that found it, its severity (warning or info), the options and arguments involved, and a one-line message. Found from file names, file existence and available CPUs only.
+_Avoid_: Error, lint, alert
+
 **Usage**:
 How often the user has accepted each option, counted per canonical name.
 _Avoid_: Stats, history, telemetry

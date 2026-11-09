@@ -14,15 +14,15 @@ platforms: [ nanopore ]
 options:
   - names: [ -i ]
     description: basecalled reads, FASTA or FASTQ (required)
-    value: { type: file, format: [ fastq, fasta ] }
+    value: { type: file, format: [ fastq, fasta ], io: input }
     rank: 97
   - names: [ -d ]
     description: draft assembly to polish, FASTA (required)
-    value: { type: file, format: fasta }
+    value: { type: file, format: fasta, io: input }
     rank: 95
   - names: [ -o ]
     description: output folder
-    value: { type: dir }
+    value: { type: dir, io: output }
     default: medaka
     rank: 90
   - names: [ -m ]
@@ -35,6 +35,7 @@ options:
     value: { type: int }
     default: 1
     rank: 85
+    threads: true
   - names: [ -b ]
     description: "batch size: lower it if memory runs out"
     value: { type: int }

@@ -150,10 +150,13 @@ name: trimmer
 version: { args: ["--version"], regex: 'v(\\S+)' }
 options:
   - names: ["-i", "--in1"]
-    value: { type: file, format: fastq, read_role: 1 }
+    value: { type: file, format: fastq, read_role: 1, io: input }
     rank: 95
   - names: ["-I", "--in2"]
     value: { type: file, format: fastq, read_role: 2, mate_of: "-i" }
+  - names: ["-t", "--threads"]
+    value: { type: int }
+    threads: true
   - names: ["-o", "--out1"]
     value: { type: file, format: fastq, derive: { from: "--in1", suffix: ".trimmed" } }
   - names: ["--index"]

@@ -22,7 +22,7 @@ commands:
     arguments:
       - name: in.fasta
         description: reference to index
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: mem
     help: [ mem ]
     description: align reads with the BWA-MEM algorithm
@@ -32,6 +32,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 90
+        threads: true
       - names: [ -o ]
         description: SAM output file (standard output by default)
         value: { type: file, format: sam }
@@ -174,12 +175,12 @@ commands:
     arguments:
       - name: idxbase
         description: prefix of the bwa-mem2 index of the reference
-        value: { type: file, format: bwa-mem2-index }
+        value: { type: file, format: bwa-mem2-index, io: input }
       - name: in1.fq
         description: reads, or read 1 of the pairs
-        value: { type: file, format: [ fastq, fasta ], read_role: 1 }
+        value: { type: file, format: [ fastq, fasta ], read_role: 1, io: input }
       - name: in2.fq
         description: read 2 of the pairs, for paired-end data
-        value: { type: file, format: [ fastq, fasta ], read_role: 2, mate_of: in1.fq, optional: true }
+        value: { type: file, format: [ fastq, fasta ], read_role: 2, mate_of: in1.fq, optional: true, io: input }
   - name: version
     description: print the version

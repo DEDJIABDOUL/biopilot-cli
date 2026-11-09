@@ -105,6 +105,25 @@ describe("Catalog compiler", () => {
       expect(result.ok).toBe(true);
     });
 
+    test("io on a value that is not a file or folder", () => {
+      expect(errorsOf(tool(`  - names: ["-n"]\n    value: { type: int, io: input }`))).toEqual([
+        expect.objectContaining({ location: "options[1].value.io", message: "io only applies to type file or dir" }),
+      ]);
+    });
+
+    test("a derived output declared as an input", () => {
+      const errors = errorsOf(
+        tool(`  - names: ["-i"]\n    value: { type: file }\n  - names: ["-x"]\n    value: { type: file, io: input, derive: { from: "-i", suffix: ".x" } }`),
+      );
+      expect(errors).toEqual([expect.objectContaining({ location: "options[2].value.io", message: "a derived output cannot be an input" })]);
+    });
+
+    test("threads on an option whose value is not an int", () => {
+      expect(errorsOf(tool(`  - names: ["-t"]\n    value: { type: string }\n    threads: true`))).toEqual([
+        expect.objectContaining({ location: "options[1].threads", message: "threads only applies to a value of type int" }),
+      ]);
+    });
+
     test("option name that is not -x or --long", () => {
       expect(errorsOf(tool(`  - names: ["in1"]`))).toEqual([
         expect.objectContaining({ location: "options[1].names[0]", message: expect.stringContaining("not an option name") }),

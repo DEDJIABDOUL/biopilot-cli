@@ -28,6 +28,6 @@ options:
     rank: 35
 arguments:
   - name: config.toml
-    value: { type: file, format: toml }
+    value: { type: file, format: toml, io: input }
   - name: input.vcf
-    value: { type: file, format: vcf }
+    value: { type: file, format: vcf, io: input }

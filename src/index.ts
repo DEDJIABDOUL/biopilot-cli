@@ -22,6 +22,7 @@ import computeProfile from "./biopilot/cli/computeProfile.js";
 import resetUsage from "./biopilot/cli/resetUsage.js";
 import learn from "./biopilot/cli/learn.js";
 import search from "./biopilot/cli/search.js";
+import check from "./biopilot/cli/check.js";
 import uninstall from "./biopilot/cli/uninstall.js"; // BIOPILOT: M9 replaces the engine's uninstall
 
 // BIOPILOT: 1.1.4 `biopilot search adapter | head`: once the reader has gone, stop quietly instead of
@@ -63,6 +64,7 @@ program.addCommand(sync); // BIOPILOT: M9
 program.addCommand(resetUsage); // BIOPILOT: M9
 program.addCommand(learn); // BIOPILOT: M9
 program.addCommand(search); // BIOPILOT: M9
+program.addCommand(check); // BIOPILOT: 1.1.5 (ticket #109)
 program.addCommand(computeProfile, { hidden: true }); // BIOPILOT: M9, the detached Profile computation
 
 program.parse();

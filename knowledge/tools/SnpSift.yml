@@ -100,9 +100,9 @@ commands:
       - *help
     arguments:
       - name: database.vcf
-        value: { type: file, format: vcf }
+        value: { type: file, format: vcf, io: input }
       - name: file.vcf
-        value: { type: file, format: vcf, optional: true }
+        value: { type: file, format: vcf, optional: true, io: input }
   - name: filter
     help: ["filter", "-h"]
     description: keep the variants for which an expression on their fields is true, e.g. "(QUAL > 30) & (DP > 10)"
@@ -153,7 +153,7 @@ commands:
         description: filter expression, in quotes
         value: { type: string }
       - name: input.vcf
-        value: { type: file, format: vcf, optional: true }
+        value: { type: file, format: vcf, optional: true, io: input }
   - name: extractFields
     help: ["extractFields", "-h"]
     description: write chosen fields of a VCF as a table (CHROM POS ID "ANN[*].GENE" "GEN[0].GT"…)
@@ -168,7 +168,7 @@ commands:
         rank: 55
     arguments:
       - name: file.vcf
-        value: { type: file, format: vcf }
+        value: { type: file, format: vcf, io: input }
       - name: fieldName
         variadic: true
         value: { type: string }
@@ -178,7 +178,7 @@ commands:
     options:
       - names: ["-db"]
         description: dbNSFP database (bgzipped and tabix-indexed)
-        value: { type: file }
+        value: { type: file, io: input }
         rank: 90
       - names: ["-f"]
         description: dbNSFP fields to add, comma-separated
@@ -212,13 +212,13 @@ commands:
       - *help
     arguments:
       - name: file.vcf
-        value: { type: file, format: vcf }
+        value: { type: file, format: vcf, io: input }
   - name: varType
     help: ["varType", "-h"]
     description: add the type of each variant (SNP, MNP, INS, DEL or MIXED) to INFO
     arguments:
       - name: file.vcf
-        value: { type: file, format: vcf }
+        value: { type: file, format: vcf, io: input }
   - name: intervals
     help: ["intervals", "-h"]
     description: keep the variants inside the intervals of BED files
@@ -233,7 +233,7 @@ commands:
     arguments:
       - name: file.bed
         variadic: true
-        value: { type: file, format: bed }
+        value: { type: file, format: bed, io: input }
   - name: split
     help: ["split", "-h"]
     description: split a VCF by chromosome or by number of lines, or join split files
@@ -248,7 +248,7 @@ commands:
     arguments:
       - name: file.vcf
         variadic: true
-        value: { type: file, format: vcf }
+        value: { type: file, format: vcf, io: input }
   - name: caseControl
     help: ["caseControl", "-h"]
     description: count the variants in case and control samples, with p-values
@@ -270,4 +270,4 @@ commands:
         description: one character per sample, + for case, - for control, 0 for neither (or use -tfam)
         value: { type: string, optional: true }
       - name: file.vcf
-        value: { type: file, format: vcf }
+        value: { type: file, format: vcf, io: input }

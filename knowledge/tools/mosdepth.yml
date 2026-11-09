@@ -13,13 +13,14 @@ arguments:
     value: { type: string }
   - name: BAM-or-CRAM
     description: alignments to compute the depth of (indexed)
-    value: { type: file, format: [bam, cram] }
+    value: { type: file, format: [bam, cram], io: input }
 options:
   - names: ["-t", "--threads"]
     description: extra threads for BAM decompression
     value: { type: int }
     default: 0
     rank: 70
+    threads: true
   - names: ["-b", "--by"]
     description: regions to report the depth of, as a BED file or a window size in bases
     value: { type: file, format: bed }

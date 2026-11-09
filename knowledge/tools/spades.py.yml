@@ -12,7 +12,7 @@ help: [ --help ]
 options:
   - names: [ -o ]
     description: output folder (required)
-    value: { type: dir }
+    value: { type: dir, io: output }
     rank: 98
   - names: [ --isolate ]
     description: mode for high-coverage isolate and multi-cell data (recommended there)
@@ -58,7 +58,7 @@ options:
     rank: 10
   - names: [ "-1" ]
     description: forward reads of the pairs
-    value: { type: file, format: [ fastq, fasta ], read_role: 1 }
+    value: { type: file, format: [ fastq, fasta ], read_role: 1, io: input }
     rank: 95
   - names: [ "-2" ]
     description: reverse reads of the pairs
@@ -216,6 +216,7 @@ options:
     value: { type: int }
     default: 16
     rank: 85
+    threads: true
   - names: [ -m, --memory ]
     description: RAM limit in GB; SPAdes stops beyond it
     value: { type: int }

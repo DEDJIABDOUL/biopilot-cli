@@ -26,6 +26,7 @@ options:
     value: { type: int }
     default: 1
     rank: 70
+    threads: true
   - names: ["-f", "--force"]
     description: overwrite an existing output file
     rank: 60
@@ -67,4 +68,4 @@ options:
 arguments:
   - name: file
     variadic: true
-    value: { type: file, format: [vcf, gvcf, bed, gff, gtf, bedgraph, sam, fasta, fastq], optional: true }
+    value: { type: file, format: [vcf, gvcf, bed, gff, gtf, bedgraph, sam, fasta, fastq], optional: true, io: input }

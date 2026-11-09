@@ -14,12 +14,12 @@ arguments:
   - name: analysis_dir
     description: folders (or files) to scan for tool results, e.g. . for the current folder
     variadic: true
-    value: { type: dir }
+    value: { type: dir, io: input }
 options:
   # --- Main options ----------------------------------------------------------
   - names: ["-o", "--outdir"]
     description: folder to write the report into
-    value: { type: dir }
+    value: { type: dir, io: output }
     rank: 90
   - names: ["-n", "--filename"]
     description: name of the report file; stdout prints it to standard output

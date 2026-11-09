@@ -34,13 +34,14 @@ options:
     rank: 85
   - names: ["-o"]
     description: file to write the alignments to (standard output by default)
-    value: { type: file }
+    value: { type: file, io: output }
     rank: 90
   - names: ["-t"]
     description: number of threads
     value: { type: int }
     default: 3
     rank: 82
+    threads: true
   - names: ["-d"]
     description: save the index built from the target to this file, for reuse
     value: { type: file, format: minimap2-index }
@@ -223,8 +224,8 @@ options:
 arguments:
   - name: target.fa
     description: reference sequences, or an index saved with -d
-    value: { type: file, format: [fasta, minimap2-index] }
+    value: { type: file, format: [fasta, minimap2-index], io: input }
   - name: query.fa
     description: reads or sequences to align
     variadic: true
-    value: { type: file, format: fastq, optional: true }
+    value: { type: file, format: fastq, optional: true, io: input }

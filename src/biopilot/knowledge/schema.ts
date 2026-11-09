@@ -6,7 +6,7 @@
  * version equals this one exactly (spec decision 30): Catalog and reader always
  * ship together, so a mismatch means a broken install.
  */
-export const CATALOG_SCHEMA_VERSION = 5;
+export const CATALOG_SCHEMA_VERSION = 6;
 
 export const PLATFORMS = ["illumina", "nanopore"] as const;
 export type Platform = (typeof PLATFORMS)[number];
@@ -20,6 +20,10 @@ export const VALUE_TYPES = ["int", "float", "string", "file", "dir", "enum"] as 
 export type ValueType = (typeof VALUE_TYPES)[number];
 
 /** How a file format is recognised: one file by its name, a reference index by prefix + suffixes, or by a folder + one of its marker files. */
+/** Whether a file or folder value is read or written by the command (`biopilot check`); unknown when absent. */
+export const VALUE_IOS = ["input", "output"] as const;
+export type ValueIo = (typeof VALUE_IOS)[number];
+
 export const FORMAT_KINDS = ["file", "prefix", "dir"] as const;
 export type FormatKind = (typeof FORMAT_KINDS)[number];
 
@@ -73,6 +77,7 @@ CREATE TABLE options (
   value_optional INTEGER NOT NULL,
   value_multiple INTEGER NOT NULL,
   read_role      INTEGER,
+  value_io       TEXT,
   mate_of        INTEGER REFERENCES options(id),
   derive_from    INTEGER REFERENCES options(id),
   derive_suffix  TEXT,
@@ -82,7 +87,8 @@ CREATE TABLE options (
   until_version  TEXT,
   repeatable     INTEGER NOT NULL,
   hidden         INTEGER NOT NULL,
-  deprecated     INTEGER NOT NULL
+  deprecated     INTEGER NOT NULL,
+  threads        INTEGER NOT NULL
 );
 
 CREATE TABLE option_values (
@@ -133,6 +139,7 @@ CREATE TABLE arguments (
   value_optional INTEGER NOT NULL,
   value_multiple INTEGER NOT NULL,
   read_role      INTEGER,
+  value_io       TEXT,
   default_value  TEXT,
   since_version  TEXT,
   until_version  TEXT,

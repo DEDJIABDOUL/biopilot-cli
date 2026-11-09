@@ -13,7 +13,7 @@ options:
   # --- Input (one is required) --------------------------------------------------------
   - names: ["--fastq"]
     description: one or more FASTQ files of reads
-    value: { type: file, format: fastq, multiple: true }
+    value: { type: file, format: fastq, multiple: true, io: input }
     rank: 95
   - names: ["--summary"]
     description: one or more sequencing summary files written by the basecaller
@@ -54,12 +54,13 @@ options:
   # --- General ------------------------------------------------------------------------
   - names: ["-o", "--outdir"]
     description: folder for the plots and the report
-    value: { type: dir }
+    value: { type: dir, io: output }
     rank: 90
   - names: ["-t", "--threads"]
     description: threads allowed
     value: { type: int }
     rank: 75
+    threads: true
   - names: ["-p", "--prefix"]
     description: prefix of the output file names
     value: { type: string }

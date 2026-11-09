@@ -49,7 +49,7 @@ options:
     rank: 5
   - names: [ -o, --out-dir ]
     description: output folder
-    value: { type: dir }
+    value: { type: dir, io: output }
     rank: 95
   - names: [ -g, --genome-size ]
     description: estimated genome size, e.g. 5m or 2.6g (needed with --asm-coverage)
@@ -60,6 +60,7 @@ options:
     value: { type: int }
     default: 1
     rank: 90
+    threads: true
   - names: [ -i, --iterations ]
     description: polishing rounds
     value: { type: int }

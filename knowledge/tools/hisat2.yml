@@ -12,11 +12,11 @@ help: [ --help ]
 options:
   - names: [ -x ]
     description: prefix of the hisat2 index (from hisat2-build)
-    value: { type: file, format: hisat2-index }
+    value: { type: file, format: hisat2-index, io: input }
     rank: 98
   - names: [ "-1" ]
     description: read 1 files of the pairs (comma-separated)
-    value: { type: file, format: [ fastq, fasta ], read_role: 1 }
+    value: { type: file, format: [ fastq, fasta ], read_role: 1, io: input }
     rank: 95
   - names: [ "-2" ]
     description: read 2 files of the pairs, in the order of -1
@@ -32,7 +32,7 @@ options:
     repeatable: true
   - names: [ -S ]
     description: SAM output file (standard output by default)
-    value: { type: file, format: sam }
+    value: { type: file, format: sam, io: output }
     rank: 92
   - names: [ -q ]
     description: reads are FASTQ (default)
@@ -347,6 +347,7 @@ options:
     value: { type: int }
     default: 1
     rank: 90
+    threads: true
   - names: [ --reorder ]
     description: write SAM records in the order of the input reads
     rank: 20

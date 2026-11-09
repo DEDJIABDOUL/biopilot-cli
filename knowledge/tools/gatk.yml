@@ -58,6 +58,7 @@ commands:
     value:
       type: file
       format: [bam, cram]
+      io: input
     repeatable: true
     rank: 95
   - names: [--output, -O]
@@ -65,10 +66,11 @@ commands:
     value:
       type: file
       format: [vcf, gvcf]
+      io: output
     rank: 95
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--emit-ref-confidence, -ERC]
     description: 'reference confidence: GVCF (blocks) or BP_RESOLUTION (every site), for joint genotyping'
@@ -103,6 +105,7 @@ commands:
     value: {type: int}
     default: 4
     rank: 50
+    threads: true
   - names: [--exclude-intervals, -XL]
     description: intervals to leave out, as for --intervals (repeatable)
     value:
@@ -652,15 +655,16 @@ commands:
     value:
       type: file
       format: [bam, cram]
+      io: input
     repeatable: true
     rank: 95
   - names: [--output, -O]
     description: VCF of unfiltered somatic calls (filter it with FilterMutectCalls)
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: output}
     rank: 95
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--normal-sample, -normal]
     description: sample name (SM) of the matched normal (repeatable)
@@ -698,6 +702,7 @@ commands:
     value: {type: int}
     default: 4
     rank: 50
+    threads: true
   - names: [--exclude-intervals, -XL]
     description: intervals to leave out, as for --intervals (repeatable)
     value:
@@ -1192,16 +1197,16 @@ commands:
   options:
   - names: [--genomicsdb-workspace-path]
     description: workspace folder to create
-    value: {type: dir, format: genomicsdb}
+    value: {type: dir, format: genomicsdb, io: output}
     rank: 95
   - names: [--variant, -V]
     description: a GVCF to load (repeatable)
-    value: {type: file, format: gvcf}
+    value: {type: file, format: gvcf, io: input}
     repeatable: true
     rank: 90
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--intervals, -L]
     description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
@@ -1233,6 +1238,7 @@ commands:
     value: {type: int}
     default: 1
     rank: 45
+    threads: true
   - names: [--exclude-intervals, -XL]
     description: intervals to leave out, as for --intervals (repeatable)
     value:
@@ -1569,16 +1575,16 @@ commands:
   options:
   - names: [--output, -O]
     description: combined GVCF to write
-    value: {type: file, format: gvcf}
+    value: {type: file, format: gvcf, io: output}
     rank: 95
   - names: [--variant, -V]
     description: a GVCF to combine (repeatable)
-    value: {type: file, format: gvcf}
+    value: {type: file, format: gvcf, io: input}
     repeatable: true
     rank: 90
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--intervals, -L]
     description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
@@ -1962,15 +1968,15 @@ commands:
   options:
   - names: [--variant, -V]
     description: combined GVCF, or a GenomicsDB workspace as gendb://folder
-    value: {type: file, format: gvcf}
+    value: {type: file, format: gvcf, io: input}
     rank: 95
   - names: [--output, -O]
     description: VCF of joint-called genotypes
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: output}
     rank: 95
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--intervals, -L]
     description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
@@ -2457,20 +2463,21 @@ commands:
     value:
       type: file
       format: [bam, cram]
+      io: input
     repeatable: true
     rank: 95
   - names: [--output, -O]
     description: recalibration table to write
-    value: {type: file, format: gatk-table}
+    value: {type: file, format: gatk-table, io: output}
     rank: 95
   - names: [--known-sites]
     description: VCF of known variants, left out of the model (dbSNP, Mills indels; repeatable)
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: input}
     repeatable: true
     rank: 90
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--intervals, -L]
     description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
@@ -2816,20 +2823,22 @@ commands:
     value:
       type: file
       format: [bam, cram]
+      io: input
     rank: 95
   - names: [--output, -O]
     description: recalibrated BAM or CRAM to write
     value:
       type: file
       format: [bam, cram]
+      io: output
     rank: 95
   - names: [--bqsr-recal-file, -bqsr]
     description: recalibration table from BaseRecalibrator
-    value: {type: file, format: gatk-table}
+    value: {type: file, format: gatk-table, io: input}
     rank: 95
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--intervals, -L]
     description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
@@ -3157,19 +3166,20 @@ commands:
     value:
       type: file
       format: [bam, cram]
+      io: input
     repeatable: true
     rank: 95
   - names: [--output, -O]
     description: pileup table to write
-    value: {type: file, format: gatk-table}
+    value: {type: file, format: gatk-table, io: output}
     rank: 95
   - names: [--variant, -V]
     description: VCF of common biallelic germline sites with allele frequencies (e.g. small_exac_common_3)
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: input}
     rank: 90
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--intervals, -L]
     description: intervals to summarise, usually the same common sites (repeatable)
@@ -3461,11 +3471,11 @@ commands:
   options:
   - names: [--input, -I]
     description: pileup table of the tumour, from GetPileupSummaries
-    value: {type: file, format: gatk-table}
+    value: {type: file, format: gatk-table, io: input}
     rank: 95
   - names: [--output, -O]
     description: contamination table to write
-    value: {type: file, format: gatk-table}
+    value: {type: file, format: gatk-table, io: output}
     rank: 95
   - names: [--matched-normal, -matched]
     description: pileup table of the matched normal
@@ -3562,12 +3572,12 @@ commands:
   options:
   - names: [--input, -I]
     description: F1R2 counts from Mutect2 --f1r2-tar-gz (repeatable, one per scatter)
-    value: {type: file, format: f1r2}
+    value: {type: file, format: f1r2, io: input}
     repeatable: true
     rank: 95
   - names: [--output, -O]
     description: artifact priors to write (.tar.gz), for FilterMutectCalls -ob-priors
-    value: {type: file, format: orientation-model}
+    value: {type: file, format: orientation-model, io: output}
     rank: 95
   - names: [--tmp-dir]
     description: folder for temporary files
@@ -3661,15 +3671,15 @@ commands:
   options:
   - names: [--variant, -V]
     description: unfiltered VCF from Mutect2
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: input}
     rank: 95
   - names: [--output, -O]
     description: filtered VCF to write
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: output}
     rank: 95
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--contamination-table]
     description: contamination table from CalculateContamination (repeatable)
@@ -4061,11 +4071,11 @@ commands:
   options:
   - names: [--variant, -V]
     description: VCF to filter
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: input}
     rank: 95
   - names: [--output, -O]
     description: VCF to write
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: output}
     rank: 95
   - names: [--filter-expression, -filter]
     description: JEXL expression; matching variants get the paired --filter-name, e.g. "QD < 2.0" (repeatable)
@@ -4079,7 +4089,7 @@ commands:
     rank: 90
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--intervals, -L]
     description: 'genomic intervals to process: chr:start-end, or an interval_list, BED or VCF file (repeatable)'
@@ -4459,14 +4469,15 @@ commands:
     value:
       type: file
       format: [vcf, gvcf]
+      io: input
     rank: 95
   - names: [--output, -O]
     description: VCF to write
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: output}
     rank: 95
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--select-type-to-include, -select-type]
     description: keep only this variant type (repeatable)
@@ -4921,16 +4932,16 @@ commands:
   options:
   - names: [--variant, -V]
     description: VCF to recalibrate (repeatable)
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: input}
     repeatable: true
     rank: 95
   - names: [--output, -O]
     description: recalibration table to write
-    value: {type: file, format: vqsr-recal}
+    value: {type: file, format: vqsr-recal, io: output}
     rank: 95
   - names: [--tranches-file]
     description: tranches to write
-    value: {type: file, format: vqsr-tranches}
+    value: {type: file, format: vqsr-tranches, io: output}
     rank: 95
   - names: [--resource]
     description: training resource, name,known=…,training=…,truth=…,prior=…:file.vcf (repeatable)
@@ -4944,7 +4955,7 @@ commands:
     rank: 90
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--mode]
     description: recalibrate SNPs or indels
@@ -5329,23 +5340,23 @@ commands:
   options:
   - names: [--variant, -V]
     description: VCF to filter
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: input}
     rank: 95
   - names: [--output, -O]
     description: filtered VCF to write
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: output}
     rank: 95
   - names: [--recal-file]
     description: recalibration table from VariantRecalibrator
-    value: {type: file, format: vqsr-recal}
+    value: {type: file, format: vqsr-recal, io: input}
     rank: 95
   - names: [--tranches-file]
     description: tranches from VariantRecalibrator
-    value: {type: file, format: vqsr-tranches}
+    value: {type: file, format: vqsr-tranches, io: input}
     rank: 90
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--truth-sensitivity-filter-level, -ts-filter-level]
     description: truth sensitivity to keep, e.g. 99.7 for SNPs, 99.0 for indels
@@ -5674,15 +5685,15 @@ commands:
   options:
   - names: [--variant, -V]
     description: VCF to normalise
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: input}
     rank: 95
   - names: [--output, -O]
     description: VCF to write
-    value: {type: file, format: vcf}
+    value: {type: file, format: vcf, io: output}
     rank: 95
   - names: [--reference, -R]
     description: reference FASTA, with its .fai and .dict
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 90
   - names: [--split-multi-allelics]
     description: split multiallelic sites into biallelic records

@@ -11,10 +11,10 @@ help: ["--help"]
 arguments:
   - name: in1.fastq
     description: reads to trim (read 1 of the pairs for paired-end data); '-' reads standard input
-    value: { type: file, format: [fastq, fasta], read_role: 1 }
+    value: { type: file, format: [fastq, fasta], read_role: 1, io: input }
   - name: in2.fastq
     description: read 2 of the pairs, for paired-end data
-    value: { type: file, format: [fastq, fasta], read_role: 2, mate_of: in1.fastq, optional: true }
+    value: { type: file, format: [fastq, fasta], read_role: 2, mate_of: in1.fastq, optional: true, io: input }
 options:
   # --- Adapters -----------------------------------------------------------------
   - names: ["-a", "--adapter"]
@@ -208,7 +208,7 @@ options:
   # --- Output -----------------------------------------------------------------------
   - names: ["-o", "--output"]
     description: file for the trimmed reads (read 1 when paired), compressed from its extension; standard output by default; {name} splits by adapter
-    value: { type: file, format: [fastq, fasta], read_role: 1 }
+    value: { type: file, format: [fastq, fasta], read_role: 1, io: output }
     rank: 92
   - names: ["-p", "--paired-output"]
     description: file for the trimmed read 2
@@ -222,6 +222,7 @@ options:
     value: { type: int }
     default: 1
     rank: 75
+    threads: true
   - names: ["--interleaved"]
     description: read and write both reads of each pair in one file
     rank: 30

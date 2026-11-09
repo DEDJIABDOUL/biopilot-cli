@@ -100,7 +100,7 @@ commands:
     arguments:
       - name: in.fq
         description: sequences to transform, FASTA or FASTQ
-        value: { type: file, format: [fastq, fasta] }
+        value: { type: file, format: [fastq, fasta], io: input }
   - name: sample
     help: ["sample"]
     description: random subsample of reads, by fraction or count; same seed for both files of a pair
@@ -116,7 +116,7 @@ commands:
     arguments:
       - name: in.fq
         description: sequences to sample
-        value: { type: file, format: [fastq, fasta] }
+        value: { type: file, format: [fastq, fasta], io: input }
       - name: frac-or-number
         description: fraction (below 1) or number of reads to keep
         value: { type: string }
@@ -138,10 +138,10 @@ commands:
     arguments:
       - name: in.fa
         description: sequences to extract from
-        value: { type: file, format: [fasta, fastq] }
+        value: { type: file, format: [fasta, fastq], io: input }
       - name: regions
         description: BED file of regions, or file of sequence names
-        value: { type: file, format: bed }
+        value: { type: file, format: bed, io: input }
   - name: trimfq
     help: ["trimfq"]
     description: trim low-quality ends of reads (Phred algorithm), or a fixed number of bases
@@ -177,7 +177,7 @@ commands:
     arguments:
       - name: in.fq
         description: reads to trim
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
   - name: fqchk
     help: ["fqchk"]
     description: base and quality summary of a FASTQ file, per position
@@ -190,13 +190,13 @@ commands:
     arguments:
       - name: in.fq
         description: reads to check
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
   - name: size
     description: count the sequences and bases of a file
     arguments:
       - name: in.fq
         description: sequences to count
-        value: { type: file, format: [fastq, fasta] }
+        value: { type: file, format: [fastq, fasta], io: input }
   - name: comp
     description: base composition of each sequence (A, C, G, T, CpG, transitions, transversions)
     options:
@@ -210,17 +210,17 @@ commands:
     arguments:
       - name: in.fa
         description: sequences to count
-        value: { type: file, format: [fasta, fastq] }
+        value: { type: file, format: [fasta, fastq], io: input }
   - name: mergepe
     help: ["mergepe"]
     description: interleave the two files of paired reads into one
     arguments:
       - name: in1.fq
         description: read 1 of the pairs
-        value: { type: file, format: fastq, read_role: 1 }
+        value: { type: file, format: fastq, read_role: 1, io: input }
       - name: in2.fq
         description: read 2 of the pairs
-        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq }
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq, io: input }
   - name: split
     help: ["split"]
     description: split a file into several smaller ones
@@ -241,19 +241,19 @@ commands:
         value: { type: string }
       - name: in.fa
         description: sequences to split
-        value: { type: file, format: [fasta, fastq] }
+        value: { type: file, format: [fasta, fastq], io: input }
   - name: dropse
     description: drop unpaired reads from an interleaved file
     arguments:
       - name: in.fq
         description: interleaved reads
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
   - name: rename
     description: rename sequences with a prefix and a running number
     arguments:
       - name: in.fq
         description: sequences to rename
-        value: { type: file, format: [fastq, fasta] }
+        value: { type: file, format: [fastq, fasta], io: input }
       - name: prefix
         description: prefix of the new names
         value: { type: string, optional: true }
@@ -277,7 +277,7 @@ commands:
     arguments:
       - name: in.fa
         description: sequences to cut
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: gap
     help: ["gap"]
     description: locations of gaps (runs of N)
@@ -290,7 +290,7 @@ commands:
     arguments:
       - name: in.fa
         description: sequences to scan
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: gc
     help: ["gc"]
     description: regions of high (or low) GC content
@@ -316,7 +316,7 @@ commands:
     arguments:
       - name: in.fa
         description: sequences to scan
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: hety
     help: ["hety"]
     description: heterozygosity per window
@@ -337,21 +337,21 @@ commands:
     arguments:
       - name: in.fa
         description: sequences with IUPAC heterozygous bases
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: listhet
     help: ["listhet"]
     description: position of each heterozygous (IUPAC) base
     arguments:
       - name: in.fa
         description: sequences to scan
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: randbase
     help: ["randbase"]
     description: replace each heterozygous base by one of its alleles, at random
     arguments:
       - name: in.fa
         description: sequences with IUPAC heterozygous bases
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: mergefa
     help: ["mergefa"]
     description: merge two FASTA files of the same sequences base by base
@@ -376,36 +376,36 @@ commands:
     arguments:
       - name: in1.fa
         description: first sequences
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: in2.fa
         description: second sequences
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: famask
     help: ["famask"]
     description: mask a FASTA with the X positions of another one
     arguments:
       - name: src.fa
         description: sequences to mask
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: mask.fa
         description: same sequences, with X where to mask
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: mutfa
     help: ["mutfa"]
     description: apply point mutations listed in a file
     arguments:
       - name: in.fa
         description: sequences to mutate
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: in.snp
         description: mutations, one per line (chromosome, 1-based position, any, new base)
-        value: { type: file }
+        value: { type: file, io: input }
   - name: hpc
     description: homopolymer-compressed sequences
     arguments:
       - name: in.fq
         description: sequences to compress
-        value: { type: file, format: [fastq, fasta] }
+        value: { type: file, format: [fastq, fasta], io: input }
   - name: telo
     description: find telomere repeats in assemblies or long reads
     options:
@@ -435,4 +435,4 @@ commands:
     arguments:
       - name: in.fq
         description: assembly or long reads
-        value: { type: file, format: [fasta, fastq] }
+        value: { type: file, format: [fasta, fastq], io: input }

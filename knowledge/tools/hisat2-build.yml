@@ -11,7 +11,7 @@ help: ["--help"]
 arguments:
   - name: reference_in
     description: reference FASTA files, comma-separated
-    value: { type: file, format: fasta }
+    value: { type: file, format: fasta, io: input }
   - name: ht2_index_base
     description: prefix of the index files to write (folder and base name)
     value: { type: string }
@@ -20,6 +20,7 @@ options:
     description: threads
     value: { type: int }
     rank: 90
+    threads: true
   - names: ["--ss"]
     description: splice sites, from hisat2_extract_splice_sites.py on a GTF
     value: { type: file }

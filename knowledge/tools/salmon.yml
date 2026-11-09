@@ -34,11 +34,11 @@ commands:
     options:
       - names: ["-t", "--transcripts"]
         description: transcriptome FASTA file(s) to index (decoy sequences, if any, at the end)
-        value: { type: file, format: fasta, multiple: true }
+        value: { type: file, format: fasta, multiple: true, io: input }
         rank: 95
       - names: ["-i", "--index"]
         description: folder to write the index into
-        value: { type: dir, format: salmon-index }
+        value: { type: dir, format: salmon-index, io: output }
         rank: 90
       - names: ["-d", "--decoys"]
         description: file naming the decoy sequences, one per line; they must come last in the FASTA
@@ -49,6 +49,7 @@ commands:
         value: { type: int }
         default: 0
         rank: 75
+        threads: true
       - names: ["-k", "--kmerLen"]
         description: k-mer size, odd and at most 31; smaller values suit short reads
         value: { type: int, values: ["31", "25", "23", "19"] }
@@ -110,14 +111,14 @@ commands:
       # --- Inputs and output ------------------------------------------------
       - names: ["-i", "--index"]
         description: salmon index to map the reads against (reads mode)
-        value: { type: dir, format: salmon-index }
+        value: { type: dir, format: salmon-index, io: input }
         rank: 95
         rules:
           - when: { used: ["--alignments"] }
             boost: -50
       - names: ["-1", "--mates1"]
         description: FASTQ file(s) of read 1, for paired-end reads
-        value: { type: file, format: fastq, multiple: true, read_role: 1 }
+        value: { type: file, format: fastq, multiple: true, read_role: 1, io: input }
         rank: 90
         rules:
           - when: { paired: false }
@@ -145,7 +146,7 @@ commands:
             boost: -60
       - names: ["-o", "--output"]
         description: folder for the results (quant.sf and friends)
-        value: { type: dir, format: salmon-quant }
+        value: { type: dir, format: salmon-quant, io: output }
         rank: 90
       - names: ["-l", "--libType"]
         description: library type, orientation and strandedness; A detects it
@@ -166,6 +167,7 @@ commands:
         value: { type: int }
         default: 0
         rank: 75
+        threads: true
       - names: ["-g", "--geneMap"]
         description: transcript-to-gene table (GTF, GFF or two-column TSV, possibly compressed); adds gene-level estimates
         value: { type: file, format: [gtf, gff] }
@@ -268,6 +270,7 @@ commands:
         rules:
           - when: { used: ["--writeBam"] }
             boost: 25
+        threads: true
       - names: ["--writeRad"]
         description: also save the per-fragment mappings as a RAD file, re-quantifiable later with --rad
         value: { type: file, format: rad }
@@ -632,11 +635,11 @@ commands:
     options:
       - names: ["--quants"]
         description: result folders of salmon quant, one per sample
-        value: { type: dir, format: salmon-quant, multiple: true }
+        value: { type: dir, format: salmon-quant, multiple: true, io: input }
         rank: 95
       - names: ["-o", "--output"]
         description: file for the merged table
-        value: { type: file }
+        value: { type: file, io: output }
         rank: 90
       - names: ["-c", "--column"]
         description: quant.sf column to merge
@@ -678,11 +681,11 @@ commands:
     options:
       - names: ["-i", "--index"]
         description: salmon index to map against
-        value: { type: dir, format: salmon-index }
+        value: { type: dir, format: salmon-index, io: input }
         rank: 95
       - names: ["-r", "--reads"]
         description: uncompressed single-end FASTQ file to map
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
         rank: 90
       - names: ["--sparseSeeds"]
         description: seed with sparse fixed-size k-mers instead of unitig-bounded matches

@@ -22,7 +22,7 @@ commands:
     options:
       - names: [ -bam ]
         description: alignments, BAM
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
         rank: 95
       - names: [ -gff, --feature-file ]
         description: regions of interest (GFF, GTF or BED), e.g. the exome targets
@@ -35,6 +35,7 @@ commands:
         description: threads
         value: { type: int }
         rank: 70
+        threads: true
       - names: [ -outdir ]
         description: folder for the HTML report and the raw data
         value: { type: dir }
@@ -121,11 +122,11 @@ commands:
     options:
       - names: [ -bam ]
         description: alignments, BAM
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
         rank: 95
       - names: [ -gtf ]
         description: annotations, Ensembl GTF
-        value: { type: file, format: [ gtf, gff, bed ] }
+        value: { type: file, format: [ gtf, gff, bed ], io: input }
         rank: 90
       - names: [ -outdir ]
         description: folder for the HTML report and the raw data
@@ -186,7 +187,7 @@ commands:
     options:
       - names: [ -d, --data ]
         description: "table, tab-separated: sample, bamqc result folder (or BAM with -r), optional group"
-        value: { type: file }
+        value: { type: file, io: input }
         rank: 95
       - names: [ -r, --run-bamqc ]
         description: "the table lists BAM files: run bamqc on each first"
@@ -247,7 +248,7 @@ commands:
     options:
       - names: [ -d, --data ]
         description: "table, tab-separated: sample, condition, counts file, counts column"
-        value: { type: file }
+        value: { type: file, io: input }
         rank: 95
       - names: [ -c, --compare ]
         description: compare the conditions (two at most)
@@ -365,11 +366,11 @@ commands:
     options:
       - names: [ -bam ]
         description: alignments, BAM
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
         rank: 95
       - names: [ -gtf ]
         description: "features: GTF (counted by attribute), GFF or BED (by name)"
-        value: { type: file, format: [ gtf, gff, bed ] }
+        value: { type: file, format: [ gtf, gff, bed ], io: input }
         rank: 90
       - names: [ -out ]
         description: file for the counts

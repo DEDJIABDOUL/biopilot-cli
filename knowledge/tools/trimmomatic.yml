@@ -20,6 +20,7 @@ commands:
         description: worker threads; 0 detects them
         value: { type: int }
         rank: 80
+        threads: true
       - names: ["-phred33"]
         description: qualities are Phred+33 (modern Illumina data)
         rank: 65
@@ -51,22 +52,22 @@ commands:
     arguments:
       - name: in1.fq
         description: read 1 of the pairs
-        value: { type: file, format: fastq, read_role: 1 }
+        value: { type: file, format: fastq, read_role: 1, io: input }
       - name: in2.fq
         description: read 2 of the pairs
-        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq }
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq, io: input }
       - name: out1P.fq
         description: read 1 of pairs kept whole
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: output }
       - name: out1U.fq
         description: read 1 whose mate was dropped
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: output }
       - name: out2P.fq
         description: read 2 of pairs kept whole
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: output }
       - name: out2U.fq
         description: read 2 whose mate was dropped
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: output }
       - name: steps
         description: trimming steps, applied in the order given
         variadic: true
@@ -95,6 +96,7 @@ commands:
         description: worker threads; 0 detects them
         value: { type: int }
         rank: 80
+        threads: true
       - names: ["-phred33"]
         description: qualities are Phred+33 (modern Illumina data)
         rank: 65
@@ -115,10 +117,10 @@ commands:
     arguments:
       - name: in.fq
         description: reads to trim
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
       - name: out.fq
         description: trimmed reads
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: output }
       - name: steps
         description: trimming steps, applied in the order given
         variadic: true

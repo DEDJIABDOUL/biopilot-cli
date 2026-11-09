@@ -34,6 +34,7 @@ options:
     value: { type: int }
     default: 1
     rank: 90
+    threads: true
   - names: [ --runDirPerm ]
     description: permissions of the folders STAR creates
     value: { type: enum, values: [ User_RWX, All_RWX ] }
@@ -177,7 +178,7 @@ options:
     rank: 5
   - names: [ --readFilesIn ]
     description: "read files: read 1, then read 2 for pairs; comma-separated for several lanes"
-    value: { type: file, format: [ fastq, fasta ], multiple: true }
+    value: { type: file, format: [ fastq, fasta ], multiple: true, io: input }
     rank: 95
   - names: [ --readFilesManifest ]
     description: tab-separated manifest of the read files (read 1, read 2 or -, read group)
@@ -417,6 +418,7 @@ options:
     value: { type: int }
     default: 0
     rank: 25
+    threads: true
   - names: [ --outBAMsortingBinsN ]
     description: genome bins for sorting
     value: { type: int }

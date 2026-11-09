@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **`biopilot check "<command line>"`:** warnings about a command before it runs, from file names, file existence and the CPUs available: read pairs of different samples or swapped, an output overwriting an input, an output folder that does not exist, a missing input, an incomplete or missing Reference index, more threads than the CPUs of the machine, the cgroup or the SLURM job. Exit code 0, 1 or 2; `--json` in a versioned format with its JSON Schema.
+- **Catalog:** the main inputs and outputs of every tool are marked (`io`), and thread-count options too (`threads`). Catalog schema version 6.
+
 ## 1.1.4
 
 - **Fix:** on Linux systems older than glibc 2.34 — RHEL, Rocky and Alma Linux 8, Ubuntu 20.04, Debian 10 and 11, common on HPC clusters and compute servers — the Catalog could not open: the SQLite addon came prebuilt for newer systems. It is now built for glibc 2.28, as the README always said, and each release is tested on Rocky Linux 8 and Ubuntu 20.04 before it is published. Nothing changes on newer systems or on macOS.

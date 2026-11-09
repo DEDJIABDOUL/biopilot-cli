@@ -17,7 +17,7 @@ describe("Catalog reader: values, formats and mates", () => {
   const option = (alias: string) => catalog.findOption(root, alias)!;
 
   test("a file option carries its format and read role", () => {
-    expect(option("--in1").value).toEqual({ type: "file", formats: ["fastq"], optional: false, multiple: false, values: [], readRole: 1 });
+    expect(option("--in1").value).toEqual({ type: "file", formats: ["fastq"], optional: false, multiple: false, values: [], readRole: 1, io: "input" });
   });
 
   test("a folder option carries its folder format", () => {
@@ -47,6 +47,17 @@ describe("Catalog reader: values, formats and mates", () => {
     expect(option("--in1")).toMatchObject({ repeatable: false, hidden: false, deprecated: false });
   });
 
+  test("io: input or output as declared, output for a derived output, null when not declared", () => {
+    expect(option("--in1").value?.io).toBe("input");
+    expect(option("-o").value?.io).toBe("output");
+    expect(option("--in2").value?.io).toBeNull();
+  });
+
+  test("a thread-count option is marked as such", () => {
+    expect(option("--threads").threads).toBe(true);
+    expect(option("--in1").threads).toBe(false);
+  });
+
   test("version range, when known", () => {
     expect(option("--dedup")).toMatchObject({ since: "0.22.0", until: null });
     expect(option("--old")).toMatchObject({ since: null, until: "0.20.1" });
@@ -69,7 +80,7 @@ describe("Catalog reader: values, formats and mates", () => {
         name: "reference",
         description: null,
         variadic: false,
-        value: { type: "file", formats: ["fasta"], optional: false, multiple: false, values: [], readRole: null },
+        value: { type: "file", formats: ["fasta"], optional: false, multiple: false, values: [], readRole: null, io: null },
         defaultValue: null,
         since: null,
         until: null,
@@ -79,7 +90,7 @@ describe("Catalog reader: values, formats and mates", () => {
         name: "reads",
         description: null,
         variadic: true,
-        value: { type: "file", formats: ["fastq"], optional: false, multiple: false, values: [], readRole: 1 },
+        value: { type: "file", formats: ["fastq"], optional: false, multiple: false, values: [], readRole: 1, io: null },
         defaultValue: "reads.fq",
         since: "1.0",
         until: null,

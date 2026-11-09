@@ -11,7 +11,7 @@ help: [ --help ]
 options:
   - names: [ "-1" ]
     description: read 1 files of the pairs (comma-separated)
-    value: { type: file, format: [ fastq, fasta ], read_role: 1 }
+    value: { type: file, format: [ fastq, fasta ], read_role: 1, io: input }
     rank: 95
     repeatable: true
   - names: [ "-2" ]
@@ -34,7 +34,7 @@ options:
     repeatable: true
   - names: [ -o, --out-dir ]
     description: output folder, which must not exist yet
-    value: { type: dir }
+    value: { type: dir, io: output }
     default: ./megahit_out
     rank: 92
   - names: [ --out-prefix ]
@@ -50,6 +50,7 @@ options:
     description: threads (all logical processors by default)
     value: { type: int }
     rank: 85
+    threads: true
   - names: [ -m, --memory ]
     description: memory for graph construction, in bytes, or a fraction of the machine's below 1
     value: { type: float }

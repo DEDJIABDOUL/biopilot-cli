@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/DEDJIABDOUL/biopilot-cli/schemas/check-output.schema.json",
+  "title": "biopilot check --json output",
+  "description": "Format 1. Adding a field does not change the format; removing or renaming one increments it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "line", "analysed", "commands", "warnings"],
+  "properties": {
+    "format": { "const": 1 },
+    "line": { "type": "string", "description": "The command line checked." },
+    "analysed": { "type": "boolean", "description": "false when the line could not be analysed (exit code 2)." },
+    "reason": { "type": "string", "description": "Why the line could not be analysed; only when analysed is false." },
+    "commands": {
+      "type": "array",
+      "description": "The commands of the line that BioPilot read with the Catalog, in order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tool", "command"],
+        "properties": {
+          "tool": { "type": "string" },
+          "command": { "type": "array", "items": { "type": "string" }, "description": "Subcommand path; empty for the tool itself." }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule", "severity", "tool", "command", "subjects", "message"],
+        "properties": {
+          "rule": {
+            "enum": ["read-pair", "output-is-input", "output-folder-missing", "input-missing", "reference-index", "threads-above-cpus"]
+          },
+          "severity": { "enum": ["warning", "info"], "description": "Only warning makes the exit code 1." },
+          "tool": { "type": "string" },
+          "command": { "type": "array", "items": { "type": "string" } },
+          "subjects": { "type": "array", "items": { "type": "string" }, "description": "Options as typed, and positional arguments as <name>." },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

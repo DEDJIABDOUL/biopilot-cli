@@ -370,6 +370,7 @@ threads = 8
 | `biopilot learn <outil>` | Importe un outil depuis son `--help` *(version 1.1 ; `--list`, `--forget`)* ; seule cette commande lance un outil inconnu |
 | `biopilot sync` | Calcule à l'avance les profils des outils de l'environnement actif |
 | `biopilot search "<texte>"` | Recherche une option par sa description (FTS5) *(version 1.1 : Catalog et outils appris)* |
+| `biopilot check [--json] "<ligne>"` | Avertit sur une ligne de commande avant son exécution *(version 1.1.5, ticket #109)* : paires de reads, entrées absentes, sortie égale à une entrée, dossier de sortie absent, index de référence incomplet, threads au-delà des CPU disponibles. Codes de sortie 0 (aucun avertissement), 1 (avertissements), 2 (ligne non analysable). Les entrées et sorties sont celles que le Catalog déclare (`io`), les options de threads celles qu'il marque (`threads`). Aucun contenu de fichier n'est lu. |
 | `biopilot info [--json] [outil] [sous-commande…] [option]` | Affiche la fiche d'un outil, d'une sous-commande ou d'une option. Les options de BioPilot se placent avant le nom de l'outil ; tout ce qui suit est lu comme chemin de sous-commande et nom d'option (fastp a lui-même une option `--json`). |
 | `biopilot reset-usage` | Efface les statistiques d'usage |
 | `biopilot uninstall` | Supprime la configuration, les données et la ligne de démarrage |
@@ -377,7 +378,7 @@ threads = 8
 Exigences communes :
 - Code de sortie 0 en cas de succès, 1 en cas d'erreur.
 - Sortie lisible dans un pipe, par exemple `biopilot status | head`.
-- Option `--json` sur `status`, `info` et `search`.
+- Option `--json` sur `status`, `info`, `search` et `check`.
 
 ---
 

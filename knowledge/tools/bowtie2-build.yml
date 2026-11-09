@@ -10,7 +10,7 @@ help: ["--help"]
 arguments:
   - name: reference_in
     description: reference FASTA files, comma-separated
-    value: { type: file, format: fasta }
+    value: { type: file, format: fasta, io: input }
   - name: bt2_index_base
     description: prefix of the index files to write (folder and base name)
     value: { type: string }
@@ -19,6 +19,7 @@ options:
     description: threads
     value: { type: int }
     rank: 90
+    threads: true
   - names: ["-f"]
     description: reference files are FASTA (default)
     rank: 15

@@ -156,7 +156,7 @@ arguments:
     description: name of the genome database, e.g. GRCh38.105 (snpEff databases lists them)
     value: { type: string }
   - name: input.vcf
-    value: { type: file, format: [vcf, bed], optional: true }
+    value: { type: file, format: [vcf, bed], optional: true, io: input }
 commands:
   - name: ann
     help: ["ann", "-h"]
@@ -379,7 +379,7 @@ commands:
         description: name of the genome database, e.g. GRCh38.105
         value: { type: string }
       - name: input.vcf
-        value: { type: file, format: [vcf, bed], optional: true }
+        value: { type: file, format: [vcf, bed], optional: true, io: input }
   - name: build
     help: ["build", "-h"]
     description: build a genome database from its annotation and sequences (GTF, GFF3, GenBank…)

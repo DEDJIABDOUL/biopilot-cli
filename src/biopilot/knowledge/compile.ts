@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { CATALOG_DDL, CATALOG_SCHEMA_VERSION, canonicalName, type Assay, type FormatKind, type Platform, type ValueType } from "./schema.js";
+import { CATALOG_DDL, CATALOG_SCHEMA_VERSION, canonicalName, type Assay, type FormatKind, type Platform, type ValueIo, type ValueType } from "./schema.js";
 import { SCHEMAS_DIR, captureGroups, formatLocation, loadYaml, schemaValidator, type CompileError, type Segment } from "./yamlSource.js";
 
 export type { CompileError } from "./yamlSource.js";
@@ -43,6 +43,7 @@ type YamlValue = {
   read_role?: 1 | 2;
   mate_of?: string;
   derive?: { from: string; suffix: string };
+  io?: ValueIo;
 };
 
 type YamlOption = {
@@ -56,6 +57,7 @@ type YamlOption = {
   repeatable?: boolean;
   hidden?: boolean;
   deprecated?: boolean;
+  threads?: boolean;
   rules?: YamlRule[];
 };
 
@@ -100,6 +102,7 @@ type ValueSource = {
   multiple: boolean;
   values: { value: string; description?: string }[];
   readRole?: 1 | 2;
+  io?: ValueIo;
 };
 
 type OptionSource = {
@@ -113,6 +116,8 @@ type OptionSource = {
   repeatable: boolean;
   hidden: boolean;
   deprecated: boolean;
+  /** The option sets a number of threads (or of CPUs, cores, workers). */
+  threads: boolean;
   /** Alias of the mate option, in the same command. */
   mateOf?: string;
   /** Derived output: alias of the source option and suffix added to its value. */
@@ -169,6 +174,8 @@ const toValueSource = (value: YamlValue | undefined): ValueSource | null =>
         multiple: value.multiple ?? false,
         values: (value.values ?? []).map((item) => (typeof item === "string" ? { value: item } : item)),
         readRole: value.read_role,
+        // A derived output is an output.
+        io: value.io ?? (value.derive ? "output" : undefined),
       }
     : null;
 
@@ -187,6 +194,7 @@ const toCommandSource = (command: YamlCommand): CommandSource => ({
     repeatable: option.repeatable ?? false,
     hidden: option.hidden ?? false,
     deprecated: option.deprecated ?? false,
+    threads: option.threads ?? false,
     mateOf: option.value?.mate_of,
     derive: option.value?.derive,
     rules: option.rules ?? [],
@@ -284,6 +292,8 @@ const readToolSource = (sourcesDir: string, file: string, formats: Map<string, F
     });
     if (value.type === "enum" && !(Array.isArray(value.values) && value.values.length > 0)) fail([...at, "values"], "an enum needs at least one value");
     if (value.read_role !== undefined && value.type !== "file") fail([...at, "read_role"], "a read role only applies to type file");
+    if (value.io !== undefined && value.type !== "file" && value.type !== "dir") fail([...at, "io"], "io only applies to type file or dir");
+    if (value.io === "input" && value.derive !== undefined) fail([...at, "io"], "a derived output cannot be an input");
   };
 
   /** Per-command checks, recursively. */
@@ -291,6 +301,10 @@ const readToolSource = (sourcesDir: string, file: string, formats: Map<string, F
     const command = node as { options?: unknown; commands?: unknown; arguments?: unknown } | null;
     if (typeof command !== "object" || command === null) return;
     const options = (Array.isArray(command.options) ? command.options : []) as Partial<YamlOption>[];
+
+    options.forEach((option, i) => {
+      if (option?.threads && option.value?.type !== "int") fail([...at, "options", i, "threads"], "threads only applies to a value of type int");
+    });
 
     // Unique aliases; remember which option each alias belongs to.
     const optionOf = new Map<string, number>();
@@ -415,18 +429,18 @@ const writeCatalogFile = (tools: ToolSource[], formats: FormatSource[], tempPath
     );
     const insertCommand = db.prepare("INSERT INTO commands (tool_id, parent_id, name, help_args, description) VALUES (?, ?, ?, ?, ?)");
     const insertOption = db.prepare(
-      `INSERT INTO options (command_id, canonical_name, description, value_type, value_formats, value_optional, value_multiple, read_role,
-        default_value, rank, since_version, until_version, repeatable, hidden, deprecated, derive_suffix)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO options (command_id, canonical_name, description, value_type, value_formats, value_optional, value_multiple, read_role, value_io,
+        default_value, rank, since_version, until_version, repeatable, hidden, deprecated, threads, derive_suffix)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const linkOption = db.prepare("UPDATE options SET mate_of = ?, derive_from = ? WHERE id = ?");
     const insertName = db.prepare("INSERT INTO option_names (command_id, name, option_id, ord) VALUES (?, ?, ?, ?)");
     const indexOption = db.prepare("INSERT INTO options_fts (rowid, names, description) VALUES (?, ?, ?)");
     const insertOptionValue = db.prepare("INSERT INTO option_values (option_id, ord, value, description) VALUES (?, ?, ?, ?)");
     const insertArgument = db.prepare(
-      `INSERT INTO arguments (command_id, position, name, description, variadic, value_type, value_formats, value_optional, value_multiple, read_role,
+      `INSERT INTO arguments (command_id, position, name, description, variadic, value_type, value_formats, value_optional, value_multiple, read_role, value_io,
         default_value, since_version, until_version, mate_of)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const insertRule = db.prepare("INSERT INTO rules (option_id, ord, paired, platform, assay, boost) VALUES (?, ?, ?, ?, ?, ?)");
     const insertRuleUsed = db.prepare("INSERT INTO rule_used (option_id, rule_ord, ord, used_option_id) VALUES (?, ?, ?, ?)");
@@ -438,6 +452,7 @@ const writeCatalogFile = (tools: ToolSource[], formats: FormatSource[], tempPath
       bool(value?.optional ?? false),
       bool(value?.multiple ?? false),
       value?.readRole ?? null,
+      value?.io ?? null,
     ];
 
     db.transaction(() => {
@@ -488,6 +503,7 @@ const writeCatalogFile = (tools: ToolSource[], formats: FormatSource[], tempPath
               bool(option.repeatable),
               bool(option.hidden),
               bool(option.deprecated),
+              bool(option.threads),
               option.derive?.suffix ?? null,
             ).lastInsertRowid;
             option.names.forEach((name, ord) => {

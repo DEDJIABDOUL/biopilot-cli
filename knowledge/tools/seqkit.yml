@@ -15,6 +15,7 @@ options:
     value: { type: int }
     default: 4
     rank: 55
+    threads: true
   - names: [ -o, --out-file ]
     description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
     value: { type: file, format: [ fasta, fastq ] }
@@ -164,6 +165,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -211,7 +213,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: stats
     help: [ stats, --help ]
     description: "statistics of FASTA/FASTQ files: counts, lengths, N50, Q20/Q30, GC"
@@ -256,6 +258,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -300,7 +303,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: grep
     help: [ grep, --help ]
     description: select records by ID, name, sequence or motif, mismatches allowed
@@ -363,6 +366,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -410,7 +414,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: subseq
     help: [ subseq, --help ]
     description: extract subsequences by region, BED or GTF, with flanks
@@ -464,6 +468,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -511,7 +516,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: fx2tab
     help: [ fx2tab, --help ]
     description: FASTA/FASTQ to a table, with length, GC, quality and other columns
@@ -580,6 +585,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -627,7 +633,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: tab2fx
     help: [ tab2fx, --help ]
     description: table (first two or three columns) back to FASTA/FASTQ
@@ -647,6 +653,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -694,7 +701,7 @@ commands:
       - name: files
         description: tables of records; standard input when none
         variadic: true
-        value: { type: file, optional: true }
+        value: { type: file, optional: true, io: input }
   - name: fq2fa
     help: [ fq2fa, --help ]
     description: FASTQ to FASTA
@@ -704,6 +711,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -751,7 +759,7 @@ commands:
       - name: files
         description: FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: fastq, optional: true }
+        value: { type: file, format: fastq, optional: true, io: input }
   - name: fa2fq
     help: [ fa2fq, --help ]
     description: fetch the FASTQ records of the sequences of a FASTA file
@@ -768,6 +776,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -815,7 +824,7 @@ commands:
       - name: files
         description: FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: fastq, optional: true }
+        value: { type: file, format: fastq, optional: true, io: input }
   - name: convert
     help: [ convert, --help ]
     description: convert FASTQ quality encoding (Sanger, Solexa, Illumina)
@@ -855,6 +864,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -902,7 +912,7 @@ commands:
       - name: files
         description: FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: fastq, optional: true }
+        value: { type: file, format: fastq, optional: true, io: input }
   - name: sample
     help: [ sample, --help ]
     description: random subsample of records, by number or proportion
@@ -931,6 +941,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -978,7 +989,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: sample2
     help: [ sample2, --help ]
     description: "random subsample, version 2: exact numbers"
@@ -1007,6 +1018,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1054,7 +1066,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: head
     help: [ head, --help ]
     description: first N records, or first records adding up to L bases
@@ -1073,6 +1085,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1120,7 +1133,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: range
     help: [ range, --help ]
     description: records in a range of positions
@@ -1134,6 +1147,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1181,7 +1195,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: rmdup
     help: [ rmdup, --help ]
     description: remove duplicate records by ID, name or sequence
@@ -1211,6 +1225,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1258,7 +1273,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: common
     help: [ common, --help ]
     description: records shared by several files, by ID, name or sequence
@@ -1283,6 +1298,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1330,7 +1346,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: duplicate
     help: [ duplicate, --help ]
     description: repeat each record N times
@@ -1345,6 +1361,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1392,7 +1409,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: head-genome
     help: [ head-genome, --help ]
     description: records of the first genome, by shared name prefix
@@ -1407,6 +1424,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1454,7 +1472,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: split
     help: [ split, --help ]
     description: split into files by ID, region, size or number of parts (mainly FASTA)
@@ -1530,6 +1548,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1577,7 +1596,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: split2
     help: [ split2, --help ]
     description: split into files by size or number of parts, FASTA or FASTQ, paired reads included
@@ -1645,6 +1664,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1692,7 +1712,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: pair
     help: [ pair, --help ]
     description: match up the reads of two FASTQ files of pairs
@@ -1723,6 +1743,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1788,6 +1809,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1835,7 +1857,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: mutate
     help: [ mutate, --help ]
     description: "edit sequences: point mutations, insertions, deletions"
@@ -1879,6 +1901,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -1926,7 +1949,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: rename
     help: [ rename, --help ]
     description: make duplicate IDs unique by numbering them
@@ -1963,6 +1986,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2010,7 +2034,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: replace
     help: [ replace, --help ]
     description: rewrite headers or sequences with a regular expression
@@ -2085,6 +2109,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2132,7 +2157,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: restart
     help: [ restart, --help ]
     description: rotate circular genomes to a new start
@@ -2158,6 +2183,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2205,7 +2231,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: sana
     help: [ sana, --help ]
     description: repair broken one-line FASTQ files
@@ -2236,6 +2262,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2283,7 +2310,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: shuffle
     help: [ shuffle, --help ]
     description: shuffle the order of the records
@@ -2315,6 +2342,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2362,7 +2390,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: sort
     help: [ sort, --help ]
     description: sort records by ID, name, sequence or length
@@ -2412,6 +2440,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2459,7 +2488,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: faidx
     help: [ faidx, --help ]
     description: index a FASTA file and extract regions from it
@@ -2488,6 +2517,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2534,7 +2564,7 @@ commands:
     arguments:
       - name: fasta-file
         description: FASTA file to index or read
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: regions
         description: IDs or regions to extract, e.g. chr1 or chr1:1-100
         variadic: true
@@ -2570,6 +2600,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2617,7 +2648,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: merge-slides
     help: [ merge-slides, --help ]
     description: merge the windows written by seqkit sliding
@@ -2651,6 +2682,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2698,7 +2730,7 @@ commands:
       - name: files
         description: tables of windows; standard input when none
         variadic: true
-        value: { type: file, optional: true }
+        value: { type: file, optional: true, io: input }
   - name: translate
     help: [ translate, --help ]
     description: translate DNA or RNA to protein, ambiguous bases included
@@ -2754,6 +2786,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2801,7 +2834,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: locate
     help: [ locate, --help ]
     description: positions of subsequences or motifs, mismatches allowed
@@ -2861,6 +2894,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -2908,7 +2942,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: amplicon
     help: [ amplicon, --help ]
     description: extract amplicons, or regions around them, from their primers
@@ -2962,6 +2996,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -3009,7 +3044,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: fish
     help: [ fish, --help ]
     description: find short sequences in longer ones by local alignment
@@ -3066,6 +3101,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -3113,7 +3149,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: sum
     help: [ sum, --help ]
     description: digest of all the sequences of each file
@@ -3154,6 +3190,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -3201,7 +3238,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: scat
     help: [ scat, --help ]
     description: follow folders and stream the FASTA/FASTQ files written there, as they grow
@@ -3261,6 +3298,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -3308,7 +3346,7 @@ commands:
       - name: dirs
         description: folders to follow
         variadic: true
-        value: { type: dir }
+        value: { type: dir, io: input }
   - name: watch
     help: [ watch, --help ]
     description: live histograms of read length, quality or GC
@@ -3368,6 +3406,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -3415,7 +3454,7 @@ commands:
       - name: files
         description: FASTA or FASTQ files, plain or compressed; standard input when none
         variadic: true
-        value: { type: file, format: [ fasta, fastq ], optional: true }
+        value: { type: file, format: [ fasta, fastq ], optional: true, io: input }
   - name: bam
     help: [ bam, --help ]
     description: statistics, filters and live histograms of BAM records
@@ -3533,6 +3572,7 @@ commands:
         value: { type: int }
         default: 4
         rank: 55
+        threads: true
       - names: [ -o, --out-file ]
         description: output file; '-' is standard output, a .gz/.xz/.zst/.bz2 suffix compresses it
         value: { type: file, format: [ fasta, fastq ] }
@@ -3580,4 +3620,4 @@ commands:
       - name: files
         description: BAM files; standard input when none
         variadic: true
-        value: { type: file, format: bam, optional: true }
+        value: { type: file, format: bam, optional: true, io: input }

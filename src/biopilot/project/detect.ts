@@ -101,13 +101,25 @@ export const readNumber = (file: string): 1 | 2 | undefined => {
   return number === "1" ? 1 : number === "2" ? 2 : undefined;
 };
 
-/** The other mate of a read file (absolute path), when it exists. */
-export const mateOf = (file: string): string | undefined => {
+/** The name the other mate of a read file would have (same folder), whether or not it exists. */
+export const mateName = (file: string): string | undefined => {
   const base = path.basename(file);
   const match = base.match(MATE_MARKER);
   if (!match) return;
-  const mate = path.join(path.dirname(file), `${base.slice(0, match.index)}${match[1]}${match[2] === "1" ? "2" : "1"}${match[3]}`);
-  return fs.existsSync(mate) ? mate : undefined;
+  return path.join(path.dirname(file), `${base.slice(0, match.index)}${match[1]}${match[2] === "1" ? "2" : "1"}${match[3]}`);
+};
+
+/** A read file's name before its mate marker (`s1_R1.fastq.gz` → `s1`): the sample of a read pair. */
+export const sampleOf = (file: string): string | undefined => {
+  const base = path.basename(file);
+  const match = base.match(MATE_MARKER);
+  return match ? base.slice(0, match.index) : undefined;
+};
+
+/** The other mate of a read file (absolute path), when it exists. */
+export const mateOf = (file: string): string | undefined => {
+  const mate = mateName(file);
+  return mate && fs.existsSync(mate) ? mate : undefined;
 };
 
 /** Complete read pairs among FASTQ files: both mates exist, names identical but for the marker. */

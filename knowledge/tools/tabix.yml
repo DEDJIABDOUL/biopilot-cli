@@ -92,9 +92,10 @@ options:
     value: { type: int }
     default: 0
     rank: 50
+    threads: true
 arguments:
   - name: file
-    value: { type: file, format: [vcf, gvcf, bed, gff, gtf, bedgraph, sam] }
+    value: { type: file, format: [vcf, gvcf, bed, gff, gtf, bedgraph, sam], io: input }
   - name: region
     variadic: true
     value: { type: string, optional: true }

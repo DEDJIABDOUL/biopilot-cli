@@ -6,7 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type Database from "better-sqlite3";
-import { CATALOG_SCHEMA_VERSION, type Assay, type FormatKind, type Platform, type ValueType } from "./schema.js";
+import { CATALOG_SCHEMA_VERSION, type Assay, type FormatKind, type Platform, type ValueIo, type ValueType } from "./schema.js";
 import { catalogCandidates, sqliteAddonPath } from "./location.js";
 import { openSqlite } from "../sqlite.js";
 
@@ -38,6 +38,8 @@ export type ValueSpec = {
   values: { value: string; description: string | null }[];
   /** Read 1 or read 2 of a read pair. */
   readRole: 1 | 2 | null;
+  /** type file or dir: read (`input`) or written (`output`) by the command; `null` when the Catalog doesn't say. */
+  io: ValueIo | null;
 };
 
 /** A context condition; `null` (or an empty `used`) means "no constraint". See `ruleHolds`. */
@@ -69,6 +71,8 @@ export type Option = {
   /** Known (for parsing a command line) but never suggested. */
   hidden: boolean;
   deprecated: boolean;
+  /** The option sets a number of threads (or CPUs, cores, workers). */
+  threads: boolean;
   /** Canonical name of the mate option of a read pair, in either direction. */
   mate: string | null;
   /** Derived output: canonical name of the source option and the suffix added to its value. */
@@ -177,6 +181,7 @@ type ValueColumns = {
   value_optional: number;
   value_multiple: number;
   read_role: 1 | 2 | null;
+  value_io: ValueIo | null;
 };
 
 type OptionRow = ValueColumns & {
@@ -190,6 +195,7 @@ type OptionRow = ValueColumns & {
   repeatable: number;
   hidden: number;
   deprecated: number;
+  threads: number;
   mate_name: string | null;
   derive_from_name: string | null;
   derive_suffix: string | null;
@@ -236,8 +242,8 @@ const toRule = (rule: RuleRow, used: string[]): Rule => ({
 
 /** Options with their mate (in either direction) and the name of the option they derive from. */
 const OPTION_SELECT = `
-  SELECT o.id, o.canonical_name, o.description, o.value_type, o.value_formats, o.value_optional, o.value_multiple, o.read_role,
-         o.default_value, o.rank, o.since_version, o.until_version, o.repeatable, o.hidden, o.deprecated, o.derive_suffix,
+  SELECT o.id, o.canonical_name, o.description, o.value_type, o.value_formats, o.value_optional, o.value_multiple, o.read_role, o.value_io,
+         o.default_value, o.rank, o.since_version, o.until_version, o.repeatable, o.hidden, o.deprecated, o.threads, o.derive_suffix,
          COALESCE(m.canonical_name, (SELECT r.canonical_name FROM options r WHERE r.mate_of = o.id ORDER BY r.id LIMIT 1)) AS mate_name,
          d.canonical_name AS derive_from_name
   FROM options o
@@ -254,6 +260,7 @@ const toValueSpec = (row: ValueColumns, values: ValueRow[]): ValueSpec | null =>
         multiple: row.value_multiple === 1,
         values: values.map(({ value, description }) => ({ value, description })),
         readRole: row.read_role,
+        io: row.value_io,
       };
 
 const toTool = (row: ToolRow): Tool => ({
@@ -573,6 +580,7 @@ class SqliteCatalog implements Catalog {
       repeatable: row.repeatable === 1,
       hidden: row.hidden === 1,
       deprecated: row.deprecated === 1,
+      threads: row.threads === 1,
       mate: row.mate_name,
       derive: row.derive_from_name !== null && row.derive_suffix !== null ? { from: row.derive_from_name, suffix: row.derive_suffix } : null,
       rules: details.rules(row.id),

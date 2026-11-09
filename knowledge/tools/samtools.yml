@@ -24,7 +24,7 @@ commands:
     options:
       - names: ["-o", "--output"]
         description: dictionary file to write (standard output by default)
-        value: { type: file, format: dict }
+        value: { type: file, format: dict, io: output }
         rank: 90
       - names: ["-a", "--assembly"]
         description: assembly name, stored in the AS tag
@@ -51,7 +51,7 @@ commands:
     arguments:
       - name: file.fa
         description: reference sequences, plain or gzip-compressed
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
 
   - name: faidx
     help: ["faidx", "--help"]
@@ -104,6 +104,7 @@ commands:
         value: { type: int }
         default: 0
         rank: 80
+        threads: true
       - &write-index
         names: ["--write-index"]
         description: index the output file as it is written
@@ -114,7 +115,7 @@ commands:
     arguments:
       - name: file.fa
         description: FASTA file, plain or bgzip-compressed
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: region
         description: regions to extract, as chr, chr:from or chr:from-to
         variadic: true
@@ -126,7 +127,7 @@ commands:
     arguments:
       - name: file.fq
         description: FASTQ file, plain or bgzip-compressed
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
       - name: region
         description: read names or regions to extract
         variadic: true
@@ -158,10 +159,10 @@ commands:
     arguments:
       - name: in.bam
         description: sorted alignments to index
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: out.index
         description: index file to write, unless -M is set
-        value: { type: file, format: bai, optional: true }
+        value: { type: file, format: bai, optional: true, io: output }
 
   # -- Editing
   - name: calmd
@@ -170,10 +171,10 @@ commands:
     arguments:
       - name: aln.bam
         description: alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: ref.fasta
         description: reference the reads were aligned to
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
 
   - name: fixmate
     help: ["fixmate", "--help"]
@@ -231,10 +232,10 @@ commands:
     arguments:
       - name: in.nameSrt.bam
         description: alignments grouped by read name
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: out.nameSrt.bam
         description: file to write
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: output }
 
   - name: reheader
     help: ["reheader", "--help"]
@@ -242,10 +243,10 @@ commands:
     arguments:
       - name: in.header.sam
         description: SAM file holding the new header
-        value: { type: file, format: sam }
+        value: { type: file, format: sam, io: input }
       - name: in.bam
         description: file whose header is replaced
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: targetcut
     help: ["targetcut", "--help"]
@@ -253,7 +254,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: addreplacerg
     help: ["addreplacerg", "--help"]
@@ -261,7 +262,7 @@ commands:
     arguments:
       - name: input.bam
         description: alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: markdup
     help: ["markdup", "--help"]
@@ -367,10 +368,10 @@ commands:
     arguments:
       - name: input.bam
         description: coordinate-sorted alignments carrying mate score tags
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: output.bam
         description: file to write
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: output }
 
   - name: ampliconclip
     help: ["ampliconclip", "--help"]
@@ -378,7 +379,7 @@ commands:
     arguments:
       - name: input.bam
         description: alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   # -- File operations
   - name: collate
@@ -387,7 +388,7 @@ commands:
     options:
       - names: ["-o"]
         description: file to write (built from the prefix when not set)
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: output }
         rank: 90
       - names: ["-O"]
         description: write to standard output
@@ -430,7 +431,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments to group
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: prefix
         description: prefix of the output and temporary files, unless -o or -O is set
         value: { type: string, optional: true }
@@ -442,7 +443,7 @@ commands:
       - name: in.bam
         description: files to concatenate
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: consensus
     help: ["consensus", "--help"]
@@ -450,7 +451,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: merge
     help: ["merge", "--help"]
@@ -458,7 +459,7 @@ commands:
     options:
       - names: ["-o"]
         description: file to write, instead of giving it as the first argument
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: output }
         rank: 92
       - names: ["-b"]
         description: file listing the input files, one per line
@@ -530,7 +531,7 @@ commands:
       - name: in.bam
         description: sorted files to merge (preceded by the output file when -o is not set)
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: mpileup
     help: ["mpileup", "--help"]
@@ -539,7 +540,7 @@ commands:
       - name: in.bam
         description: alignments
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: sort
     help: ["sort", "--help"]
@@ -547,7 +548,7 @@ commands:
     options:
       - names: ["-o"]
         description: file to write (standard output by default)
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: output }
         rank: 95
       - *threads
       - *output-fmt
@@ -612,7 +613,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments to sort (standard input when absent)
-        value: { type: file, format: [bam, sam, cram], optional: true }
+        value: { type: file, format: [bam, sam, cram], optional: true, io: input }
 
   - name: split
     help: ["split", "--help"]
@@ -620,7 +621,7 @@ commands:
     arguments:
       - name: merged.bam
         description: alignments to split
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: quickcheck
     help: ["quickcheck", "--help"]
@@ -640,7 +641,7 @@ commands:
       - name: input
         description: files to check
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: fastq
     help: ["fastq", "--help"]
@@ -648,7 +649,7 @@ commands:
     options:
       - names: ["-1"]
         description: file for read 1 of the pairs
-        value: { type: file, format: fastq, read_role: 1 }
+        value: { type: file, format: fastq, read_role: 1, io: output }
         rank: 92
       - names: ["-2"]
         description: file for read 2 of the pairs
@@ -775,7 +776,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments grouped by read name
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: fasta
     help: ["fasta", "--help"]
@@ -783,7 +784,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments grouped by read name
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: import
     help: ["import", "--help"]
@@ -792,7 +793,7 @@ commands:
       - name: file.fastq
         description: reads to convert
         variadic: true
-        value: { type: file, format: fastq, optional: true }
+        value: { type: file, format: fastq, optional: true, io: input }
 
   - name: reference
     help: ["reference", "--help"]
@@ -800,7 +801,7 @@ commands:
     arguments:
       - name: in.cram
         description: alignments
-        value: { type: file, format: cram, optional: true }
+        value: { type: file, format: cram, optional: true, io: input }
 
   - name: reset
     help: ["reset", "--help"]
@@ -808,7 +809,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments (standard input when absent)
-        value: { type: file, format: bam, optional: true }
+        value: { type: file, format: bam, optional: true, io: input }
 
   # -- Statistics
   - name: bedcov
@@ -817,11 +818,11 @@ commands:
     arguments:
       - name: in.bed
         description: regions
-        value: { type: file, format: bed }
+        value: { type: file, format: bed, io: input }
       - name: in.bam
         description: indexed alignments
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: coverage
     help: ["coverage", "--help"]
@@ -899,7 +900,7 @@ commands:
       - name: in.bam
         description: alignments
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: depth
     help: ["depth", "--help"]
@@ -976,7 +977,7 @@ commands:
       - name: in.bam
         description: alignments
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: flagstat
     help: ["flagstat", "--help"]
@@ -997,7 +998,7 @@ commands:
     arguments:
       - name: in.bam
         description: alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: idxstats
     help: ["idxstats", "--help"]
@@ -1012,7 +1013,7 @@ commands:
     arguments:
       - name: in.bam
         description: indexed alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: cram-size
     help: ["cram-size", "--help"]
@@ -1020,7 +1021,7 @@ commands:
     arguments:
       - name: in.cram
         description: CRAM file
-        value: { type: file, format: cram, optional: true }
+        value: { type: file, format: cram, optional: true, io: input }
 
   - name: phase
     help: ["phase", "--help"]
@@ -1028,7 +1029,7 @@ commands:
     arguments:
       - name: in.bam
         description: sorted alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: stats
     help: ["stats", "--help"]
@@ -1133,7 +1134,7 @@ commands:
     arguments:
       - name: file.bam
         description: alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: region
         description: regions to restrict the statistics to (needs an index)
         variadic: true
@@ -1145,11 +1146,11 @@ commands:
     arguments:
       - name: primers.bed
         description: primer positions
-        value: { type: file, format: bed }
+        value: { type: file, format: bed, io: input }
       - name: in.bam
         description: alignments
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: checksum
     help: ["checksum", "--help"]
@@ -1158,7 +1159,7 @@ commands:
       - name: file.bam
         description: alignments (standard input when absent)
         variadic: true
-        value: { type: file, format: bam, optional: true }
+        value: { type: file, format: bam, optional: true, io: input }
 
   # -- Viewing
   - name: flags
@@ -1176,7 +1177,7 @@ commands:
     arguments:
       - name: file
         description: alignments (standard input when absent)
-        value: { type: file, format: bam, optional: true }
+        value: { type: file, format: bam, optional: true, io: input }
 
   - name: tview
     help: ["tview", "--help"]
@@ -1184,10 +1185,10 @@ commands:
     arguments:
       - name: aln.bam
         description: sorted, indexed alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: ref.fasta
         description: reference, to show mismatches
-        value: { type: file, format: fasta, optional: true }
+        value: { type: file, format: fasta, optional: true, io: input }
 
   - name: view
     help: ["view", "--help"]
@@ -1196,7 +1197,7 @@ commands:
       # Output.
       - names: ["-o", "--output"]
         description: file to write (standard output by default)
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: output }
         rank: 95
       - names: ["-b", "--bam"]
         description: write BAM
@@ -1375,7 +1376,7 @@ commands:
     arguments:
       - name: in.bam
         description: SAM, BAM or CRAM file to read
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: region
         description: regions to extract (chr, chr:from or chr:from-to); needs an index
         variadic: true
@@ -1387,7 +1388,7 @@ commands:
     arguments:
       - name: in.bam
         description: padded alignments
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   - name: samples
     help: ["samples", "--help"]
@@ -1396,7 +1397,7 @@ commands:
       - name: input
         description: alignment files
         variadic: true
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
 
   # -- Misc
   - name: help

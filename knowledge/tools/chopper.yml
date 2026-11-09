@@ -12,7 +12,7 @@ help: ["--help"]
 options:
   - names: ["-i", "--input"]
     description: reads to filter, FASTQ (compressed or not) or unaligned BAM; standard input by default
-    value: { type: file, format: [fastq, bam] }
+    value: { type: file, format: [fastq, bam], io: input }
     rank: 90
   - names: ["-q", "--quality"]
     description: drop reads whose mean Phred quality is below this
@@ -89,6 +89,7 @@ options:
     value: { type: int }
     default: 4
     rank: 70
+    threads: true
   - names: ["--output-format"]
     description: format of the output (the input's by default)
     value:

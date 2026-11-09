@@ -38,7 +38,7 @@ commands:
     arguments:
       - name: in.fasta
         description: reference sequences to index
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
 
   - name: mem
     help: ["mem"]
@@ -49,9 +49,10 @@ commands:
         value: { type: int }
         default: 1
         rank: 85
+        threads: true
       - names: ["-o"]
         description: SAM file to write (standard output by default)
-        value: { type: file, format: sam }
+        value: { type: file, format: sam, io: output }
         rank: 90
       - names: ["-R"]
         description: read group header line, e.g. '@RG\tID:s1\tSM:s1', added to every read
@@ -221,13 +222,13 @@ commands:
     arguments:
       - name: idxbase
         description: prefix of the bwa index of the reference
-        value: { type: file, format: bwa-index }
+        value: { type: file, format: bwa-index, io: input }
       - name: in1.fq
         description: reads, or read 1 of the pairs
-        value: { type: file, format: fastq, read_role: 1 }
+        value: { type: file, format: fastq, read_role: 1, io: input }
       - name: in2.fq
         description: read 2 of the pairs, for paired-end data
-        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq, optional: true }
+        value: { type: file, format: fastq, read_role: 2, mate_of: in1.fq, optional: true, io: input }
 
   - name: fastmap
     help: ["fastmap"]
@@ -261,10 +262,10 @@ commands:
     arguments:
       - name: idxbase
         description: prefix of the bwa index of the reference
-        value: { type: file, format: bwa-index }
+        value: { type: file, format: bwa-index, io: input }
       - name: in.fq
         description: reads to search
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
 
   - name: pemerge
     help: ["pemerge"]
@@ -281,6 +282,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 75
+        threads: true
       - names: ["-T"]
         description: shortest overlap between the two reads
         value: { type: int }
@@ -294,10 +296,10 @@ commands:
     arguments:
       - name: read1.fq
         description: read 1, or interleaved pairs when read 2 is not given
-        value: { type: file, format: fastq, read_role: 1 }
+        value: { type: file, format: fastq, read_role: 1, io: input }
       - name: read2.fq
         description: read 2 of the pairs
-        value: { type: file, format: fastq, read_role: 2, optional: true }
+        value: { type: file, format: fastq, read_role: 2, optional: true, io: input }
 
   - name: aln
     help: ["aln"]
@@ -305,13 +307,14 @@ commands:
     options:
       - names: ["-f"]
         description: .sai file to write (standard output by default)
-        value: { type: file, format: sai }
+        value: { type: file, format: sai, io: output }
         rank: 90
       - names: ["-t"]
         description: number of threads
         value: { type: int }
         default: 1
         rank: 85
+        threads: true
       - names: ["-n"]
         description: differences allowed, as a count, or as a missing probability when fractional
         value: { type: float }
@@ -408,10 +411,10 @@ commands:
     arguments:
       - name: prefix
         description: prefix of the bwa index of the reference
-        value: { type: file, format: bwa-index }
+        value: { type: file, format: bwa-index, io: input }
       - name: in.fq
         description: reads to align
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
 
   - name: samse
     help: ["samse"]
@@ -419,7 +422,7 @@ commands:
     options:
       - names: ["-f"]
         description: SAM file to write (standard output by default)
-        value: { type: file, format: sam }
+        value: { type: file, format: sam, io: output }
         rank: 90
       - names: ["-n"]
         description: report every hit in XA when a read has at most this many
@@ -432,13 +435,13 @@ commands:
     arguments:
       - name: prefix
         description: prefix of the bwa index of the reference
-        value: { type: file, format: bwa-index }
+        value: { type: file, format: bwa-index, io: input }
       - name: in.sai
         description: alignments from bwa aln
-        value: { type: file, format: sai }
+        value: { type: file, format: sai, io: input }
       - name: in.fq
         description: the reads given to bwa aln
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
 
   - name: sampe
     help: ["sampe"]
@@ -446,7 +449,7 @@ commands:
     options:
       - names: ["-f"]
         description: SAM file to write (standard output by default)
-        value: { type: file, format: sam }
+        value: { type: file, format: sam, io: output }
         rank: 90
       - names: ["-r"]
         description: read group header line, e.g. '@RG\tID:s1\tSM:s1'
@@ -489,19 +492,19 @@ commands:
     arguments:
       - name: prefix
         description: prefix of the bwa index of the reference
-        value: { type: file, format: bwa-index }
+        value: { type: file, format: bwa-index, io: input }
       - name: in1.sai
         description: bwa aln alignments of read 1
-        value: { type: file, format: sai }
+        value: { type: file, format: sai, io: input }
       - name: in2.sai
         description: bwa aln alignments of read 2
-        value: { type: file, format: sai }
+        value: { type: file, format: sai, io: input }
       - name: in1.fq
         description: read 1 of the pairs
-        value: { type: file, format: fastq, read_role: 1 }
+        value: { type: file, format: fastq, read_role: 1, io: input }
       - name: in2.fq
         description: read 2 of the pairs
-        value: { type: file, format: fastq, read_role: 2 }
+        value: { type: file, format: fastq, read_role: 2, io: input }
 
   - name: bwasw
     help: ["bwasw"]
@@ -509,13 +512,14 @@ commands:
     options:
       - names: ["-f"]
         description: SAM file to write (standard output by default)
-        value: { type: file, format: sam }
+        value: { type: file, format: sam, io: output }
         rank: 90
       - names: ["-t"]
         description: number of threads
         value: { type: int }
         default: 1
         rank: 85
+        threads: true
       - names: ["-a"]
         description: match score
         value: { type: int }
@@ -596,13 +600,13 @@ commands:
     arguments:
       - name: target.prefix
         description: prefix of the bwa index of the reference
-        value: { type: file, format: bwa-index }
+        value: { type: file, format: bwa-index, io: input }
       - name: query.fa
         description: reads or sequences to align
-        value: { type: file, format: fastq, read_role: 1 }
+        value: { type: file, format: fastq, read_role: 1, io: input }
       - name: query2.fa
         description: second reads of pairs
-        value: { type: file, format: fastq, read_role: 2, optional: true }
+        value: { type: file, format: fastq, read_role: 2, optional: true, io: input }
 
   - name: shm
     help: ["shm"]
@@ -621,7 +625,7 @@ commands:
     arguments:
       - name: idxbase
         description: prefix of the bwa index to load
-        value: { type: file, format: bwa-index, optional: true }
+        value: { type: file, format: bwa-index, optional: true, io: input }
 
   - name: fa2pac
     help: ["fa2pac"]
@@ -633,7 +637,7 @@ commands:
     arguments:
       - name: in.fasta
         description: sequences to pack
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: out.prefix
         description: prefix of the files written (the FASTA name by default)
         value: { type: string, optional: true }
@@ -648,10 +652,10 @@ commands:
     arguments:
       - name: in.pac
         description: packed sequences
-        value: { type: file }
+        value: { type: file, io: input }
       - name: out.bwt
         description: BWT file to write
-        value: { type: file }
+        value: { type: file, io: output }
 
   - name: pac2bwtgen
     help: ["pac2bwtgen"]
@@ -659,10 +663,10 @@ commands:
     arguments:
       - name: in.pac
         description: packed sequences
-        value: { type: file }
+        value: { type: file, io: input }
       - name: out.bwt
         description: BWT file to write
-        value: { type: file }
+        value: { type: file, io: output }
 
   - name: bwtupdate
     help: ["bwtupdate"]
@@ -670,7 +674,7 @@ commands:
     arguments:
       - name: the.bwt
         description: BWT file to update
-        value: { type: file }
+        value: { type: file, io: input }
 
   - name: bwt2sa
     help: ["bwt2sa"]
@@ -684,7 +688,7 @@ commands:
     arguments:
       - name: in.bwt
         description: BWT file
-        value: { type: file }
+        value: { type: file, io: input }
       - name: out.sa
         description: suffix array file to write
-        value: { type: file }
+        value: { type: file, io: output }

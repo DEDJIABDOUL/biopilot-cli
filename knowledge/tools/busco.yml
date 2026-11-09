@@ -11,7 +11,7 @@ help: [ --help ]
 options:
   - names: [ -i, --in ]
     description: "sequences to assess: assembly or transcriptome (DNA) or proteins, FASTA; or a folder of such files"
-    value: { type: file, format: [ fasta ] }
+    value: { type: file, format: [ fasta ], io: input }
     rank: 97
   - names: [ -m, --mode ]
     description: what the input is
@@ -38,6 +38,7 @@ options:
     description: threads
     value: { type: int }
     rank: 85
+    threads: true
   - names: [ --auto-lineage ]
     description: find the best lineage automatically
     rank: 55

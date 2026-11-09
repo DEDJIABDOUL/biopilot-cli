@@ -68,6 +68,8 @@ Write **descriptions in your own words**: never copy them from the `--help` (sev
 | `value.optional`, `value.multiple` | `--opt[=VAL]`; several values follow |
 | `value.read_role`, `value.mate_of` | read 1 or 2 of a pair, and the option holding its mate (`mate_of: "--in1"`) |
 | `value.derive` | a derived output: `{ from: "--in1", suffix: ".trimmed" }` offers `results/x_R1.trimmed.fastq.gz` |
+| `value.io` | `input` or `output`, for a file or folder: what `biopilot check` verifies (a missing input, an output folder that does not exist, an output equal to an input). Give it to the main inputs and outputs; omit it when it depends on the mode (STAR's `--genomeDir`). A derived output is an output |
+| `threads` | `true` on an `int` option that sets a number of threads, CPUs, cores or workers: `biopilot check` compares it with the CPUs available |
 | `default` | the tool's default, for `biopilot info` |
 | `rank` | 0–100, see below; 50 when omitted |
 | `since`, `until` | the first and last tool versions that have the option: options outside are hidden for a detected version |

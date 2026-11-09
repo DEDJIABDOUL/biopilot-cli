@@ -17,11 +17,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments to sort
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: sorted alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --SORT_ORDER, -SO ]
         description: "order: coordinate (for indexing and most tools), queryname (pairs together) or duplicate"
@@ -97,12 +97,12 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: coordinate-sorted alignments (repeatable)
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         repeatable: true
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: alignments with duplicates flagged
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --METRICS_FILE, -M ]
         description: file for the duplication metrics
@@ -340,11 +340,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: metrics file
-        value: { type: file }
+        value: { type: file, io: output }
         rank: 90
       - names: [ --CREATE_INDEX ]
         description: write an index of coordinate-sorted BAM or VCF output
@@ -460,11 +460,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: metrics file
-        value: { type: file }
+        value: { type: file, io: output }
         rank: 90
       - names: [ --Histogram_FILE, -H ]
         description: PDF of the insert size histogram
@@ -578,11 +578,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: metrics file
-        value: { type: file }
+        value: { type: file, io: output }
         rank: 90
       - names: [ --CREATE_INDEX ]
         description: write an index of coordinate-sorted BAM or VCF output
@@ -717,7 +717,7 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: base name of the metrics files
@@ -849,11 +849,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: metrics file
-        value: { type: file }
+        value: { type: file, io: output }
         rank: 90
       - names: [ --BAIT_INTERVALS, -BI ]
         description: intervals of the baits (repeatable)
@@ -996,11 +996,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: metrics file
-        value: { type: file }
+        value: { type: file, io: output }
         rank: 90
       - names: [ --REF_FLAT ]
         description: gene annotations, refFlat format
@@ -1123,11 +1123,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: alignments with the new read group
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --RGSM, -SM ]
         description: sample name
@@ -1256,7 +1256,7 @@ commands:
     options:
       - names: [ --REFERENCE, -R ]
         description: reference FASTA, plain or gzipped
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: dictionary file (reference name with .dict by default)
@@ -1354,12 +1354,12 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments to merge (repeatable)
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         repeatable: true
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: merged alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --CREATE_INDEX ]
         description: write an index of coordinate-sorted BAM or VCF output
@@ -1460,7 +1460,7 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments to check
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --MODE, -M ]
         description: VERBOSE lists each problem, SUMMARY counts them
@@ -1581,7 +1581,7 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: coordinate-sorted BAM
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
         rank: 95
       - names: [ --CREATE_INDEX ]
         description: write an index of coordinate-sorted BAM or VCF output
@@ -1657,11 +1657,11 @@ commands:
     options:
       - names: [ --FASTQ, -F1 ]
         description: reads, or read 1 of the pairs (plain or gzipped)
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: unaligned BAM, SAM or CRAM
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --SAMPLE_NAME, -SM ]
         description: sample name of the read group
@@ -1826,11 +1826,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --FASTQ, -F ]
         description: reads, or read 1 of the pairs
-        value: { type: file, format: fastq }
+        value: { type: file, format: fastq, io: output }
         rank: 90
       - names: [ --SECOND_END_FASTQ, -F2 ]
         description: read 2 of the pairs
@@ -1984,11 +1984,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: reordered alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --SEQUENCE_DICTIONARY, -SD ]
         description: dictionary to follow (.dict, FASTA, SAM, VCF, interval list…)
@@ -2074,11 +2074,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: filtered alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --FILTER ]
         description: filter to apply
@@ -2184,15 +2184,15 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: variants to lift
-        value: { type: file, format: [ vcf, gvcf, bcf ] }
+        value: { type: file, format: [ vcf, gvcf, bcf ], io: input }
         rank: 95
       - names: [ --CHAIN, -C ]
         description: chain file from the source to the target assembly
-        value: { type: file, format: chain }
+        value: { type: file, format: chain, io: input }
         rank: 90
       - names: [ --OUTPUT, -O ]
         description: lifted variants
-        value: { type: file, format: [ vcf, bcf ] }
+        value: { type: file, format: [ vcf, bcf ], io: output }
         rank: 90
       - names: [ --REJECT ]
         description: file for the variants that could not be lifted
@@ -2318,7 +2318,7 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: "alignments to fix (repeatable: merged and sorted)"
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         repeatable: true
         rank: 95
       - names: [ --OUTPUT, -O ]
@@ -2414,11 +2414,11 @@ commands:
     options:
       - names: [ --INPUT, -I ]
         description: alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: input }
         rank: 95
       - names: [ --OUTPUT, -O ]
         description: downsampled alignments
-        value: { type: file, format: [ bam, sam, cram ] }
+        value: { type: file, format: [ bam, sam, cram ], io: output }
         rank: 90
       - names: [ --PROBABILITY, -P ]
         description: chance of keeping each read (0 to 1)

@@ -32,12 +32,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     rank: 95
   - names: [-b]
     description: file(s) B, compared with A (several files, or a wildcard, allowed)
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     repeatable: true
     rank: 90
   - names: [-wa]
@@ -156,6 +158,7 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 95
   - names: [-d]
     description: 'merge intervals at most this many bp apart (negative: overlapping by at least that much)'
@@ -204,6 +207,7 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 95
   - names: [-sizeA]
     description: sort by size, ascending
@@ -245,12 +249,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     rank: 95
   - names: [-b]
     description: file(s) B, compared with A (several files, or a wildcard, allowed)
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     repeatable: true
     rank: 90
   - names: [-A]
@@ -293,12 +299,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     rank: 95
   - names: [-b]
     description: file(s) B, compared with A (several files, or a wildcard, allowed)
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     repeatable: true
     rank: 90
   - names: [-d]
@@ -375,12 +383,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     rank: 95
   - names: [-b]
     description: file(s) B, compared with A (several files, or a wildcard, allowed)
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     repeatable: true
     rank: 90
   - names: [-abam]
@@ -432,12 +442,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     rank: 95
   - names: [-b]
     description: file(s) B, compared with A (several files, or a wildcard, allowed)
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     repeatable: true
     rank: 90
   - names: [-hist]
@@ -480,12 +492,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 90
   - names: [-ibam]
     description: BAM or CRAM to read instead of -i (no genome file needed)
     value:
       type: file
       format: [bam, cram]
+      io: input
     rank: 95
   - names: [-g]
     description: genome file of sequence names and lengths (with -i)
@@ -554,7 +568,7 @@ commands:
   options:
   - names: [-bams]
     description: BAM files to count, indexed
-    value: {type: file, format: bam}
+    value: {type: file, format: bam, io: input}
     repeatable: true
     rank: 95
   - names: [-bed]
@@ -562,6 +576,7 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 90
   - names: [-split]
     description: count only the blocks of spliced reads
@@ -600,13 +615,14 @@ commands:
   options:
   - names: [-fi]
     description: FASTA to extract from
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 95
   - names: [-bed]
     description: intervals to extract
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 90
   - names: [-fo]
     description: file to write (standard output by default)
@@ -645,17 +661,18 @@ commands:
   options:
   - names: [-fi]
     description: FASTA to mask
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: input}
     rank: 95
   - names: [-bed]
     description: intervals to mask
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 90
   - names: [-fo]
     description: masked FASTA to write
-    value: {type: file, format: fasta}
+    value: {type: file, format: fasta, io: output}
     rank: 90
   - names: [-soft]
     description: 'soft-mask: write the masked bases in lowercase'
@@ -676,12 +693,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 95
   - names: [-g]
     description: genome file of sequence names and lengths (samtools faidx's .fai works)
     value:
       type: file
       format: [genome, fai]
+      io: input
     rank: 90
   - names: [-b]
     description: bp added on both sides
@@ -711,12 +730,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 95
   - names: [-g]
     description: genome file of sequence names and lengths (samtools faidx's .fai works)
     value:
       type: file
       format: [genome, fai]
+      io: input
     rank: 90
   - names: [-b]
     description: flank size on both sides, in bp
@@ -746,12 +767,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf]
+      io: input
     rank: 95
   - names: [-g]
     description: genome file of sequence names and lengths (samtools faidx's .fai works)
     value:
       type: file
       format: [genome, fai]
+      io: input
     rank: 90
   - names: [-L]
     description: only the chromosomes present in the input
@@ -802,12 +825,14 @@ commands:
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     rank: 95
   - names: [-b]
     description: file B, whose columns are summarised
     value:
       type: file
       format: [bed, gff, gtf, vcf, bam]
+      io: input
     rank: 90
   - names: [-c]
     description: columns of B to summarise, comma-separated
@@ -853,7 +878,7 @@ commands:
   options:
   - names: [-i]
     description: BAM to convert
-    value: {type: file, format: bam}
+    value: {type: file, format: bam, io: input}
     rank: 95
   - names: [-bedpe]
     description: write read pairs as BEDPE (the BAM sorted by read name)
@@ -890,11 +915,11 @@ commands:
   options:
   - names: [-i]
     description: BAM to convert
-    value: {type: file, format: bam}
+    value: {type: file, format: bam, io: input}
     rank: 95
   - names: [-fq]
     description: FASTQ to write (read 1 of pairs)
-    value: {type: file, format: fastq}
+    value: {type: file, format: fastq, io: output}
     rank: 90
   - names: [-fq2]
     description: FASTQ of read 2 (paired-end BAM sorted by read name)

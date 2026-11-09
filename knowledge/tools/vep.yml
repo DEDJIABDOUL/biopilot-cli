@@ -10,11 +10,11 @@ version: { args: ["--help"], regex: 'ensembl-vep\s*:\s*(\d[\w.]*)' }
 options:
   - names: ["-i", "--input_file"]
     description: "variants to annotate: VCF, HGVS, VEP default format, IDs…"
-    value: { type: file, format: vcf }
+    value: { type: file, format: vcf, io: input }
     rank: 95
   - names: ["-o", "--output_file"]
     description: "file to write (variant_effect_output.txt by default; STDOUT for standard output)"
-    value: { type: file }
+    value: { type: file, io: output }
     rank: 90
   - names: ["--format"]
     description: "input format, guessed when not given"

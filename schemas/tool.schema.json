@@ -135,6 +135,11 @@
           "type": "boolean",
           "default": false,
           "description": "Still accepted but obsolete; give it a low rank."
+        },
+        "threads": {
+          "type": "boolean",
+          "default": false,
+          "description": "type int: the number of threads (or CPUs, cores, workers) the command uses; biopilot check compares it with the CPUs available."
         }
       }
     },
@@ -323,6 +328,10 @@
           },
           "description": "Suggested values; for type enum, the only allowed ones."
         },
+        "io": {
+          "enum": ["input", "output"],
+          "description": "type file or dir: whether the command reads (input) or writes (output) it; biopilot check warns about a missing input or output folder. A derived output is an output. Omit when it depends on the mode."
+        },
         "read_role": {
           "enum": [1, 2],
           "description": "type file: read 1 or read 2 of a read pair."
@@ -394,6 +403,10 @@
             ]
           },
           "description": "Suggested values; for type enum, the only allowed ones."
+        },
+        "io": {
+          "enum": ["input", "output"],
+          "description": "type file or dir: whether the command reads (input) or writes (output) it; biopilot check warns about a missing input or output folder. A derived output is an output. Omit when it depends on the mode."
         },
         "read_role": {
           "enum": [1, 2],

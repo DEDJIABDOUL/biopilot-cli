@@ -46,11 +46,13 @@ commands:
         value: { type: int }
         default: 2
         rank: 25
+        threads: true
       - names: [ --bam_chunk ]
         description: reference length each worker reads at once (memory use)
         value: { type: int }
         default: 1000000
         rank: 15
+        threads: true
       - names: [ --min_mapq ]
         description: least mapping quality (the model's by default)
         value: { type: int }
@@ -94,10 +96,10 @@ commands:
     arguments:
       - name: bam
         description: reads aligned to the draft or reference, BAM
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: output
         description: consensus probabilities to write (.hdf)
-        value: { type: file }
+        value: { type: file, io: output }
   - name: sequence
     help: [ sequence, --help ]
     description: stitch inference outputs into the polished consensus
@@ -116,6 +118,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 50
+        threads: true
       - names: [ --no-fillgaps ]
         description: do not fill gaps with the draft sequence
         rank: 25
@@ -136,13 +139,13 @@ commands:
       - name: inputs
         description: inference outputs (.hdf)
         variadic: false
-        value: { type: file, multiple: true }
+        value: { type: file, multiple: true, io: input }
       - name: draft
         description: draft assembly that was polished
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: output
         description: polished consensus to write
-        value: { type: file, format: [ fasta, fastq ] }
+        value: { type: file, format: [ fasta, fastq ], io: output }
   - name: vcf
     help: [ vcf, --help ]
     description: stitch inference outputs into a VCF
@@ -169,13 +172,13 @@ commands:
     arguments:
       - name: inputs
         description: inference outputs (.hdf)
-        value: { type: file, multiple: true }
+        value: { type: file, multiple: true, io: input }
       - name: ref_fasta
         description: reference the reads were aligned to
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: output
         description: VCF to write
-        value: { type: file, format: vcf }
+        value: { type: file, format: vcf, io: output }
   - name: smolecule
     help: [ smolecule, --help ]
     description: consensus of each molecule from its subreads (e.g. concatemers)
@@ -230,6 +233,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 50
+        threads: true
       - names: [ --check_output ]
         description: check the output file at the end
         rank: 10
@@ -248,10 +252,10 @@ commands:
     arguments:
       - name: output
         description: output folder
-        value: { type: dir }
+        value: { type: dir, io: output }
       - name: fasta
         description: subreads, one file or more
-        value: { type: file, format: [ fasta, fastq ], multiple: true }
+        value: { type: file, format: [ fasta, fastq ], multiple: true, io: input }
   - name: tandem
     help: [ tandem, --help ]
     description: genotype tandem repeats (STRs) from aligned reads
@@ -269,6 +273,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 55
+        threads: true
       - names: [ --process_large_regions ]
         description: also process repeats longer than 10 kb (much more memory)
         rank: 20
@@ -329,19 +334,19 @@ commands:
     arguments:
       - name: bam
         description: aligned reads, BAM or CRAM, preferably haplotagged
-        value: { type: file, format: [ bam, cram ] }
+        value: { type: file, format: [ bam, cram ], io: input }
       - name: ref_fasta
         description: reference genome
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
       - name: regions
         description: repeat regions to genotype, BED
-        value: { type: file, format: bed }
+        value: { type: file, format: bed, io: input }
       - name: sex
         description: sex of the sample, for X and Y
         value: { type: enum, values: [ male, female ] }
       - name: output
         description: output folder
-        value: { type: dir }
+        value: { type: dir, io: output }
   - name: features
     help: [ features, --help ]
     description: compute features from alignments, for training
@@ -381,6 +386,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 60
+        threads: true
       - names: [ --label_scheme ]
         description: labelling scheme
         value: { type: enum, values: [ HaploidLabelScheme, DiploidLabelScheme, RLELabelScheme ] }
@@ -408,10 +414,10 @@ commands:
     arguments:
       - name: bam
         description: reads aligned to the draft or reference, BAM
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: output
         description: features file to write
-        value: { type: file }
+        value: { type: file, io: output }
   - name: train
     help: [ train, --help ]
     description: train a model from features
@@ -457,6 +463,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 15
+        threads: true
       - names: [ --device ]
         description: GPU to use
         value: { type: int }
@@ -506,7 +513,7 @@ commands:
       - name: features
         description: training data
         variadic: true
-        value: { type: file }
+        value: { type: file, io: input }
   - name: consensus_from_features
     help: [ consensus_from_features, --help ]
     description: run a model on features computed beforehand
@@ -529,7 +536,7 @@ commands:
       - name: features
         description: features from medaka features
         variadic: true
-        value: { type: file }
+        value: { type: file, io: input }
   - name: compress_bam
     help: [ compress_bam, --help ]
     description: compress an alignment into run-length encoded form
@@ -543,6 +550,7 @@ commands:
         value: { type: int }
         default: 1
         rank: 60
+        threads: true
       - names: [ --use_fast5_info ]
         description: fast5 folder and its index (filename, read_id), for run lengths
         value: { type: string, multiple: true }
@@ -556,13 +564,13 @@ commands:
     arguments:
       - name: bam_input
         description: alignments to compress
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: input }
       - name: bam_output
         description: compressed alignments to write
-        value: { type: file, format: bam }
+        value: { type: file, format: bam, io: output }
       - name: ref_fname
         description: reference the input was aligned to
-        value: { type: file, format: fasta }
+        value: { type: file, format: fasta, io: input }
   - name: fastrle
     help: [ fastrle, --help ]
     description: "run-length encoded FASTQ: run lengths in the quality line"
@@ -581,7 +589,7 @@ commands:
     arguments:
       - name: input
         description: sequences, plain or gzipped
-        value: { type: file, format: [ fasta, fastq ] }
+        value: { type: file, format: [ fasta, fastq ], io: input }
   - name: tools
     help: [ tools, --help ]
     description: "utilities: VCF conversion and annotation, models"

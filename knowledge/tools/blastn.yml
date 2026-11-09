@@ -12,16 +12,16 @@ options:
   # Input and output.
   - names: ["-query"]
     description: FASTA file of the sequences to search (standard input by default)
-    value: { type: file, format: fasta }
+    value: { type: file, format: fasta, io: input }
     default: "-"
     rank: 98
   - names: ["-db"]
     description: name of the BLAST database to search, as built by makeblastdb
-    value: { type: file, format: blast-nucl-db }
+    value: { type: file, format: blast-nucl-db, io: input }
     rank: 96
   - names: ["-out"]
     description: file to write the results to (standard output by default)
-    value: { type: file }
+    value: { type: file, io: output }
     default: "-"
     rank: 92
   - names: ["-subject"]
@@ -72,6 +72,7 @@ options:
     value: { type: int }
     default: 1
     rank: 82
+    threads: true
   - names: ["-evalue"]
     description: keep hits whose expect value is below this (10 by default, 1000 for blastn-short)
     value: { type: float, values: ["1e-5", "1e-10", "0.001"] }

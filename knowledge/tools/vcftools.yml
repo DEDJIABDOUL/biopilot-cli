@@ -9,11 +9,11 @@ version: { args: ["--version"], regex: 'VCFtools \((\d[\w.]*)\)' }
 options:
   - names: ["--vcf"]
     description: "VCF to read (uncompressed)"
-    value: { type: file, format: vcf }
+    value: { type: file, format: vcf, io: input }
     rank: 95
   - names: ["--gzvcf"]
     description: "gzip-compressed VCF to read"
-    value: { type: file, format: vcf }
+    value: { type: file, format: vcf, io: input }
     rank: 95
   - names: ["--bcf"]
     description: "BCF to read"

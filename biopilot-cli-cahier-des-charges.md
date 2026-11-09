@@ -4,7 +4,7 @@
 |---|---|
 | **Version du document** | 1.0 — 6 novembre 2026 |
 | **Statut** | Proposition à valider |
-| **Base technique** | Fork léger de Microsoft Inshellisense (licence MIT) |
+| **Base technique** | Fork léger d'un moteur d'autocomplétion open source sous licence MIT (voir `NOTICE`) |
 | **Cible** | Bioinformaticiens et biologistes computationnels, en local |
 
 ---
@@ -34,7 +34,7 @@ L'outil doit être utile dès l'installation, sans compte, sans réseau et sans 
 - Détection de la version réelle de chaque outil.
 - Suggestions de fichiers selon le format attendu (FASTQ, BAM, FASTA, etc.), avec appariement R1/R2.
 - Classement selon le contexte et les habitudes de l'utilisateur.
-- Conservation de l'autocomplétion générale d'Inshellisense (git, cd, ls…), les outils bio passant en priorité.
+- Conservation de l'autocomplétion générale du moteur d'origine (git, cd, ls…), les outils bio passant en priorité.
 - Shells pris en charge : bash, zsh et fish.
 - Systèmes pris en charge : Linux (x64, arm64), macOS (arm64, x64) et Windows via WSL.
 
@@ -55,10 +55,10 @@ L'outil doit être utile dès l'installation, sans compte, sans réseau et sans 
 
 | Principe | Règle concrète |
 |---|---|
-| **Fork minimal** | Le moteur et le rendu d'Inshellisense restent intacts. Le code BioPilot vit dans un dossier séparé, appelé depuis quelques points d'ancrage identifiés (section 5). |
+| **Fork minimal** | Le moteur et le rendu d'origine restent intacts. Le code BioPilot vit dans un dossier séparé, appelé depuis quelques points d'ancrage identifiés (section 5). |
 | **Local-first** | Aucune requête réseau à l'exécution. Pas de télémétrie. |
 | **La vérité vient du binaire** | Les options affichées sont celles de la version installée. La base apporte le classement, les types et les règles. |
-| **Échec silencieux** | Une erreur de BioPilot ne bloque jamais le terminal. Le moteur retombe sur le comportement d'Inshellisense. |
+| **Échec silencieux** | Une erreur de BioPilot ne bloque jamais le terminal. Le moteur retombe sur son comportement d'origine. |
 | **Rien à chaque frappe qui coûte** | Pas de processus *bloquant*, pas d'accès réseau, pas de parcours disque complet pendant la frappe. Seule exception : le calcul détaché d'un profil inconnu (section 6.5). Tout ce qui est coûteux est mis en cache. |
 | **AI-optional** | Toute fonctionnalité de la version 1 marche sans LLM. |
 
@@ -71,7 +71,7 @@ Utilisateur
    │  bash · zsh · fish
    ▼
 ┌──────────────────────────────────────────────────────────┐
-│ Moteur Inshellisense (forké, patchs minimaux)            │
+│ Moteur d'origine (forké, patchs minimaux)                │
 │   terminal (pty) · parseur · rendu des suggestions       │
 └──────────────┬───────────────────────────────────────────┘
                │ points d'ancrage (section 5)
@@ -102,13 +102,13 @@ Utilisateur
 
 ---
 
-## 5. Modifications du moteur Inshellisense
+## 5. Modifications du moteur d'origine
 
 La liste est fermée. Toute modification supplémentaire doit être justifiée dans le dépôt, sinon la récupération des correctifs de l'original devient trop coûteuse.
 
 | # | Modification | Fichiers concernés | Motif |
 |---|---|---|---|
-| M1 | Renommage : commande `biopilot`, variable de session `BIOPILOT`, config `~/.config/biopilot/`, données `~/.local/share/biopilot/` | `package.json`, `utils/constants.ts`, `utils/config.ts`, scripts `shell/` | Cohabiter avec un Inshellisense installé. Ne pas utiliser la marque d'origine. |
+| M1 | Renommage : commande `biopilot`, variable de session `BIOPILOT`, config `~/.config/biopilot/`, données `~/.local/share/biopilot/` | `package.json`, `utils/constants.ts`, `utils/config.ts`, scripts `shell/` | Cohabiter avec le moteur d'origine s'il est installé. Ne pas utiliser la marque d'origine. |
 | M2 | Remontée de l'environnement du shell au moteur, via une séquence d'échappement émise au prompt par l'intégration shell existante | `shell/shellIntegration.*`, `isterm/` | *(faite en phase 3, ticket #44 : bash, zsh et fish émettent `6973;ENV;<jeton>;<PATH>;<CONDA_PREFIX>` à chaque prompt ; les autres shells gardent l'environnement de départ. Le jeton, tiré au hasard à chaque session et gardé par le shell dans une variable non exportée, écarte toute séquence forgée par la sortie d'un programme.)* Sans cela, `conda activate` reste invisible pour le moteur, qui tourne dans le processus parent. Supprime le besoin d'un hook à installer. |
 | M3 | Point d'ancrage avant le chargement d'une spec : le noyau BioPilot fournit la spec des outils bio *(faite en phase 2, ticket #30 ; en phase 3, ticket #43, elle est demandée avant le cache du moteur, car elle suit le binaire actif)* | `runtime/runtime.ts` | Brancher la base SQLite. |
 | M4 | Respect de la priorité des options, y compris avant toute saisie : toute option portant une priorité explicite la garde, et les règles de contexte qui s'appliquent l'augmentent *(faite en phase 2, tickets #30 et #33 ; en phase 4, ticket #50, le classement reçoit le dossier courant pour le contexte du projet et l'usage)* | `runtime/suggestion.ts` | Le moteur d'origine force les options à une priorité fixe tant que rien n'est tapé. |
@@ -284,7 +284,7 @@ CREATE TABLE usage (
 | Option | Avantage | Point vérifié |
 |---|---|---|
 | `node:sqlite` intégré à Node | Aucune dépendance | Rejeté : encore au stade *Release Candidate* (pas stable) même en Node 26, et API modifiée récemment (renommage dans la 26.11). *(Corrigé le 6 novembre 2026 : l'argument « exige Node 22+ » ne le distingue pas de `better-sqlite3`, qui l'exige aussi.)* |
-| **`better-sqlite3`** ✅ | Rapide, mûr, synchrone | Retenu : depuis la v13, les binaires précompilés (Node-API) sont embarqués dans le paquet npm lui-même pour les six cibles (linux/darwin/win32 × x64/arm64, plus linux musl) — aucune compilation chez l'utilisateur. Exige Node 22+ (la v12 exigeait déjà Node 20+ ; aucune version ne prend en charge Node 18). Module natif : pour le binaire autonome (SEA), devra être extrait sur disque puis chargé au runtime, exactement comme le moteur Inshellisense le fait déjà pour `node-pty`. |
+| **`better-sqlite3`** ✅ | Rapide, mûr, synchrone | Retenu : depuis la v13, les binaires précompilés (Node-API) sont embarqués dans le paquet npm lui-même pour les six cibles (linux/darwin/win32 × x64/arm64, plus linux musl) — aucune compilation chez l'utilisateur. Exige Node 22+ (la v12 exigeait déjà Node 20+ ; aucune version ne prend en charge Node 18). Module natif : pour le binaire autonome (SEA), devra être extrait sur disque puis chargé au runtime, exactement comme le moteur d'origine le fait déjà pour `node-pty`. |
 | `sql.js` (WebAssembly) | Portable, sans module natif | Rejeté : `user.db` deviendrait purement en mémoire, imposant de sérialiser/réécrire le fichier à chaque mutation (statistiques d'usage, outils appris) — coût d'ingénierie pour un gain de simplicité marginal, et binaire WASM d'environ 1,5 Mo ajouté. |
 
 Critères de décision : temps d'ouverture, taille ajoutée, absence de compilation chez l'utilisateur.
@@ -392,7 +392,7 @@ curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/insta
 
 Le script :
 1. détecte le système et l'architecture ;
-2. télécharge le binaire autonome correspondant, avec Node embarqué, comme le fait déjà le paquet d'Inshellisense, depuis la Release GitHub, compressé en gzip (140 Mo → 45 Mo) ;
+2. télécharge le binaire autonome correspondant, avec Node embarqué, comme le fait déjà le paquet du moteur d'origine, depuis la Release GitHub, compressé en gzip (140 Mo → 45 Mo) ;
 3. vérifie sa somme SHA-256 (`SHA256SUMS` de la Release) ;
 4. l'installe dans `~/.local/bin`, sans droits administrateur ;
 5. place `knowledge.db` dans `~/.local/share/biopilot/` (par `biopilot reinit`) ;
@@ -413,7 +413,7 @@ conda install -c conda-forge biopilot-cli   # abandonné (décision de la versio
 | Étapes manuelles après le script | Une seule : ajouter la ligne d'initialisation du shell |
 | Droits administrateur | Jamais |
 | Compilation chez l'utilisateur | Jamais |
-| Prérequis | Aucun pour le binaire autonome. Variante npm : un Node récent suffit, car le paquet ne fait que lancer le binaire autonome, qui embarque Node 22. Développement et installation depuis les sources : Node 22 (plancher imposé par `better-sqlite3`, plafond `<23` hérité d'Inshellisense) |
+| Prérequis | Aucun pour le binaire autonome. Variante npm : un Node récent suffit, car le paquet ne fait que lancer le binaire autonome, qui embarque Node 22. Développement et installation depuis les sources : Node 22 (plancher imposé par `better-sqlite3`, plafond `<23` hérité du moteur d'origine) |
 | Mise à jour | Relance du script (ou `npm`/`conda`), puis `biopilot reinit`, que la session réclame d'elle-même tant que les ressources sont d'une autre version |
 | Désinstallation | `biopilot uninstall` laisse le système dans son état initial |
 
@@ -471,7 +471,7 @@ Prévue pour l'architecture, non développée en version 1.
 | Bout en bout | Vraies sessions dans un pseudo-terminal, rendu par le même émulateur que le moteur, avec de vrais environnements conda à deux versions d'un même outil | Tous verts sur Linux et macOS |
 | Performance | Mesures de la section 11 | Échec si une cible est dépassée de plus de 20 % |
 | Régression | Autocomplétion générale (git, cd) inchangée | Bloquant |
-| Upstream | Rejeu des tests d'Inshellisense sur le fork | Bloquant |
+| Upstream | Rejeu des tests du moteur d'origine sur le fork | Bloquant |
 
 ---
 
@@ -479,7 +479,7 @@ Prévue pour l'architecture, non développée en version 1.
 
 | Phase | Contenu | Critère de fin |
 |---|---|---|
-| 0. Fondations | Fork, renommage (M1), choix SQLite, mesures de référence | `biopilot` s'installe et fonctionne comme Inshellisense |
+| 0. Fondations | Fork, renommage (M1), choix SQLite, mesures de référence | `biopilot` s'installe et fonctionne comme le moteur d'origine |
 | 1. Base | Schéma, compilation YAML vers SQLite, 10 outils de l'annexe A | `biopilot info fastp` répond depuis la base |
 | 2. Moteur | M3 à M6 et M8, branchement de la base | `fastp --` affiche les options classées |
 | 3. Version réelle | M2, résolveur, analyse du `--help`, profils, `status`, `sync` *(`learn` reporté)* | `--dedup` apparaît avec fastp 0.23.4 et pas avec 0.20.1 |
@@ -493,7 +493,7 @@ Prévue pour l'architecture, non développée en version 1.
 
 | Risque | Impact | Parade |
 |---|---|---|
-| Inshellisense reste pré-1.0 depuis l'origine (0.0.x sur 4 releases), maintenu par une petite équipe sans engagement public de support long terme | Fork plus difficile à maintenir si le rythme ralentit ou change | Patchs isolés et listés, tests upstream en CI, noyau BioPilot indépendant du moteur |
+| Le moteur d'origine reste pré-1.0 depuis sa création (0.0.x sur 4 releases), maintenu par une petite équipe sans engagement public de support long terme | Fork plus difficile à maintenir si le rythme ralentit ou change | Patchs isolés et listés, tests upstream en CI, noyau BioPilot indépendant du moteur |
 | `--help` dans un format non prévu | Options manquantes | Retour à `knowledge.db`, test ajouté pour chaque nouveau format |
 | Outil lent à afficher son aide (Java) | Première suggestion lente | `biopilot sync`, calcul en arrière-plan |
 | Module SQLite natif incompatible | Échec d'installation | Choix en phase 0, binaires précompilés, solution WebAssembly en secours |
@@ -505,7 +505,7 @@ Prévue pour l'architecture, non développée en version 1.
 
 1. **Bibliothèque SQLite :** `better-sqlite3` — voir section 6.6 et [ADR-0001](./docs/adr/0001-better-sqlite3.md).
 2. **Nom de paquet :** `biopilot-cli` (npm, dépôt GitHub, feedstock conda-forge). La commande shell reste `biopilot` (M1, section 5). Disponibilité vérifiée le 6 novembre 2026 sur les trois plateformes ; `biopilot` seul a été écarté car l'organisation GitHub de ce nom est déjà prise et qu'un produit commercial existant (bioréacteur pilote) porte ce nom dans le même secteur.
-3. **Licence :** MIT, avec un fichier `NOTICE` préservant intégralement la licence et le copyright d'Inshellisense (`Copyright (c) Microsoft Corporation`).
+3. **Licence :** MIT, avec un fichier `NOTICE` préservant intégralement la licence et le copyright du projet d'origine (`Copyright (c) Microsoft Corporation`).
 4. **Hébergement :** GitHub Releases, dépôt [`DEDJIABDOUL/biopilot-cli`](https://github.com/DEDJIABDOUL/biopilot-cli) (privé pour l'instant — à rendre public avant la distribution en section 10).
 
 5. **Langue :** ce document reste en français tant qu'il est une proposition. Le glossaire (`GLOSSARY.md`), le code, le README et la documentation publique (phase 6) sont en anglais.

@@ -56,7 +56,7 @@ These are not negotiable; a pull request that breaks one will be asked to change
 2. Keep one subject per pull request. A new tool and an engine change are two pull requests.
 3. Add or update tests. A Catalog tool needs its recorded help under `knowledge/help/<tool>/<version>/`.
 4. Add a line under **Unreleased** in [CHANGELOG.md](./CHANGELOG.md) for any change a user can see.
-5. Code from the original Inshellisense engine is changed only where needed, and each change is marked with a `// BIOPILOT:` comment saying why.
+5. Code from the original engine is changed only where needed, and each change is marked with a `// BIOPILOT:` comment saying why.
 6. CI must be green: lint, unit tests, end-to-end tests, performance targets.
 
 A maintainer answers a new pull request or issue within a few days. Releases follow the cadence described in [docs/releasing.md](./docs/releasing.md): a merged change ships in the next scheduled release, not immediately.

@@ -1,4 +1,4 @@
-# Performance baseline: unmodified Inshellisense 0.0.4
+# Performance baseline: the unmodified original engine, 0.0.4
 
 Reference point for the performance targets in section 11 of the spec (notably "installed binary no more than 10% larger than the original"). Measured on the upstream tag `0.0.4`, before any BioPilot change.
 
@@ -33,7 +33,7 @@ Process: CPU user 136.6 ms, system 117.6 ms; heap used 11.2 MB; RSS 97.2 MB.
 
 | Artifact | Size |
 |---|---|
-| Binary `inshellisense-linux-x64` | 137,956,544 bytes (131.6 MiB) |
+| Binary (linux-x64) | 137,956,544 bytes (131.6 MiB) |
 | Release tarball `.tgz` | 43,994,166 bytes (42.0 MiB) |
 | JS bundle `index.cjs` | 1,221,616 bytes |
 

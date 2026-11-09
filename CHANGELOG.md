@@ -21,7 +21,7 @@
 - **Security:** `install.sh` trusts only the release key it carries: the `BIOPILOT_TEST_PUBLIC_KEY_FILE` setting, meant for tests, no longer replaces it.
 - **Security:** a User store moved to a new data directory stays readable by its owner only.
 - **Build:** js-yaml and brace-expansion of the development tools updated (high-severity advisories; they are not part of BioPilot); CI's token is read-only and checkouts keep no credentials; Dependabot also watches the npm dependencies.
-- **Documentation:** for commands outside the Catalog, the completion specs inherited from Inshellisense may run the command being typed to list its values (`git checkout ` runs `git branch`); the guide and the 1.0.0 notes said otherwise.
+- **Documentation:** for commands outside the Catalog, the completion specs inherited from the original engine may run the command being typed to list its values (`git checkout ` runs `git branch`); the guide and the 1.0.0 notes said otherwise.
 
 ## 1.1.2
 
@@ -62,7 +62,7 @@ The first stable release: terminal autocompletion for bioinformatics, fitted to 
 - **Status line** under a bio tool's suggestions: version, its source, environment, warnings; `statusLine = false` turns it off.
 - **One-line install** (`install.sh`, standalone binaries for Linux x64/arm64 and macOS arm64/x64, SHA-256 checked, no admin rights), `biopilot doctor`, `biopilot uninstall`.
 - **Measured:** every target of spec §11 checked in CI (`npm run perf:targets`): session startup +32 ms and memory +2 MB over the original engine, warm suggestions under 1 ms.
-- **Offline and private:** no network, no telemetry; only file names are read; of the Catalog tools, only their declared help and version commands are run (for other commands, the completion specs inherited from Inshellisense may run them to list values, e.g. `git branch` — corrected in 1.1.3).
+- **Offline and private:** no network, no telemetry; only file names are read; of the Catalog tools, only their declared help and version commands are run (for other commands, the completion specs inherited from the original engine may run them to list values, e.g. `git branch` — corrected in 1.1.3).
 
 ## 0.1.0
 

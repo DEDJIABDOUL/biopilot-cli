@@ -83,6 +83,21 @@ const notAPath = (value: string) =>
 
 const argName = (argument: Argument) => `<${argument.name}>`;
 
+/** A command's options by alias and its arguments, read once per Catalog: the live check runs on every keystroke. */
+const shapes = new WeakMap<Catalog, Map<string, { byAlias: Map<string, Option>; args: Argument[] }>>();
+const commandShape = (catalog: Catalog, command: Command) => {
+  let byCommand = shapes.get(catalog);
+  if (!byCommand) shapes.set(catalog, (byCommand = new Map()));
+  const key = [command.tool, ...command.path].join("\0");
+  let shape = byCommand.get(key);
+  if (!shape) {
+    const options = catalog.listOptions(command);
+    shape = { byAlias: new Map(options.flatMap((option) => option.aliases.map((alias) => [alias, option] as const))), args: catalog.listArguments(command) };
+    byCommand.set(key, shape);
+  }
+  return shape;
+};
+
 /** Reads the words of one simple command against the Catalog: its command, then options and arguments with their values. */
 const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[]; typed: Typed[] } | undefined => {
   // `VAR=value tool …`
@@ -99,9 +114,7 @@ const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[
     if (!sub) break;
     command = sub;
   }
-  const options = catalog.listOptions(command);
-  const byAlias = new Map<string, Option>(options.flatMap((option) => option.aliases.map((alias) => [alias, option] as const)));
-  const args = catalog.listArguments(command);
+  const { byAlias, args } = commandShape(catalog, command);
   const bound: Bound[] = [];
   const typed: Typed[] = [];
   const add = (subject: string, key: string, spec: ValueSpec | null, values: string[], mate: string | null, threads: boolean) => {
@@ -184,7 +197,7 @@ const pathsOf = (value: string, ctx: CheckContext, resolve: (v: string) => strin
 export const checkLine = (line: string, catalog: Catalog, ctx: CheckContext): CheckResult => {
   const tokenized = tokenize(line);
   if (!tokenized.ok) return { ok: false, reason: tokenized.reason };
-  const formats = new Map<string, Format>(catalog.listFormats().map((format) => [format.name, format]));
+  const formats = new Map<string, Format>(catalog.listFormats().map((format) => [format.name, format])); // read once by the reader
   const resolve = (value: string) => path.resolve(ctx.cwd, ctx.home && value.startsWith("~/") ? path.join(ctx.home, value.slice(2)) : value);
   const analysed: { tool: string; command: string[] }[] = [];
   const warnings: Warning[] = [];

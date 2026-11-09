@@ -252,6 +252,22 @@ const installedFor = (current: Catalog, tool: string, learned?: ToolQuery): { bi
   return { binary, installed: { tool, version, versionSource: detected?.source, key: versionKey(version, binary.fingerprint), store } };
 };
 
+/**
+ * What is installed of a Catalog Tool, for the live Warnings of `biopilot check` (ticket #110): the
+ * version and Profiles of the binary the shell would run, as its spec uses them. Never throws.
+ */
+export const installedOf = (toolName: string): { version: string | undefined; profile: (command: string) => HelpOption[] | undefined } | undefined => {
+  try {
+    const current = getCatalog();
+    const found = current?.getTool(toolName) ? installedFor(current, toolName) : undefined;
+    if (!found) return;
+    const { installed } = found;
+    return { version: installed.version, profile: (command) => installed.store?.getProfile(installed.tool, installed.key, command)?.options };
+  } catch {
+    return;
+  }
+};
+
 /** Priority of a Catalog Tool's name in command-name completion (spec M6): above other specs (40). */
 const TOOL_PRIORITY = 90;
 /** M6: fixed bonus of a Tool whose platform is among the project's. */

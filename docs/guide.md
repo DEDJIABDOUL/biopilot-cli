@@ -77,7 +77,13 @@ Under the suggestions of a Catalog tool, a dim line tells what BioPilot detected
  fastp · not installed: options from the Catalog
 ```
 
-Turn it off with `statusLine = false` in [`rc.toml`](#configuration-rctoml).
+While you type, it starts with the first warning of [`biopilot check`](#checking-a-command-biopilot-check) for the line, if any. The word being typed is not checked until you move past it:
+
+```text
+ ⚠ -I data/s2_R2.fastq.gz is not the mate of -i data/s1_R1.fastq.gz: samples s1 and s2 · fastp 0.23.4 · conda-meta
+```
+
+The warning never blocks Enter. Turn the warnings off with `warnings = false` in [`rc.toml`](#configuration-rctoml) (everywhere) or in [`.biopilot.toml`](#project-configuration-biopilottoml) (in one project). Turn the whole status line off with `statusLine = false` in `rc.toml`.
 
 ## Commands
 
@@ -142,6 +148,7 @@ assay = "rna-seq"            # rna-seq | variant-calling | unknown
 platform = ["illumina"]      # illumina, nanopore, or both
 results_dir = "out"          # where derived output names go (default: results/ when it exists)
 reference = "ref/GRCh38.fa"  # offered first wherever a reference fits
+warnings = false             # no live warning of biopilot check in this project
 ```
 
 ## Configuration: `rc.toml`
@@ -150,6 +157,7 @@ reference = "ref/GRCh38.fa"  # offered first wherever a reference fits
 
 ```toml
 statusLine = true                          # the status line under bio tools' suggestions
+warnings = true                            # the first warning of biopilot check, in the status line
 maxSuggestions = 5                         # suggestions shown at once
 activeSuggestionBackgroundColor = "#7D56F4"
 boxBorderStyle = "square"                  # or "rounded"

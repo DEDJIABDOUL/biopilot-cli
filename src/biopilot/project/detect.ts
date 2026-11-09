@@ -17,7 +17,15 @@ export type FormatRecogniser = Pick<Catalog, "formatOfFile" | "matchFiles">;
 export type ReadPair = { r1: string; r2: string };
 
 /** What `.biopilot.toml` says; `null` fields were absent or invalid. */
-export type ProjectConfig = { file: string; assay: Assay | null; platforms: Platform[] | null; resultsDir: string | null; reference: string | null };
+export type ProjectConfig = {
+  file: string;
+  assay: Assay | null;
+  platforms: Platform[] | null;
+  resultsDir: string | null;
+  reference: string | null;
+  /** `warnings = false`: no live Warning of `biopilot check` in this project. */
+  warnings: boolean | null;
+};
 
 export type Project = {
   root: string;
@@ -204,6 +212,7 @@ const readConfig = (root: string): ProjectConfig | null => {
     platforms,
     resultsDir: typeof data.results_dir === "string" ? data.results_dir : null,
     reference: typeof data.reference === "string" ? data.reference : null,
+    warnings: typeof data.warnings === "boolean" ? data.warnings : null,
   };
 };
 

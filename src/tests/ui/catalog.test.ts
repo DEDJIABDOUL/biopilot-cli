@@ -202,6 +202,20 @@ describe("[bash] the status line (M7)", () => {
     await terminal.expectText("not installed: options from the Catalog", { strict: false });
   });
 
+  test("a Warning of biopilot check leads it while the line is typed (ticket #110)", async () => {
+    const project = tempDir();
+    fs.mkdirSync(path.join(project, ".git"));
+    fs.mkdirSync(path.join(project, "d"));
+    for (const file of ["a_R1.fq", "a_R2.fq", "b_R1.fq", "b_R2.fq"]) fs.writeFileSync(path.join(project, "d", file), "");
+    terminal = await session({ BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath, PATH: noFastp });
+    // Into the project, then a clear screen: the next prompt is the only one shown.
+    await terminal.write(`cd ${project}; clear\r`);
+    await terminal.expectText("clear", { strict: false, not: true });
+    await expectPrompt(terminal);
+    await terminal.type("fastp -i d/a_R1.fq -I d/b_R2.fq --");
+    await terminal.expectText("is not the mate of", { strict: false });
+  });
+
   test("statusLine = false in rc.toml hides it", async () => {
     terminal = await session({ BIOPILOT_CATALOG: compileRepositoryCatalog().catalogPath, PATH: noFastp, XDG_CONFIG_HOME: off });
     await terminal.type("fastp --");

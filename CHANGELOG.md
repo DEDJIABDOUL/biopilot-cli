@@ -5,6 +5,9 @@
 - **`biopilot check "<command line>"`:** warnings about a command before it runs, from file names, file existence and the CPUs available: read pairs of different samples or swapped, an output overwriting an input, an output folder that does not exist, a missing input, an incomplete or missing Reference index, more threads than the CPUs of the machine, the cgroup or the SLURM job, an option the installed version doesn't have (from its Profile, else the Catalog's version range), a deprecated option (info). Exit code 0, 1 or 2; `--json` in a versioned format with its JSON Schema.
 - **Live warnings:** while a command is typed, the status line starts with its first warning, the word being typed left out (`⚠ -I data/s2_R2.fastq.gz is not the mate of -i data/s1_R1.fastq.gz: samples s1 and s2 · fastp 0.23.4 · conda-meta`). Never blocks Enter; `warnings = false` in `rc.toml` or `.biopilot.toml` turns them off.
 - **Catalog:** the main inputs and outputs of every tool are marked (`io`), and thread-count options too (`threads`). Catalog schema version 6.
+- **Release policy:** about one version every two weeks; the 1.1 line continues up to 1.1.10 (1.1.5: Catalog lots 4 and 5, README demo, `biopilot check`; then wrapper commands, native mode, Lmod), then 1.2.0 and Semantic Versioning with one minor release about every four weeks. See [Releasing](./docs/releasing.md).
+- **Contributing:** `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (private reporting), `CITATION.cff`, and a tool request issue template.
+- **Bioconda:** the recipe for `conda install -c bioconda biopilot-cli`, in `recipes/bioconda/`, to be submitted to bioconda-recipes.
 
 ## 1.1.4
 

@@ -1,31 +1,28 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: A wrong, missing or slow suggestion, an installation problem, or a crash
 title: ''
-labels: bug
+labels: bug, needs-triage
 assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+**What happened**
+What you typed, what BioPilot suggested (or did), and what you expected instead.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**To reproduce**
+1. In a folder containing: (e.g. `data/s1_R1.fastq.gz`, `data/s1_R2.fastq.gz`)
+2. Type: (e.g. `fastp --in2 `)
+3. See: 
 
 **Environment**
- - OS: [e.g. iOS]
- - Output of `is --version`: 
- - Nodejs Version: [e.g. 20.9.0]
- - Shell: [e.g. bash, zsh, fish]
- - Shell Version: [e.g. 5.2.21]
+- Output of `biopilot --version`:
+- Output of `biopilot doctor`:
+- For a tool's suggestions, output of `biopilot status` (or `biopilot info <tool>`):
+- System: (e.g. Ubuntu 22.04 x86_64, macOS 14 arm64, WSL 2 Ubuntu, Rocky Linux 8 cluster node)
+- Shell and version: (e.g. bash 5.2)
+- Terminal: (e.g. GNOME Terminal, iTerm2, Windows Terminal, tmux)
+- Installed with: install.sh / npm / conda
 
-**Additional context**
-Add any other context about the problem here.
+**Log**
+If you can, start BioPilot with `biopilot -V`, reproduce, and attach the relevant lines of `~/.local/share/biopilot/log/biopilot.log`. Remove any path or sample name you do not want to share.

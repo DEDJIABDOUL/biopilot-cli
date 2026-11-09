@@ -21,6 +21,7 @@ Version 1.1. 44 tools are built in: bcftools, bedtools, bgzip, blastn, bowtie2, 
 - [Use BioPilot](#use-biopilot)
 - [Stop BioPilot](#stop-biopilot)
 - [Run a diagnostic](#run-a-diagnostic)
+- [Command reference](#command-reference)
 - [Update](#update)
 - [Uninstall](#uninstall)
 - [Documentation](#documentation)
@@ -173,6 +174,22 @@ biopilot search "adapter"
 
 lists the options of the built-in and imported tools whose name or description contains every word. Add `--tool fastp` to search one tool, or `--json` for a machine-readable answer.
 
+### Check a command before running it
+
+```shell
+biopilot check "fastp -i data/ctrl_R1.fastq.gz -I data/treat_R2.fastq.gz -o out/ctrl.fq.gz -w 64"
+```
+
+warns about mistakes that would otherwise show up hours later, without running the command or reading your files. It prints one line per warning (each starts with a warning sign in the terminal):
+
+```text
+-I data/treat_R2.fastq.gz is not the mate of -i data/ctrl_R1.fastq.gz: samples ctrl and treat  [read-pair]
+-o out/ctrl.fq.gz: the folder out does not exist  [output-folder-missing]
+-w 64 asks for 64 threads; only 8 CPUs are available on this machine  [threads-above-cpus]
+```
+
+It also reports a missing input, an output that would overwrite an input, an incomplete reference index, and an option the installed version of the tool doesn't have. While you type in a BioPilot session, the first warning appears at the start of the status line; it never blocks Enter. See [`biopilot check`](#biopilot-check) below.
+
 ## Stop BioPilot
 
 - **Hide the suggestions for a moment:** press Escape.
@@ -202,6 +219,176 @@ Run these commands in a terminal:
 | suggestions for another version of a tool | run `biopilot status` to see which program BioPilot found, then `biopilot sync` |
 
 For a detailed log, start BioPilot with `biopilot -V`; the log is written to `~/.local/share/biopilot/log/biopilot.log`.
+
+## Command reference
+
+BioPilot's own options go before the tool name: in `biopilot info fastp --json`, `--json` is an option of fastp, not of BioPilot. Every command answers `--help`.
+
+| Command | What it does |
+|---|---|
+| [`biopilot`](#biopilot) | start a BioPilot session in the current terminal |
+| [`biopilot init`](#biopilot-init) | print the start line to add to your shell's startup file |
+| [`biopilot reinit`](#biopilot-reinit) | reinstall BioPilot's resources after an update |
+| [`biopilot doctor`](#biopilot-doctor) | check the installation |
+| [`biopilot status`](#biopilot-status) | show the environment, the project and the tools BioPilot detects |
+| [`biopilot sync`](#biopilot-sync) | read the real options of the tools of the active environment ahead of time |
+| [`biopilot info`](#biopilot-info) | show what BioPilot knows about a tool, a subcommand or an option |
+| [`biopilot search`](#biopilot-search) | find an option by what it does |
+| [`biopilot check`](#biopilot-check) | warn about a command line before it runs |
+| [`biopilot learn`](#biopilot-learn) | import a tool that is not built in |
+| [`biopilot reset-usage`](#biopilot-reset-usage) | forget which options you use most |
+| [`biopilot complete`](#biopilot-complete) | print the suggestions for a line, as JSON |
+| [`biopilot specs list`](#biopilot-specs-list) | list the completion specs available for general commands |
+| [`biopilot uninstall`](#biopilot-uninstall) | remove BioPilot |
+
+### `biopilot`
+
+```shell
+biopilot [-s <shell>] [-l] [-V]
+biopilot -c
+biopilot -v
+```
+
+Starts a BioPilot session: your shell runs inside it, with suggestions under the cursor. The start line added at installation does this in every new terminal; type `exit` to leave the session (and the terminal).
+
+| Option | Effect |
+|---|---|
+| `-s, --shell <shell>` | the shell to run: `bash`, `zsh` or `fish` (default: the shell you type it in) |
+| `-l, --login` | start the shell as a login shell |
+| `-V, --verbose` | write a detailed log to `~/.local/share/biopilot/log/biopilot.log` |
+| `-c, --check` | tell whether this terminal runs in a BioPilot session: `biopilot session [live]` or `[not found]` |
+| `-v, --version` | print BioPilot's version |
+
+### `biopilot init`
+
+```shell
+biopilot init bash      # or zsh, fish
+```
+
+Prepares the shell plugin and prints the line that starts BioPilot, to put at the end of your shell's startup file (see the installation steps). The line does nothing when `biopilot` is not on the `PATH`.
+
+### `biopilot reinit`
+
+```shell
+biopilot reinit
+```
+
+Replaces BioPilot's resources (the Catalog of built-in tools, the shell plugins, the completion specs) with those of the installed version. Run it when a terminal reports `biopilot resources out of date`. Your settings, imported tools and data are kept.
+
+### `biopilot doctor`
+
+```shell
+biopilot doctor
+```
+
+Checks the installation: the start lines of your shells, the Catalog, the user data, the `PATH` and the active environment. It names each problem and what to do about it.
+
+### `biopilot status`
+
+```shell
+biopilot status [--json]
+```
+
+Shows the active conda environment, the detected project (its root, platforms, assay, read pairs) and, for each built-in tool, the program found on the `PATH`, its version, where that version comes from, and whether its real options are known. `--json` prints the same as JSON.
+
+### `biopilot sync`
+
+```shell
+biopilot sync
+```
+
+Reads, once, the real options of every built-in tool installed in the active environment, from each tool's own help, for the version installed, and lists what it found. Without it, BioPilot does the same in the background the first time you use a tool. Run it again after installing or updating tools. (Imported tools are read when you run `biopilot learn`.)
+
+### `biopilot info`
+
+```shell
+biopilot info                      # the built-in tools
+biopilot info fastp                # a tool and its options
+biopilot info fastp -i             # one option (any of its names)
+biopilot info samtools sort        # a subcommand
+biopilot info samtools sort -o     # an option of a subcommand
+biopilot info --json fastp -i      # the same, as JSON
+```
+
+Shows what BioPilot knows about a tool, a subcommand or an option: descriptions, values, file formats, read pairs, default values and the versions that have it. The JSON format is published in [`schemas/info-output.schema.json`](./schemas/info-output.schema.json).
+
+### `biopilot search`
+
+```shell
+biopilot search [--json] [--tool <tool>] "<text>"
+```
+
+Finds the options of the built-in and imported tools whose name or description contains every word of the text, the last word as a prefix. `--tool fastp` limits the search to one tool; `--json` prints the results as JSON.
+
+### `biopilot check`
+
+```shell
+biopilot check [--json] "<command line>"
+biopilot check -- samtools sort -o out.bam in.bam
+```
+
+Reads a command line with what BioPilot knows of its tools and warns about mistakes before it runs. It never runs the command and never reads the content of a file: only file names, whether files exist, the CPUs available and the installed version's options.
+
+| Warning | When |
+|---|---|
+| `read-pair` | the read 1 and read 2 files belong to different samples or folders, are swapped, or are both read 1 (or both read 2) |
+| `output-is-input` | an output would overwrite one of the inputs |
+| `output-folder-missing` | an output is in a folder that does not exist |
+| `input-missing` | an input file or folder does not exist |
+| `reference-index` | a reference index lacks some of its files, or has none; an index folder lacks its marker file |
+| `threads-above-cpus` | a thread count is above the CPUs available: a SLURM job's `SLURM_CPUS_PER_TASK`, else the container's CPU quota, else the machine's CPUs |
+| `option-version` | an option the installed version of the tool doesn't have |
+| `option-deprecated` | an obsolete option (information only) |
+
+Pipelines (`bwa mem … | samtools sort …`) are checked command by command. Standard input and output (`-`), URIs, patterns (`*.bam`) and variables (`$BAM`) are never reported as missing. Exit code **0** without a warning, **1** with at least one, **2** when the line cannot be checked (no built-in tool on it, an unterminated quote). `--json` prints the result in the format of [`schemas/check-output.schema.json`](./schemas/check-output.schema.json), for scripts and workflows:
+
+```shell
+biopilot check --json "$cmd" > /dev/null || echo "check this command first: $cmd"
+```
+
+In a BioPilot session, the first warning of the line being typed starts the status line. Turn this off with `warnings = false` in `~/.config/biopilot/rc.toml`, or in a project's `.biopilot.toml` for that project only.
+
+### `biopilot learn`
+
+```shell
+biopilot learn <tool>              # import an installed tool
+biopilot learn --list              # the imported tools
+biopilot learn --forget <tool>     # remove one
+```
+
+Imports an installed tool that is not built in: BioPilot reads its own help, finds its subcommands (one level) and how to get its version, then completes it like a built-in tool, with the options of the version installed. It refuses a built-in tool, a tool that is not installed, and a tool whose help it cannot read. This is the only command that runs a tool BioPilot doesn't know; typing a command never runs it.
+
+### `biopilot reset-usage`
+
+```shell
+biopilot reset-usage
+```
+
+Erases the usage statistics: how often you accepted each option, which makes your usual options rise in the suggestions. Nothing else is touched.
+
+### `biopilot complete`
+
+```shell
+biopilot complete "fastp --in1 "
+```
+
+Prints, as JSON, the suggestions BioPilot would show for a line, in the current folder. For scripts and editors; a session does not need it.
+
+### `biopilot specs list`
+
+```shell
+biopilot specs list [-s bash|zsh]
+```
+
+Prints, as a JSON list, the names of the commands BioPilot has completion specs for, besides the bioinformatics tools (git, cd, ls…); with `-s`, the names of your shell's aliases too.
+
+### `biopilot uninstall`
+
+```shell
+biopilot uninstall [-y]
+```
+
+Lists everything it will remove, asks for confirmation, then removes BioPilot: the program, its settings, its data and the start line in your shells' startup files. `-y, --yes` removes without asking. See [Uninstall](#uninstall).
 
 ## Update
 

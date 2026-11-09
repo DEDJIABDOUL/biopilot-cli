@@ -23,6 +23,7 @@ Version 1.1. 44 tools are built in: bcftools, bedtools, bgzip, blastn, bowtie2, 
 - [Uninstall](#uninstall)
 - [Documentation](#documentation)
 - [Development](#development)
+- [Contributing and citing](#contributing-and-citing)
 - [Credits and license](#credits-and-license)
 
 ## Requirements
@@ -249,6 +250,10 @@ node build/index.js
 ```
 
 `npm test` runs the unit tests and `npm run test:e2e` the end-to-end tests in real bash, zsh and fish sessions. `npm run perf:targets` checks the performance targets. The domain vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the architecture decisions in [docs/adr/](./docs/adr/).
+
+## Contributing and citing
+
+Tool requests, Catalog additions and fixes are welcome: see [CONTRIBUTING.md](./CONTRIBUTING.md). To cite BioPilot, use [CITATION.cff](./CITATION.cff) (GitHub's "Cite this repository" button).
 
 ## Credits and license
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Release policy:** about one version every two weeks; the 1.1 line continues up to 1.1.10 (1.1.5: Catalog lots 4 and 5, README demo, `biopilot check`; then wrapper commands, native mode, Lmod), then 1.2.0 and Semantic Versioning with one minor release about every four weeks. See [Releasing](./docs/releasing.md).
+- **Contributing:** `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (private reporting), `CITATION.cff`, and a tool request issue template.
+- **Bioconda:** the recipe for `conda install -c bioconda biopilot-cli`, in `recipes/bioconda/`, to be submitted to bioconda-recipes.
+
 ## 1.1.4
 
 - **Fix:** on Linux systems older than glibc 2.34 — RHEL, Rocky and Alma Linux 8, Ubuntu 20.04, Debian 10 and 11, common on HPC clusters and compute servers — the Catalog could not open: the SQLite addon came prebuilt for newer systems. It is now built for glibc 2.28, as the README always said, and each release is tested on Rocky Linux 8 and Ubuntu 20.04 before it is published. Nothing changes on newer systems or on macOS.

@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use BioPilot CLI in your work, please cite it as below."
+title: "BioPilot CLI: version-aware and project-aware terminal autocompletion for bioinformatics"
+type: software
+authors:
+  - name: "BioPilot CLI contributors"
+version: 1.1.4
+date-released: 2026-11-08
+license: MIT
+repository-code: "https://github.com/DEDJIABDOUL/biopilot-cli"
+abstract: >-
+  BioPilot CLI suggests, while a command is typed, the options, files and values
+  that fit bioinformatics tools such as fastp, samtools, bwa or minimap2, as they
+  are actually installed in the active environment (conda, mamba), and for the
+  project being worked on (file formats, read pairs, reference indexes). It runs
+  locally, without network access or telemetry.
+keywords:
+  - bioinformatics
+  - command line
+  - autocompletion
+  - shell
+  - conda
+  - reproducibility

@@ -1,0 +1,62 @@
+{% set name = "biopilot-cli" %}
+{% set version = "1.1.4" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+# The signed standalone binaries of the GitHub Release (Node.js 22 and the native addons embedded,
+# built for glibc 2.28): the same files install.sh and npm install. Checksums from the release's
+# SHA256SUMS, itself signed by the BioPilot release key.
+source:
+  - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-linux-x64.gz  # [linux and x86_64]
+    sha256: 3864b37847d5f37ba1af6daae6f6eb849cdbf047b5977b1ac8350c67c2f177be  # [linux and x86_64]
+  - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-linux-arm64.gz  # [linux and aarch64]
+    sha256: 2ba35476959f26670f9a32a7f7864cb47780927e2dc4d098cae9c14928b72769  # [linux and aarch64]
+  - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-darwin-x64.gz  # [osx and x86_64]
+    sha256: 03a0aa8dd01d95973549043130b69ae1d4df2337bf7a3060ada9a5661c1b5271  # [osx and x86_64]
+  - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-darwin-arm64.gz  # [osx and arm64]
+    sha256: f448532b965bb0c1e9801a8728771ef36c433cea5d84c8db4c4d1bd9d4703450  # [osx and arm64]
+  - url: https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/v{{ version }}/LICENSE
+    sha256: c0fe194341a79a1f5ea6227d847adcf53e54adb5b3d2015658df052d1435f61e
+  - url: https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/v{{ version }}/NOTICE
+    sha256: 067275d3c8d1c5b87063e9e0f734b5add7f3a882cef375d1eb037a5d761ef660
+
+build:
+  number: 0
+  # A Node.js single executable application: its embedded blob must not be patched or rewritten.
+  binary_relocation: false
+  detect_binary_files_with_prefix: false
+  run_exports:
+    - {{ pin_subpackage(name, max_pin="x") }}
+
+requirements:
+  build: []
+  host: []
+  run: []
+
+# run_test.sh: the version, then reinit (into a throwaway data directory), info, search and init answer.
+
+about:
+  home: https://github.com/DEDJIABDOUL/biopilot-cli
+  dev_url: https://github.com/DEDJIABDOUL/biopilot-cli
+  doc_url: https://github.com/DEDJIABDOUL/biopilot-cli/blob/main/docs/guide.md
+  license: MIT
+  license_family: MIT
+  license_file:
+    - LICENSE
+    - NOTICE
+  summary: Version-aware and project-aware terminal autocompletion for bioinformatics tools.
+  description: |
+    BioPilot suggests, while you type a command, the options, files and values that fit
+    tools such as fastp, samtools, bwa or minimap2, as they are installed in your active
+    conda environment, for the project you are working in. Local, no network, no telemetry.
+    After installing, run `biopilot init bash` (or zsh, fish) and add the line it prints
+    at the end of your shell's startup file.
+
+extra:
+  additional-platforms:
+    - linux-aarch64
+    - osx-arm64
+  recipe-maintainers:
+    - DEDJIABDOUL

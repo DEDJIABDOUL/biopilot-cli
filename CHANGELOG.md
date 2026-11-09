@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **`biopilot check "<command line>"`:** warnings about a command before it runs, from file names, file existence and the CPUs available: read pairs of different samples or swapped, an output overwriting an input, an output folder that does not exist, a missing input, an incomplete or missing Reference index, more threads than the CPUs of the machine, the cgroup or the SLURM job, an option the installed version doesn't have (from its Profile, else the Catalog's version range), a deprecated option (info). Exit code 0, 1 or 2; `--json` in a versioned format with its JSON Schema.
+- **Live warnings:** while a command is typed, the status line starts with its first warning, the word being typed left out (`⚠ -I data/s2_R2.fastq.gz is not the mate of -i data/s1_R1.fastq.gz: samples s1 and s2 · fastp 0.23.4 · conda-meta`). Never blocks Enter; `warnings = false` in `rc.toml` or `.biopilot.toml` turns them off.
 - **Catalog:** the main inputs and outputs of every tool are marked (`io`), and thread-count options too (`threads`). Catalog schema version 6.
 
 ## 1.1.4

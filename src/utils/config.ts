@@ -38,6 +38,7 @@ type Config = {
   boxBorderStyle: BoxBorderStyle;
   /** BIOPILOT: M7 the status line under the suggestions of a Catalog Tool. */
   statusLine: boolean;
+  warnings: boolean;
 };
 
 const bindingSchema: JSONSchemaType<Binding> = {
@@ -111,6 +112,12 @@ const configSchema = {
       nullable: true,
       default: true,
     },
+    // BIOPILOT: 1.1.5 (ticket #110) the live Warnings of biopilot check in the status line.
+    warnings: {
+      type: "boolean",
+      nullable: true,
+      default: true,
+    },
   },
   additionalProperties: false,
 };
@@ -136,6 +143,7 @@ let globalConfig: Config = {
   activeSuggestionBackgroundColor: "#7D56F4",
   boxBorderStyle: "square",
   statusLine: true, // BIOPILOT: M7
+  warnings: true, // BIOPILOT: ticket #110
 };
 
 export const getConfig = (): Config => globalConfig;
@@ -169,6 +177,7 @@ export const loadConfig = async (program: Command) => {
         activeSuggestionBackgroundColor: config?.activeSuggestionBackgroundColor ?? "#7D56F4",
         boxBorderStyle: config?.boxBorderStyle ?? "square",
         statusLine: config?.statusLine ?? true, // BIOPILOT: M7
+        warnings: config?.warnings ?? true, // BIOPILOT: ticket #110
       };
     }
   }

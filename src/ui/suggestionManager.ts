@@ -121,7 +121,7 @@ export class SuggestionManager {
       this.#commandKey = commandKey;
       this.#suggestBlob = suggestionBlob;
       // BIOPILOT: M7
-      this.#statusLine = getConfig().statusLine ? (await import("../biopilot/engine/statusLine.js")).statusLineFor(commandText) : undefined;
+      this.#statusLine = getConfig().statusLine ? (await import("../biopilot/engine/statusLine.js")).statusLineFor(commandText, this.#term.cwd) : undefined;
       this.#activeSuggestionIdx = 0;
       return true;
     } catch (e) {

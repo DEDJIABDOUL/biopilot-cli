@@ -13,6 +13,7 @@ import { availableCpus } from "../../../biopilot/check/cpus.js";
 import { checkContext, runCheck } from "../../../biopilot/cli/checkRunner.js";
 import { compileCatalog } from "../../../biopilot/knowledge/compile.js";
 import { openCatalog, type Catalog } from "../../../biopilot/knowledge/catalog.js";
+import { parseHelp } from "../../../biopilot/profile/helpParser.js";
 import { tempDir } from "../helpers.js";
 
 const knowledge = path.resolve("knowledge");
@@ -195,6 +196,40 @@ describe("biopilot check", () => {
     test("a SLURM allocation is named", () => {
       const slurm = { ...ctx, cpus: availableCpus({ SLURM_CPUS_PER_TASK: "4" }) };
       expect(check("minimap2 -t 8 -o results/a.sam ref/genome.fa data/nano.fastq.gz", slurm)[0].message).toContain("4 CPUs are available to this SLURM job");
+    });
+  });
+
+  describe("option-version and option-deprecated (ticket #111)", () => {
+    const recorded = (version: string) => parseHelp(fs.readFileSync(path.join(knowledge, "help", "fastp", version, "root.txt"), "utf-8"));
+    const withFastp = (version: string | undefined, profile: ReturnType<typeof parseHelp> | undefined): CheckContext => ({
+      ...ctx,
+      installed: (tool) => (tool === "fastp" ? { version, profile: (command) => (command === "" ? profile : undefined) } : undefined),
+    });
+    const fastp = (options: string, context: CheckContext) => check(`fastp -i data/ctrl_R1.fastq.gz ${options}`, context);
+
+    test("an option the installed version's Profile lacks", () => {
+      const [warning] = fastp("--dedup", withFastp("0.20.1", recorded("0.20.1")));
+      expect(warning).toMatchObject({ rule: "option-version", severity: "warning", subjects: ["--dedup"] });
+      expect(warning.message).toBe("--dedup is not an option of fastp (fastp 0.20.1)");
+      expect(fastp("--dedup", withFastp("0.23.4", recorded("0.23.4")))).toEqual([]);
+    });
+    test("an option neither the Catalog nor the Profile knows", () => {
+      expect(fastp("--no-such-option", withFastp("0.23.4", recorded("0.23.4"))).map((w) => w.rule)).toEqual(["option-version"]);
+    });
+    test("any alias of a Catalog option present in the Profile is enough", () => {
+      expect(fastp("-D", withFastp("0.23.4", recorded("0.23.4")))).toEqual([]);
+    });
+    test("without a Profile, the Catalog's version range decides", () => {
+      expect(fastp("--dedup", withFastp("0.20.1", undefined))[0].message).toBe("--dedup appeared in 0.22.0; fastp 0.20.1 is installed");
+      expect(fastp("--dedup", withFastp("0.23.4", undefined))).toEqual([]);
+    });
+    test("nothing without a Profile or a version, or when the tool is not installed", () => {
+      expect(fastp("--dedup --no-such-option", withFastp(undefined, undefined))).toEqual([]);
+      expect(fastp("--dedup --no-such-option", ctx)).toEqual([]);
+    });
+    test("a deprecated option is an info, which does not fail the check", () => {
+      const [warning] = fastp("--cut_by_quality5", withFastp("0.23.4", recorded("0.23.4")));
+      expect(warning).toMatchObject({ rule: "option-deprecated", severity: "info", subjects: ["--cut_by_quality5"] });
     });
   });
 

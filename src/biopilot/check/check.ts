@@ -8,11 +8,22 @@
 
 import path from "node:path";
 import type { Argument, Catalog, Command, Format, Option, ValueSpec } from "../knowledge/catalog.js";
+import { withinVersions } from "../env/versionOrder.js";
+import type { HelpOption } from "../profile/helpParser.js";
 import { mateName, readNumber, sampleOf } from "../project/detect.js";
 import type { AvailableCpus } from "./cpus.js";
 import { tokenize, type Words } from "./tokens.js";
 
-export const RULES = ["read-pair", "output-is-input", "output-folder-missing", "input-missing", "reference-index", "threads-above-cpus"] as const;
+export const RULES = [
+  "read-pair",
+  "output-is-input",
+  "output-folder-missing",
+  "input-missing",
+  "reference-index",
+  "threads-above-cpus",
+  "option-version",
+  "option-deprecated",
+] as const;
 export type RuleId = (typeof RULES)[number];
 
 /** A finding about a command line: what is wrong, on which options or arguments. */
@@ -35,7 +46,17 @@ export type CheckContext = {
   /** Names of the entries of a folder; empty when it cannot be read. */
   list: (dir: string) => string[];
   cpus: AvailableCpus;
+  /**
+   * What is installed of a Tool: its version when known, and the Profile of one of its commands (by
+   * subcommand path, `""` for the root) when it was read. Nothing when the Tool is not installed or not known.
+   */
+  installed?: (tool: string) => Installed | undefined;
 };
+
+export type Installed = { version: string | undefined; profile: (command: string) => HelpOption[] | undefined };
+
+/** An option name typed on the line, and the Catalog's option when it knows it. */
+type Typed = { name: string; option: Option | undefined };
 
 export type CheckResult = { ok: true; analysed: { tool: string; command: string[] }[]; warnings: Warning[] } | { ok: false; reason: string };
 
@@ -63,7 +84,7 @@ const notAPath = (value: string) =>
 const argName = (argument: Argument) => `<${argument.name}>`;
 
 /** Reads the words of one simple command against the Catalog: its command, then options and arguments with their values. */
-const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[] } | undefined => {
+const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[]; typed: Typed[] } | undefined => {
   // `VAR=value tool …`
   let i = 0;
   while (i < words.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[i])) i++;
@@ -82,6 +103,7 @@ const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[
   const byAlias = new Map<string, Option>(options.flatMap((option) => option.aliases.map((alias) => [alias, option] as const)));
   const args = catalog.listArguments(command);
   const bound: Bound[] = [];
+  const typed: Typed[] = [];
   const add = (subject: string, key: string, spec: ValueSpec | null, values: string[], mate: string | null, threads: boolean) => {
     if (!spec || values.length === 0) return;
     const existing = bound.find((b) => b.key === key && b.subject === subject);
@@ -108,12 +130,14 @@ const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[
       if (!option && /^-[^-]/.test(word) && equals < 0) {
         // Grouped short options and attached values: `-ax map-ont`, `-t8`.
         let read = true;
+        const letters: Typed[] = [];
         for (let k = 1; k < word.length; k++) {
           const short = byAlias.get(`-${word[k]}`);
           if (!short) {
             read = false;
             break;
           }
+          letters.push({ name: `-${word[k]}`, option: short });
           if (short.value) {
             const rest = word.slice(k + 1);
             if (rest !== "") add(`-${word[k]}`, short.canonicalName, short.value, [rest], short.mate, short.threads);
@@ -122,8 +146,10 @@ const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[
           }
         }
         if (!read) argumentsUnknown = true;
+        typed.push(...(read ? letters : [{ name: word, option: undefined }]));
         continue;
       }
+      typed.push({ name, option });
       if (!option) {
         if (equals < 0) argumentsUnknown = true;
         continue;
@@ -148,7 +174,7 @@ const bind = (catalog: Catalog, words: Words): { command: Command; bound: Bound[
     add(argName(argument), argument.name, argument.value, [word], argument.mate, false);
     if (!(argument.variadic || argument.value?.multiple)) position++;
   }
-  return { command, bound };
+  return { command, bound, typed };
 };
 
 /** Every path of a value: one, or several separated by commas (bowtie2 `-1 a_R1.fq,b_R1.fq`). */
@@ -166,7 +192,7 @@ export const checkLine = (line: string, catalog: Catalog, ctx: CheckContext): Ch
   for (const words of tokenized.commands) {
     const read = bind(catalog, words);
     if (!read) continue;
-    const { command, bound } = read;
+    const { command, bound, typed } = read;
     analysed.push({ tool: command.tool, command: command.path });
     const warn = (rule: RuleId, subjects: string[], message: string, severity: "warning" | "info" = "warning") =>
       warnings.push({ rule, severity, tool: command.tool, command: command.path, subjects, message });
@@ -269,6 +295,35 @@ export const checkLine = (line: string, catalog: Catalog, ctx: CheckContext): Ch
       if (Number.isInteger(n) && n > ctx.cpus.count) {
         const where = ctx.cpus.source === "SLURM_CPUS_PER_TASK" ? "to this SLURM job" : ctx.cpus.source === "cgroup" ? "in this cgroup" : "on this machine";
         warn("threads-above-cpus", [b.subject], `${b.subject} ${n} asks for ${n} threads; only ${ctx.cpus.count} CPUs are available ${where}`);
+      }
+    }
+
+    // 7. Options the installed version doesn't have, or that the Catalog marks deprecated.
+    const installed = ctx.installed?.(command.tool);
+    const profile = installed?.profile(command.path.join(" "));
+    const known = profile && profile.length > 0 ? new Set(profile.flatMap((option) => option.names)) : undefined;
+    const label = [command.tool, ...command.path].join(" ");
+    const versionText = installed?.version ? `${command.tool} ${installed.version}` : `the installed ${command.tool}`;
+    const reported = new Set<string>();
+    for (const { name, option } of typed) {
+      if (reported.has(name)) continue;
+      if (known) {
+        const present = option ? option.aliases.some((alias) => known.has(alias)) : known.has(name);
+        if (!present) {
+          reported.add(name);
+          warn("option-version", [name], `${name} is not an option of ${label} (${versionText})`);
+          continue;
+        }
+      } else if (option && installed?.version && !withinVersions(installed.version, option.since, option.until)) {
+        reported.add(name);
+        const when =
+          option.since && !withinVersions(installed.version, option.since, null) ? `appeared in ${option.since}` : `was removed after ${option.until}`;
+        warn("option-version", [name], `${name} ${when}; ${versionText} is installed`);
+        continue;
+      }
+      if (option?.deprecated) {
+        reported.add(name);
+        warn("option-deprecated", [name], `${name} is deprecated in ${label}`, "info");
       }
     }
   }

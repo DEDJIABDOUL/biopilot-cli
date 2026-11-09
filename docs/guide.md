@@ -119,13 +119,15 @@ $ biopilot check "fastp -i data/s1_R1.fastq.gz -I data/s2_R2.fastq.gz -o out/s1.
 | `input-missing` | an input file or folder does not exist |
 | `reference-index` | a Reference index named by a prefix lacks some of its files, or has none; an index folder lacks its marker file (`salmon quant -i`) |
 | `threads-above-cpus` | a thread count is above the CPUs available: a SLURM job's `SLURM_CPUS_PER_TASK`, else the cgroup's CPU quota, else the machine's CPUs |
+| `option-version` | an option is absent from the installed version's Profile (`--dedup is not an option of fastp (fastp 0.20.1)`); without a Profile, outside the Catalog's version range of the option. Nothing is said while the Profile is unknown: run `biopilot sync` |
+| `option-deprecated` | an option the Catalog marks deprecated; an *info*, which does not change the exit code |
 
 - Pipelines and lists are checked command by command (`bwa mem … | samtools sort …`); redirections are ignored.
 - Standard streams (`-`, `/dev/stdin`), URIs (`gendb://`), patterns (`*.bam`) and variables (`$BAM`) are never reported as missing.
 - After an option the Catalog doesn't know, the command's positional arguments are not checked: BioPilot cannot tell whether the next word is that option's value.
 - Inputs and outputs are checked where the Catalog declares them (`io` in the tool's file): the main files of every Catalog tool. Learned tools are not checked.
 
-Exit code: **0** without a warning, **1** with at least one, **2** when the line cannot be analysed (no Catalog tool on it, an unterminated quote, the Catalog unavailable). `--json` prints the result in a versioned format (`"format": 1`), published as a JSON Schema in [`schemas/check-output.schema.json`](../schemas/check-output.schema.json), for scripts and workflow managers:
+Exit code: **0** without a warning (infos do not count), **1** with at least one, **2** when the line cannot be analysed (no Catalog tool on it, an unterminated quote, the Catalog unavailable). `--json` prints the result in a versioned format (`"format": 1`), published as a JSON Schema in [`schemas/check-output.schema.json`](../schemas/check-output.schema.json), for scripts and workflow managers:
 
 ```shell
 biopilot check --json "$cmd" > /dev/null || echo "check this command first: $cmd"

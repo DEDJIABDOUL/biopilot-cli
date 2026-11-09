@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **`biopilot check "<command line>"`:** warnings about a command before it runs, from file names, file existence and the CPUs available: read pairs of different samples or swapped, an output overwriting an input, an output folder that does not exist, a missing input, an incomplete or missing Reference index, more threads than the CPUs of the machine, the cgroup or the SLURM job. Exit code 0, 1 or 2; `--json` in a versioned format with its JSON Schema.
+- **`biopilot check "<command line>"`:** warnings about a command before it runs, from file names, file existence and the CPUs available: read pairs of different samples or swapped, an output overwriting an input, an output folder that does not exist, a missing input, an incomplete or missing Reference index, more threads than the CPUs of the machine, the cgroup or the SLURM job, an option the installed version doesn't have (from its Profile, else the Catalog's version range), a deprecated option (info). Exit code 0, 1 or 2; `--json` in a versioned format with its JSON Schema.
 - **Catalog:** the main inputs and outputs of every tool are marked (`io`), and thread-count options too (`threads`). Catalog schema version 6.
 
 ## 1.1.4

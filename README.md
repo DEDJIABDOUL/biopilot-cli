@@ -2,6 +2,8 @@
 
 Terminal autocompletion for bioinformatics. While you type a command, BioPilot suggests the options, files and values that fit tools such as fastp, samtools, bwa or minimap2, as they are actually installed in your active environment, for the project you are working in.
 
+![BioPilot in a terminal: typing fastp offers --in1 first, then the read 1 file, then --in2 and its mate, then a derived output name in results/; bwa mem is offered the reference index; biopilot search finds fastp's adapter options. Under the suggestions, the status line names fastp 0.23.4 from the conda environment rnaseq.](docs/demo/demo.gif)
+
 - **Local and private:** no account, no network access, no telemetry, no AI service.
 - **Version-aware:** the options come from the version of the tool you really run, and follow `conda activate`.
 - **Project-aware:** files of the expected format first, R1/R2 mates paired, output names derived from inputs.
@@ -248,7 +250,7 @@ npm test
 node build/index.js
 ```
 
-`npm test` runs the unit tests and `npm run test:e2e` the end-to-end tests in real bash, zsh and fish sessions. `npm run perf:targets` checks the performance targets. The domain vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the architecture decisions in [docs/adr/](./docs/adr/).
+`npm test` runs the unit tests and `npm run test:e2e` the end-to-end tests in real bash, zsh and fish sessions. `npm run demo` records the animation above again (it needs [agg](https://github.com/asciinema/agg): `conda install -c conda-forge asciinema-agg`). `npm run perf:targets` checks the performance targets. The domain vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the architecture decisions in [docs/adr/](./docs/adr/).
 
 ## Credits and license
 

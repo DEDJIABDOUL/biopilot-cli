@@ -2,30 +2,45 @@
 
 ## Release cadence and version numbers
 
-From 1.2.0 on, BioPilot is released on a slower, predictable schedule. The project published eight versions in under two days (0.1.0 to 1.1.4, 7 and 8 November 2026); that was the pace of construction, not one a laboratory can follow. A user who installs a tool on a cluster, or cites it in a paper, needs versions that stay current for weeks.
+BioPilot is now released on a slower, predictable schedule. The project published eight versions in under two days (0.1.0 to 1.1.4, 7 and 8 November 2026); that was the pace of construction, not one a laboratory can follow. A user who installs a tool on a cluster, or cites it in a paper, needs versions that stay current for weeks.
 
-**Version numbers** follow [Semantic Versioning](https://semver.org/):
+### Until 1.1.10: the 1.1 line
+
+The 1.1 line continues up to **1.1.10** before 1.2.0. Its versions carry new Catalog lots and features as well as fixes; each one's content is the GitHub milestone of the same name:
+
+| Version | Content |
+|---|---|
+| 1.1.5 | Catalog lot 4; contribution files, release policy, Bioconda recipe |
+| 1.1.6 | Catalog lot 5 (the last lot) |
+| 1.1.7 | completion after wrapper commands; README demo |
+| 1.1.8 | native mode (completion without the session) |
+| 1.1.9 | version source `module` (Lmod); Bioconda install documented |
+| 1.1.10 | stabilisation: fixes and feedback from users only, no new feature |
+| **1.2.0** | `biopilot check` and its warnings |
+
+- **About one version every two weeks**, never less than one week after the previous one.
+- **A fix that cannot wait** (a regression, an installation failure, a security problem, or a suggestion that can make a command run on the wrong file) goes into the next version at once, which is then released early with only that fix.
+- A merged change waits on `main` for its version. `main` stays releasable at all times.
+
+### From 1.2.0: Semantic Versioning
 
 | Change | Version | Examples |
 |---|---|---|
 | Breaking | **major** (2.0.0) | a command or option of BioPilot removed or renamed; `format` of the `biopilot info` JSON incremented; a `.biopilot.toml` that no longer reads; a shell start line that must be rewritten |
-| New feature or new Catalog tools | **minor** (1.2.0) | a new command; new tools, file formats or rules in the Catalog; a new supported environment (Lmod, Apptainer) |
+| New feature or new Catalog tools | **minor** (1.3.0) | a new command; new tools, file formats or rules in the Catalog; a new supported environment |
 | Fix only | **patch** (1.2.1) | a wrong or missing suggestion, a crash, an installation failure, a security fix |
 
-**Cadence:**
+- **One minor release about every four weeks**, never less than two weeks after the previous one.
+- **Patch releases only for** the fixes that cannot wait (above). Fixes are grouped: at most one patch release a week, except for security.
+- **Catalog additions ship in minor releases**, not in patches.
 
-- **One minor release about every four weeks**, never less than two weeks after the previous one. Its content is the GitHub milestone of the same name (`1.2.0`): an issue without a milestone is not in the next release.
-- **Patch releases only for** a regression, an installation failure, a security problem, or a wrong suggestion that can make a command run on the wrong file. Fixes are grouped: at most one patch release a week, except for security.
-- **Catalog additions ship in minor releases**, not in patches, even when they are ready earlier.
-- A merged change waits on `main` for its release. `main` stays releasable at all times.
-
-**Before a minor release:**
+### Before every version
 
 1. Its milestone is closed, and the CHANGELOG's **Unreleased** section is renamed to the version, with its date.
 2. The version is tried for at least three days by people other than its author: build it from `main` (see the README's Development section) and use it in real work.
 3. The README, the user guide and `CITATION.cff` (`version`, `date-released`) state the new version; the Bioconda recipe in [`recipes/bioconda/`](../recipes/bioconda/) gets the new checksums.
 
-**Support:** fixes, security fixes included, go to the latest minor release only.
+**Support:** fixes, security fixes included, go to the latest version only.
 
 ## Publish a version
 

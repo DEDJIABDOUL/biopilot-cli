@@ -1,0 +1,110 @@
+site_name: BioPilot CLI
+site_description: Terminal autocompletion for bioinformatics tools, fitted to the version installed in your environment and to your project.
+site_url: https://dedjiabdoul.github.io/biopilot-cli/
+repo_url: https://github.com/DEDJIABDOUL/biopilot-cli
+repo_name: DEDJIABDOUL/biopilot-cli
+edit_uri: edit/main/docs/site/pages/
+copyright: BioPilot CLI is released under the MIT license.
+docs_dir: pages
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  font:
+    text: Geist
+    code: Geist Mono
+  palette:
+    scheme: slate
+    primary: custom
+    accent: custom
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.tabs.link
+    - content.action.edit
+
+extra_css:
+  - assets/extra.css
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/DEDJIABDOUL/biopilot-cli
+
+nav:
+  - Home: index.md
+  - Get started:
+      - getting-started/index.md
+      - Requirements: getting-started/requirements.md
+      - Installation: getting-started/installation.md
+      - First steps: getting-started/first-steps.md
+  - Usage:
+      - usage/index.md
+      - How suggestions work: usage/how-it-works.md
+      - The status line: usage/status-line.md
+      - Tools outside the Catalog: usage/learn.md
+      - Checking a command: usage/check.md
+      - Stop BioPilot: usage/stop.md
+  - Commands:
+      - commands/index.md
+      - biopilot: commands/biopilot.md
+      - init: commands/init.md
+      - reinit: commands/reinit.md
+      - doctor: commands/doctor.md
+      - status: commands/status.md
+      - sync: commands/sync.md
+      - check: commands/check.md
+      - info: commands/info.md
+      - learn: commands/learn.md
+      - search: commands/search.md
+      - reset-usage: commands/reset-usage.md
+      - uninstall: commands/uninstall.md
+  - Reference:
+      - reference/index.md
+      - Project file (.biopilot.toml): reference/project-config.md
+      - Settings (rc.toml): reference/settings.md
+      - Supported tools: reference/tools.md
+      - Privacy: reference/privacy.md
+  - Help:
+      - help/index.md
+      - Update and uninstall: help/update.md
+      - Troubleshooting: help/troubleshooting.md
+      - FAQ: help/faq.md
+      - Contributing and citing: help/contributing.md

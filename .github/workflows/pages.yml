@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "site/**"
+      - "docs/site/**"
       - "docs/demo/demo.gif"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
       - name: Assemble the site
         run: |
           mkdir -p _site
-          cp -R site/. _site/
+          cp -R docs/site/. _site/
           cp docs/demo/demo.gif _site/demo.gif
           touch _site/.nojekyll
 

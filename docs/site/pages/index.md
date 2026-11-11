@@ -7,8 +7,6 @@ hide:
 
 <div class="bp-hero" markdown>
 
-<p class="bp-eyebrow">Version 1.1 · 44 built-in tools · bash, zsh, fish</p>
-
 # Autocompletion that knows your <em>bioinformatics</em> tools.
 
 <p class="bp-lede">While you type, BioPilot suggests the options, files and values that fit fastp, samtools, bwa or minimap2, as they are actually installed in your active environment, for the project you are working in.</p>
@@ -59,27 +57,27 @@ Then add the start line to your shell: see [Installation](getting-started/instal
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch-outline: **[Get started](getting-started/index.md)**
+-   :octicons-rocket-24:{ .bp-icon } **[Get started](getting-started/index.md)**
 
     Requirements, installation on Linux, macOS and Windows (WSL), first steps.
 
--   :material-keyboard-outline: **[Usage](usage/index.md)**
+-   :octicons-command-palette-24:{ .bp-icon } **[Usage](usage/index.md)**
 
     Keys, examples, how suggestions are chosen, the status line, checking a command.
 
--   :material-console: **[Commands](commands/index.md)**
+-   :octicons-terminal-24:{ .bp-icon } **[Commands](commands/index.md)**
 
     Every `biopilot` command, with its options and examples.
 
--   :material-cog-outline: **[Reference](reference/index.md)**
+-   :octicons-gear-24:{ .bp-icon } **[Reference](reference/index.md)**
 
     `.biopilot.toml`, `rc.toml`, the 44 supported tools, privacy.
 
--   :material-lifebuoy: **[Help](help/index.md)**
+-   :octicons-question-24:{ .bp-icon } **[Help](help/index.md)**
 
     Update, uninstall, troubleshooting and the FAQ.
 
--   :material-github: **[GitHub](https://github.com/DEDJIABDOUL/biopilot-cli)**
+-   :octicons-mark-github-24:{ .bp-icon } **[GitHub](https://github.com/DEDJIABDOUL/biopilot-cli)**
 
     Source code, releases, issues and tool requests.
 

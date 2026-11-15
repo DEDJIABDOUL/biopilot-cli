@@ -70,7 +70,7 @@ test("biopilot create prints the line and creates nothing; running the line make
   });
   expect(cli.status).toBe(0);
   expect(fs.readdirSync(cwd)).toEqual([]);
-  const sh = spawnSync("sh", ["-c", `${cli.stdout.trim()} && pwd`], { encoding: "utf-8" });
+  const sh = spawnSync("sh", ["-c", `${cli.stdout.trim()} && pwd -P`], { encoding: "utf-8" });
   expect(sh.status).toBe(0);
   expect(sh.stdout.trim()).toBe(fs.realpathSync(project));
   for (const folder of PROJECT_FOLDERS) expect(fs.statSync(path.join(project, folder)).isDirectory()).toBe(true);

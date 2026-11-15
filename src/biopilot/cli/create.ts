@@ -1,19 +1,21 @@
 // Copyright (c) BioPilot CLI contributors.
 // Licensed under the MIT License.
 
-// `biopilot create <project>`: prints the line that creates a standard bioinformatics project layout and enters it.
+// `biopilot create [--print] <project>`: creates the folders of a standard bioinformatics project layout.
 
 import { Command } from "commander";
 
 const cmd = new Command("create");
 cmd
-  .description("prints the command that creates a standard bioinformatics project layout and enters it")
+  .description("creates the folders of a standard bioinformatics project (data/raw, metadata, reference, results…)")
   .argument("[project...]")
-  .action(async (args: string[]) => {
+  .option("--print", "print the mkdir -p … && cd … command; in a BioPilot session, the shell runs it: the project is created and entered")
+  .action(async (args: string[], options: { print?: boolean }) => {
     const { runCreate } = await import("./createRunner.js");
-    process.exitCode = runCreate(args, {
+    process.exitCode = runCreate(args, options, {
       stdout: (t) => process.stdout.write(t),
       stderr: (t) => process.stderr.write(t),
+      cwd: process.cwd(),
     });
   });
 

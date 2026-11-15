@@ -39,10 +39,11 @@ lists the options whose name or description contains every word. See [`biopilot 
 ## Start a new project
 
 ```shell
-eval "$(biopilot create rnaseq-2026)"
+biopilot create rnaseq-2026
+cd rnaseq-2026
 ```
 
-creates a standard project layout and enters it; the reads go in `data/raw`, and BioPilot derives output names in `results/`. See [`biopilot create`](../commands/create.md).
+creates a standard project layout; the reads go in `data/raw`, and BioPilot derives output names in `results/`. See [`biopilot create`](../commands/create.md).
 
 ## In this section
 

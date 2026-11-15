@@ -176,10 +176,11 @@ lists the options of the built-in and imported tools whose name or description c
 ### Start a new project
 
 ```shell
-eval "$(biopilot create rnaseq-2026)"
+biopilot create rnaseq-2026
+cd rnaseq-2026
 ```
 
-creates a standard bioinformatics project and enters it (with fish: `biopilot create rnaseq-2026 | source`):
+creates a standard bioinformatics project:
 
 ```text
 rnaseq-2026/
@@ -196,7 +197,7 @@ rnaseq-2026/
 └── docs/             notes, protocols, reports
 ```
 
-Without `eval`, `biopilot create rnaseq-2026` only prints the `mkdir -p … && cd rnaseq-2026` command, for you to read or change before running it; BioPilot never creates the folders itself. Right after, BioPilot recognises the project from any of its folders, without any hidden file: the reads you put in `data/raw` are paired, and output names are derived in `results/`. Put the reads directly in `data/raw`: BioPilot reads file names three levels deep.
+Folders already there are kept, with their files. To create the project and enter it in one go, use `biopilot create --print rnaseq-2026`: the `mkdir -p … && cd rnaseq-2026` command is shown, then run by your shell, and you are in the project (in a BioPilot session; elsewhere `--print` only prints the command). Right after, BioPilot recognises the project from any of its folders, without any hidden file: the reads you put in `data/raw` are paired, and output names are derived in `results/`. Put the reads directly in `data/raw`: BioPilot reads file names three levels deep.
 
 ## Stop BioPilot
 

@@ -9,6 +9,7 @@ import path from "node:path";
 import toml from "toml";
 import type { Catalog } from "../knowledge/catalog.js";
 import { ASSAYS, PLATFORMS, type Assay, type Platform } from "../knowledge/schema.js";
+import { hasProjectLayout, LAYOUT_MARKER } from "./layout.js";
 
 /** What BioPilot needs from the Catalog to recognise formats. */
 export type FormatRecogniser = Pick<Catalog, "formatOfFile" | "matchFiles">;
@@ -62,10 +63,10 @@ const ILLUMINA_NAME = /_L00\d_|_S\d+_/;
 const NANOPORE_PACKAGES = /\b(porechop|nanoplot|nanofilt|medaka|dorado|guppy|pod5|nanopolish|chopper|flye)\b/;
 const ILLUMINA_PACKAGES = /\b(fastp|trimmomatic|cutadapt|bcl2fastq|trim-galore|bwa)\b/;
 
-/** The first parent of `cwd` (itself included) holding a project marker. */
+/** The first parent of `cwd` (itself included) holding a project marker, or the standard layout of `biopilot create`. */
 const findRoot = (cwd: string): { root: string; marker: string | null } => {
   for (let dir = path.resolve(cwd); ; dir = path.dirname(dir)) {
-    const marker = ROOT_MARKERS.find((name) => fs.existsSync(path.join(dir, name)));
+    const marker = ROOT_MARKERS.find((name) => fs.existsSync(path.join(dir, name))) ?? (hasProjectLayout(dir) ? LAYOUT_MARKER : undefined);
     if (marker) return { root: dir, marker };
     if (path.dirname(dir) === dir) return { root: path.resolve(cwd), marker: null };
   }

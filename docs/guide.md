@@ -62,7 +62,7 @@ General completion (git, cd, ls…) works as before; bio tools simply come first
 
 1. **The Catalog** — a database shipped with BioPilot describing 44 tools (bcftools, bedtools, bgzip, blastn, bowtie2, bowtie2-build, busco, bwa, bwa-mem2, chopper, cutadapt, fastp, fastqc, filtlong, flye, freebayes, gatk, hisat2, hisat2-build, medaka, medaka_consensus, medaka_variant, megahit, minimap2, mosdepth, multiqc, NanoPlot, picard, porechop, qualimap, quast, salmon, samtools, seqkit, seqtk, SnpEff, SnpSift, spades.py, STAR, tabix, trimmomatic, vcfanno, VCFtools, VEP): their options, subcommands, value types, file formats, read pairs, derived outputs, and a rank for each option. `biopilot info fastp` shows what it knows.
 2. **The binary you would run** — BioPilot looks up the tool in your shell's `PATH` (it follows `conda activate`), finds its version in `conda-meta/` or by asking the tool, and reads the tool's own `--help` once per version: its **Profile**. With a Profile, only the options your version really has are suggested (fastp 0.20.1 gets no `--dedup`). The first time, the Catalog's options (filtered by version when it is known) show while the Profile is computed in the background; `biopilot sync` computes them ahead of time.
-3. **The project** — from the first parent folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml`, BioPilot reads file names (never contents): files of the expected format, read pairs, the platform (illumina, nanopore) and the assay, which adjust the ranking.
+3. **The project** — from the first parent folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml`, or the folders `data/raw`, `metadata`, `reference` and `results` of the [standard layout](#starting-a-project-biopilot-create), BioPilot reads file names (never contents): files of the expected format, read pairs, the platform (illumina, nanopore) and the assay, which adjust the ranking.
 4. **Your habits** — options you accept often rise a little (+15 at most). `biopilot reset-usage` forgets them.
 
 **Tools outside the Catalog:** `biopilot learn <tool>` reads the tool's root help (`--help`, `-h`, or no argument), discovers its subcommands (one level, 50 at most) and how to print its version (`--version`, `-V` or `version`), and computes its Profiles. From then on it is completed like a Catalog tool, from its own help only: its options rank by your usage, and values are completed as files. BioPilot never runs a tool you merely type: only `learn` runs an unknown one.
@@ -100,6 +100,7 @@ The warning never blocks Enter. Turn the warnings off with `warnings = false` in
 | `biopilot learn <tool>` | import an installed tool that is not in the Catalog, from its own help; `--list`, `--forget <tool>` |
 | `biopilot search [--json] [--tool <tool>] "<text>"` | find options of the Catalog and of learned tools by their names and descriptions |
 | `biopilot reset-usage` | erase the usage statistics |
+| `biopilot create <project>` | print the command that creates a standard project layout, recognised as a project by BioPilot, and enters it; see [Starting a project](#starting-a-project-biopilot-create) |
 | `biopilot uninstall [--yes]` | remove BioPilot entirely |
 | `biopilot -c` | tell whether this terminal runs in a BioPilot session |
 | `biopilot -V` | start a session with verbose logging |
@@ -138,6 +139,33 @@ Exit code: **0** without a warning (infos do not count), **1** with at least one
 ```shell
 biopilot check --json "$cmd" > /dev/null || echo "check this command first: $cmd"
 ```
+
+## Starting a project: `biopilot create`
+
+`biopilot create <project>` prints the command that creates a standard bioinformatics project layout and enters it. It creates nothing itself: read the command, change it if you wish, then run it.
+
+```shell
+$ biopilot create rnaseq-2026
+mkdir -p rnaseq-2026/data/raw rnaseq-2026/data/processed rnaseq-2026/metadata rnaseq-2026/reference rnaseq-2026/results rnaseq-2026/scripts rnaseq-2026/logs rnaseq-2026/envs rnaseq-2026/notebooks rnaseq-2026/docs && cd rnaseq-2026
+$ eval "$(biopilot create rnaseq-2026)"      # to run it directly (bash, zsh; fish: biopilot create rnaseq-2026 | source)
+```
+
+| Folder | For |
+|---|---|
+| `data/raw` | the reads as received, never modified |
+| `data/processed` | intermediate files: trimmed reads, alignments |
+| `metadata` | sample sheets, experimental design |
+| `reference` | genome, annotation, indexes |
+| `results` | final outputs; BioPilot derives output names here |
+| `scripts` | analysis code |
+| `logs` | the tools' logs |
+| `envs` | conda environment files |
+| `notebooks` | exploration, figures |
+| `docs` | notes, protocols, reports |
+
+The project can be a folder name or a path (`~/projects/wgs_trio`), made of letters, digits, `.`, `_`, `+` and `-`, so that the command works unquoted in bash, zsh and fish. Exit code 0, or 2 when the name is missing or not usable.
+
+Right after the command, BioPilot recognises the project from any of its folders, by its layout alone: no hidden file is written. `biopilot status` names it (`project layout`), reads in `data/raw` are paired, and output names go to `results/`. The layout counts as long as `data/raw`, `metadata`, `reference` and `results` are there; the other folders can be removed. A marker in a folder nearer to where you are (a `Snakefile` in `scripts/pipeline/`, for example) takes precedence.
 
 ## Project configuration: `.biopilot.toml`
 

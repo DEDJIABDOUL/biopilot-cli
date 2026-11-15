@@ -1,39 +1,47 @@
 # biopilot create
 
-Print the command that creates a standard bioinformatics project, then enters it.
+Create the folders of a standard bioinformatics project.
 
 ```text
-biopilot create <project>
+biopilot create [--print] <project>
 ```
-
-It creates nothing itself: read the command, change it if you wish, then run it.
 
 ## Examples
 
 ```console
 $ biopilot create rnaseq-2026
-mkdir -p rnaseq-2026/data/raw rnaseq-2026/data/processed rnaseq-2026/metadata rnaseq-2026/reference rnaseq-2026/results rnaseq-2026/scripts rnaseq-2026/logs rnaseq-2026/envs rnaseq-2026/notebooks rnaseq-2026/docs && cd rnaseq-2026
+created rnaseq-2026/ with data/raw/ data/processed/ metadata/ reference/ results/ scripts/ logs/ envs/ notebooks/ docs/
+to enter it: cd rnaseq-2026
+$ cd rnaseq-2026
 ```
 
-To create the project and enter it in one go:
+A program cannot change the folder of the shell that runs it: the `cd` is yours. Folders already there are kept, with their files; only the missing ones are made.
+
+The project can also be a path:
+
+```shell
+biopilot create ~/projects/wgs_trio
+```
+
+## Options
+
+| Option | Effect |
+|---|---|
+| `--print` | print the `mkdir -p … && cd …` command instead, creating nothing |
+
+To create the project and enter it in one go, run the printed command:
 
 === "bash, zsh"
 
     ```shell
-    eval "$(biopilot create rnaseq-2026)"
+    eval "$(biopilot create --print rnaseq-2026)"
     ```
 
 === "fish"
 
     ```shell
-    biopilot create rnaseq-2026 | source
+    biopilot create --print rnaseq-2026 | source
     ```
-
-The project can also be a path:
-
-```shell
-eval "$(biopilot create ~/projects/wgs_trio)"
-```
 
 ## The layout
 
@@ -67,11 +75,11 @@ The layout counts as long as `data/raw`, `metadata`, `reference` and `results` a
 
 ## Project names
 
-Letters, digits, `.`, `_`, `+` and `-`, not starting with `-` or `.`, in a folder name or a path (`~/…`, `/…`, `../…`). That way the command works unquoted in bash, zsh and fish, and is safe to run with `eval`. A name with a space, `;`, `$`, `*` or a backslash is refused.
+Letters, digits, `.`, `_`, `+` and `-`, not starting with `-` or `.`, in a folder name or a path (`~/…`, `/…`, `../…`). That way the printed command works unquoted in bash, zsh and fish, and is safe to run with `eval`. A name with a space, `;`, `$`, `*` or a backslash is refused.
 
 ## Exit code
 
-**0** with the command printed; **2** when the project name is missing, repeated or not usable.
+**0** when the layout is there (made now or before); **1** when a folder could not be made (a file in the way, no permission); **2** when the project name is missing, repeated or not usable.
 
 ## See also
 

@@ -29,10 +29,11 @@ Otherwise BioPilot reads them in the background the first time you use each tool
 ## Start a project
 
 ```shell
-eval "$(biopilot create rnaseq-2026)"
+biopilot create rnaseq-2026
+cd rnaseq-2026
 ```
 
-creates a standard project layout (`data/raw`, `metadata`, `reference`, `results`, `scripts`, `logs`, `envs`…) and enters it; BioPilot recognises it at once. In fish: `biopilot create rnaseq-2026 | source`. Without `eval`, the command is only printed, for you to read first. See [`biopilot create`](../commands/create.md).
+creates a standard project layout (`data/raw`, `metadata`, `reference`, `results`, `scripts`, `logs`, `envs`…); BioPilot recognises it at once. See [`biopilot create`](../commands/create.md).
 
 ## Try it
 

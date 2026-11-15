@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **`biopilot create <project>` creates the folders** of the project layout itself, then says how to enter it (`cd <project>`): in 1.1.5 it only printed the `mkdir -p` command, and the project was not created unless that command was run with `eval`. Folders already there, and their files, are kept; a file in the way is an error (exit code 1). `biopilot create --print <project>` prints the command as before, creating nothing.
+
 ## 1.1.5
 
 - **`biopilot create <project>`:** prints the command that creates a standard bioinformatics project layout (`data/raw`, `data/processed`, `metadata`, `reference`, `results`, `scripts`, `logs`, `envs`, `notebooks`, `docs`), then enters it. The layout itself is a project marker (`data/raw`, `metadata`, `reference` and `results` together): BioPilot recognises the project and its folders at once, without any hidden file. It creates nothing itself; `eval "$(biopilot create <project>)"` runs it.

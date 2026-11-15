@@ -15,7 +15,14 @@ to enter it: cd rnaseq-2026
 $ cd rnaseq-2026
 ```
 
-A program cannot change the folder of the shell that runs it: the `cd` is yours. Folders already there are kept, with their files; only the missing ones are made.
+Folders already there are kept, with their files; only the missing ones are made. To also enter the project, add `--print`:
+
+```console
+$ biopilot create --print rnaseq-2026
+mkdir -p rnaseq-2026/data/raw rnaseq-2026/data/processed … rnaseq-2026/docs && cd rnaseq-2026
+$ pwd
+/home/me/rnaseq-2026
+```
 
 The project can also be a path:
 
@@ -27,21 +34,24 @@ biopilot create ~/projects/wgs_trio
 
 | Option | Effect |
 |---|---|
-| `--print` | print the `mkdir -p … && cd …` command instead, creating nothing |
+| `--print` | show the `mkdir -p … && cd …` command and run it in your shell: the project is created and you are in it |
 
-To create the project and enter it in one go, run the printed command:
+!!! note "How `--print` enters the project"
+    A program cannot change the folder of the shell that runs it. In a BioPilot session, the shell integration (bash, zsh, fish) defines a `biopilot` function: for `create --print`, it runs the printed line in your shell, once it has checked that it is the `mkdir -p … && cd …` line. Every other `biopilot` command goes to the program unchanged.
 
-=== "bash, zsh"
+    Outside a BioPilot session, `--print` only prints the line, creating nothing. Run it yourself:
 
-    ```shell
-    eval "$(biopilot create --print rnaseq-2026)"
-    ```
+    === "bash, zsh"
 
-=== "fish"
+        ```shell
+        eval "$(biopilot create --print rnaseq-2026)"
+        ```
 
-    ```shell
-    biopilot create --print rnaseq-2026 | source
-    ```
+    === "fish"
+
+        ```shell
+        biopilot create --print rnaseq-2026 | source
+        ```
 
 ## The layout
 

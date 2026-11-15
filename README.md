@@ -197,7 +197,7 @@ rnaseq-2026/
 └── docs/             notes, protocols, reports
 ```
 
-Folders already there are kept, with their files. `biopilot create --print rnaseq-2026` prints the `mkdir -p … && cd rnaseq-2026` command instead, creating nothing, for scripts or to read it first. Right after, BioPilot recognises the project from any of its folders, without any hidden file: the reads you put in `data/raw` are paired, and output names are derived in `results/`. Put the reads directly in `data/raw`: BioPilot reads file names three levels deep.
+Folders already there are kept, with their files. To create the project and enter it in one go, use `biopilot create --print rnaseq-2026`: the `mkdir -p … && cd rnaseq-2026` command is shown, then run by your shell, and you are in the project (in a BioPilot session; elsewhere `--print` only prints the command). Right after, BioPilot recognises the project from any of its folders, without any hidden file: the reads you put in `data/raw` are paired, and output names are derived in `results/`. Put the reads directly in `data/raw`: BioPilot reads file names three levels deep.
 
 ## Stop BioPilot
 

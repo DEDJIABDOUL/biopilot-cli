@@ -127,4 +127,32 @@ else
 	fi
 fi
 
+# BIOPILOT: create-cd begin. `biopilot create --print <project>` creates the project and enters it: a program
+# cannot change its shell's folder, so the shell runs the printed line itself, once checked to be the
+# `mkdir -p … && cd …` line. Every other biopilot command runs as is.
+biopilot() {
+	local __is_name=
+	if [ "$#" -eq 3 ] && [ "$1" = create ]; then
+		if [ "$2" = --print ]; then __is_name=$3; elif [ "$3" = --print ]; then __is_name=$2; fi
+	fi
+	case "$__is_name" in
+	"" | -*)
+		command biopilot "$@"
+		return
+		;;
+	esac
+	local __is_create_line
+	__is_create_line="$(command biopilot create --print "$__is_name")" || return
+	case "$__is_create_line" in
+	"mkdir -p "*) ;;
+	*)
+		builtin printf '%s\n' "$__is_create_line"
+		return 1
+		;;
+	esac
+	builtin printf '%s\n' "$__is_create_line"
+	builtin eval "$__is_create_line"
+}
+# BIOPILOT: create-cd end
+
 __is_precmd

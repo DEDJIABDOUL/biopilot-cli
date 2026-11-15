@@ -32,3 +32,28 @@ function fish_prompt;
     # Pass the prompt as data so a literal % is not a printf conversion.
     printf '%s' $__prompt
 end
+
+# BIOPILOT: create-cd begin. `biopilot create --print <project>` creates the project and enters it: a program
+# cannot change its shell's folder, so the shell runs the printed line itself, once checked to be the
+# `mkdir -p … && cd …` line. Every other biopilot command runs as is.
+function biopilot
+	set --local __is_name
+	if test (count $argv) -eq 3; and test "$argv[1]" = create
+		if test "$argv[2]" = --print
+			set __is_name $argv[3]
+		else if test "$argv[3]" = --print
+			set __is_name $argv[2]
+		end
+	end
+	if test -z "$__is_name"; or string match -q -- '-*' "$__is_name"
+		command biopilot $argv
+		return
+	end
+	set --local __is_create_line (command biopilot create --print $__is_name); or return
+	printf '%s\n' $__is_create_line
+	if not string match -q -- 'mkdir -p *' "$__is_create_line"; or test (count $__is_create_line) -ne 1
+		return 1
+	end
+	eval $__is_create_line
+end
+# BIOPILOT: create-cd end

@@ -101,7 +101,7 @@ The warning never blocks Enter. Turn the warnings off with `warnings = false` in
 | `biopilot learn <tool>` | import an installed tool that is not in the Catalog, from its own help; `--list`, `--forget <tool>` |
 | `biopilot search [--json] [--tool <tool>] "<text>"` | find options of the Catalog and of learned tools by their names and descriptions |
 | `biopilot reset-usage` | erase the usage statistics |
-| `biopilot create [--print] <project>` | create the folders of a standard project layout, recognised as a project by BioPilot; see [Starting a project](#starting-a-project-biopilot-create) |
+| `biopilot create [--print] <project>` | create the folders of a standard project layout, recognised as a project by BioPilot; with `--print`, also enter it; see [Starting a project](#starting-a-project-biopilot-create) |
 | `biopilot uninstall [--yes]` | remove BioPilot entirely |
 | `biopilot -c` | tell whether this terminal runs in a BioPilot session |
 | `biopilot -V` | start a session with verbose logging |
@@ -152,7 +152,16 @@ to enter it: cd rnaseq-2026
 $ cd rnaseq-2026
 ```
 
-Folders already there are kept, with their files; only the missing ones are made. `biopilot create --print <project>` prints the `mkdir -p … && cd …` command instead and creates nothing: read it, change it, or run it with `eval "$(biopilot create --print rnaseq-2026)"`, which also enters the project (fish: `biopilot create --print rnaseq-2026 | source`).
+Folders already there are kept, with their files; only the missing ones are made. To create the project **and enter it**, add `--print`:
+
+```shell
+$ biopilot create --print rnaseq-2026
+mkdir -p rnaseq-2026/data/raw rnaseq-2026/data/processed … rnaseq-2026/docs && cd rnaseq-2026
+$ pwd
+/home/me/rnaseq-2026
+```
+
+The command is shown, then run by your shell itself: in a BioPilot session, the shell integration (bash, zsh, fish) defines a `biopilot` function that runs the line once it has checked that it is the `mkdir -p … && cd …` line; every other `biopilot` command goes to the program unchanged. Outside a BioPilot session, `--print` only prints the line, creating nothing: run it with `eval "$(biopilot create --print rnaseq-2026)"` (fish: `biopilot create --print rnaseq-2026 | source`), or use it in a script.
 
 | Folder | For |
 |---|---|

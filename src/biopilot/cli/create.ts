@@ -9,7 +9,7 @@ const cmd = new Command("create");
 cmd
   .description("creates the folders of a standard bioinformatics project (data/raw, metadata, reference, results…)")
   .argument("[project...]")
-  .option("--print", "print the mkdir -p … && cd … command instead, creating nothing")
+  .option("--print", "print the mkdir -p … && cd … command; in a BioPilot session, the shell runs it: the project is created and entered")
   .action(async (args: string[], options: { print?: boolean }) => {
     const { runCreate } = await import("./createRunner.js");
     process.exitCode = runCreate(args, options, {

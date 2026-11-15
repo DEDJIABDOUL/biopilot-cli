@@ -12,7 +12,7 @@ updates:
   # BIOPILOT: security and version updates of the npm dependencies too (the engine's and the build's).
   - package-ecosystem: "npm"
     directory: "/"
-    # Majors that break the build until BioPilot is adapted: TypeScript 7 (typescript-eslint does not support
+    # Majors that break the build until BioPilot is adapted, and node-pty: TypeScript 7 (typescript-eslint does not support
     # it yet), Node types past the Node 22 BioPilot runs on, and tui-test's new locator API (the e2e tests).
     ignore:
       - dependency-name: "typescript"
@@ -21,6 +21,10 @@ updates:
         versions: [">=23"]
       - dependency-name: "@microsoft/tui-test"
         versions: [">=0.1.0"]
+      # node-pty: scripts/pkg.ts patches its code by text, for the exact version pinned in package.json; an
+      # update that rewrote that code (beta.8 to beta.18) broke every session of 1.1.5 and 1.1.6. Updated by
+      # hand only, with `npm run package` (it stops when a patch cannot apply) and scripts/ci/session-test.sh.
+      - dependency-name: "node-pty"
     groups:
       development:
         dependency-type: "development"

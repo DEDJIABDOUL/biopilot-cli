@@ -57,9 +57,16 @@ const getVersion = (): string => {
 const readBundle = (): string => fs.readFileSync(BUNDLE_PATH, "utf-8");
 const writeBundle = (content: string): void => fs.writeFileSync(BUNDLE_PATH, content, "utf-8");
 
-const patchBundle = (search: string, replacement: string, description: string): void => {
+/**
+ * Replaces the first of `searches` found in the bundle. None found stops the build: a dependency update
+ * that rewrote the patched code must not ship a binary without the patch (1.1.5 and 1.1.6 shipped without
+ * node-pty's, and could not start a session: pty.node was not found).
+ */
+const patchBundle = (searches: string | string[], replacement: string, description: string): void => {
   const content = readBundle();
-  writeBundle(content.replace(search, replacement));
+  const search = (Array.isArray(searches) ? searches : [searches]).find((candidate) => content.includes(candidate));
+  if (search === undefined) throw new Error(`pkg: cannot patch ${description}: the code to replace is not in the bundle (did a dependency change it?)`);
+  writeBundle(content.replace(search, () => replacement));
   console.log(`Patched: ${description}`);
 };
 
@@ -154,8 +161,9 @@ const bundleNodePtyWorker = async (): Promise<string> => {
 
 const applyBundlePatches = async (): Promise<void> => {
   // Patch native require
+  // node-pty 1.2.0-beta.18 writes `"".concat(…)` where beta.8 wrote `a + b`: both forms are accepted.
   patchBundle(
-    'return { dir, module: require(dir + "/" + name + ".node") };',
+    ['return { dir, module: require("".concat(dir, "/").concat(name, ".node")) };', 'return { dir, module: require(dir + "/" + name + ".node") };'],
     `var req = require("module").createRequire(__filename);
     return { dir, module: req(dir + "/" + name + ".node") };`,
     "native require",
@@ -163,7 +171,10 @@ const applyBundlePatches = async (): Promise<void> => {
 
   // Patch native locations
   patchBundle(
-    'var dirs = ["build/Release", "build/Debug", "prebuilds/" + process.platform + "-" + process.arch];',
+    [
+      'var dirs = ["build/Release", "build/Debug", "prebuilds/".concat(process.platform, "-").concat(process.arch)];',
+      'var dirs = ["build/Release", "build/Debug", "prebuilds/" + process.platform + "-" + process.arch];',
+    ],
     `var os_1 = require("os");
     var path_1 = require("path");
     var fs_1 = require("fs");
@@ -175,12 +186,15 @@ const applyBundlePatches = async (): Promise<void> => {
   );
 
   // Patch to handle absolute paths correctly (skip relative prefixes for absolute paths)
-  patchBundle('var dir = r + "/" + d;', 'var dir = path_1.isAbsolute(d) ? d : r + "/" + d;', "absolute path handling");
+  patchBundle(['var dir = "".concat(r, "/").concat(d);', 'var dir = r + "/" + d;'], 'var dir = path_1.isAbsolute(d) ? d : r + "/" + d;', "absolute path handling");
 
   // Patch worker inline
   const workerCode = await bundleNodePtyWorker();
   patchBundle(
-    'this._worker = new worker_threads_1.Worker(path_1.join(scriptPath, "worker/conoutSocketWorker.js"), { workerData });',
+    [
+      'this._worker = new worker_threads_1.Worker((0, path_1.join)(scriptPath, "worker/conoutSocketWorker.js"), { workerData });',
+      'this._worker = new worker_threads_1.Worker(path_1.join(scriptPath, "worker/conoutSocketWorker.js"), { workerData });',
+    ],
     `var script = \`${workerCode}\`
     this._worker = new worker_threads_1.Worker(script, { workerData, eval: true });`,
     "inline worker",

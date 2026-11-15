@@ -242,7 +242,7 @@ Then open a new terminal. Your settings and data are kept. If a terminal reports
 To install a specific version, set `BIOPILOT_VERSION` for the script, for example:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.6 sh
+curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.7 sh
 ```
 
 ## Uninstall

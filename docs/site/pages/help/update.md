@@ -13,7 +13,7 @@ Your settings and data are kept. If a terminal reports `biopilot resources out o
 To install a specific version:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.6 sh
+curl -fsSL https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/main/install.sh | BIOPILOT_VERSION=1.1.7 sh
 ```
 
 What changed in each version: [Changelog](https://github.com/DEDJIABDOUL/biopilot-cli/blob/main/CHANGELOG.md).

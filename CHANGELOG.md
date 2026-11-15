@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.7
+
 - **Fix:** in 1.1.5 and 1.1.6, a BioPilot session could not start: `biopilot`, and every new terminal, stopped at once with `Failed to load native module: pty.node`. Version 1.2.0-beta.18 of node-pty, the terminal library, rewrote the code that the build patches so that the standalone binary finds `pty.node`, and the patches were skipped without a word. They apply again; the build now stops when one cannot apply, and each binary starts a real session in CI and before every release. Other commands (`check`, `create`, `status`…) were not affected.
 
 ## 1.1.6

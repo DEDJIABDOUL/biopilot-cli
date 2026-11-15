@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.6
+
 - **`biopilot create <project>` creates the folders** of the project layout itself, then says how to enter it (`cd <project>`): in 1.1.5 it only printed the `mkdir -p` command, and the project was not created unless that command was run with `eval`. Folders already there, and their files, are kept; a file in the way is an error (exit code 1). `biopilot create --print <project>` shows the `mkdir -p … && cd …` command and runs it in your shell: the project is created and you are in it. This works in a BioPilot session, whose shell integration (bash, zsh, fish) defines a `biopilot` function for it; outside a session, `--print` only prints the command, as in 1.1.5.
 
 ## 1.1.5

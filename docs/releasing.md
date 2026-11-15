@@ -10,8 +10,8 @@ The 1.1 line continues up to **1.1.10** before 1.2.0. Its versions carry new Cat
 
 | Version | Content |
 |---|---|
-| 1.1.5 | Catalog lots 4 and 5 (the last lots); README demo; `biopilot check` and its warnings; contribution files, release policy, Bioconda recipe |
-| 1.1.6 | to be defined (fixes and feedback on 1.1.5 first) |
+| 1.1.5 | `biopilot check` and its live warnings; `biopilot create`; README demo and documentation site; contribution files, release policy, Bioconda recipe |
+| 1.1.6 | Catalog lots 4 and 5 (the last lots); fixes and feedback on 1.1.5 |
 | 1.1.7 | completion after wrapper commands |
 | 1.1.8 | native mode (completion without the session) |
 | 1.1.9 | version source `module` (Lmod); Bioconda install documented |

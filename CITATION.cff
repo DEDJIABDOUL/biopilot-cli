@@ -4,8 +4,8 @@ title: "BioPilot CLI: version-aware and project-aware terminal autocompletion fo
 type: software
 authors:
   - name: "BioPilot CLI contributors"
-version: 1.1.4
-date-released: 2026-11-08
+version: 1.1.5
+date-released: 2026-11-15
 license: MIT
 repository-code: "https://github.com/DEDJIABDOUL/biopilot-cli"
 abstract: >-

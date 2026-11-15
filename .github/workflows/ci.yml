@@ -100,6 +100,8 @@ jobs:
         run: |
           scripts/ci/check-glibc.sh pkg/biopilot-linux-x64
           scripts/ci/old-distros-test.sh pkg/biopilot-linux-x64
+      # BIOPILOT: 1.1.7 a real session with the packaged binary (1.1.5 and 1.1.6 crashed: pty.node not found).
+      - run: scripts/ci/session-test.sh pkg/biopilot-${{ runner.os == 'Linux' && 'linux-x64' || 'darwin-arm64' }}
       - run: scripts/ci/install-test.sh
       - run: npm run package:base
       - run: scripts/ci/npm-test.sh  # BIOPILOT: 1.1, npm install -g biopilot-cli

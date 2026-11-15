@@ -103,11 +103,11 @@ Continue with the [first steps](first-steps.md).
 
 ## Install script variables
 
-Set them before `sh`, for example `curl … | BIOPILOT_VERSION=1.1.4 sh`.
+Set them before `sh`, for example `curl … | BIOPILOT_VERSION=1.1.5 sh`.
 
 | Variable | Effect |
 |---|---|
-| `BIOPILOT_VERSION=1.1.4` | install that version instead of the latest |
+| `BIOPILOT_VERSION=1.1.5` | install that version instead of the latest |
 | `BIOPILOT_INSTALL_DIR=~/bin` | install the program there instead of `~/.local/bin` |
 | `BIOPILOT_DOWNLOAD_URL=…` | download from a mirror (a folder holding the release files) |
 

@@ -38,7 +38,7 @@ With a Profile, only the options your version really has are suggested: fastp 0.
 
 ## 3. The project
 
-From the first parent folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml`, BioPilot reads file names, never their contents:
+From the first parent folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml`, or the folders `data/raw`, `metadata`, `reference` and `results` of the layout that [`biopilot create`](../commands/create.md) makes, BioPilot reads file names, never their contents:
 
 - files of the expected format come first;
 - read pairs are matched (R1 first, then its mate);

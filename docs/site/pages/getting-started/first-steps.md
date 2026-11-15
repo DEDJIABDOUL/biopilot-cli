@@ -26,9 +26,17 @@ biopilot sync
 
 Otherwise BioPilot reads them in the background the first time you use each tool.
 
+## Start a project
+
+```shell
+eval "$(biopilot create rnaseq-2026)"
+```
+
+creates a standard project layout (`data/raw`, `metadata`, `reference`, `results`, `scripts`, `logs`, `envs`…) and enters it; BioPilot recognises it at once. In fish: `biopilot create rnaseq-2026 | source`. Without `eval`, the command is only printed, for you to read first. See [`biopilot create`](../commands/create.md).
+
 ## Try it
 
-In a project folder with FASTQ files, type `fastp ` and press ++tab++. See [Usage](../usage/index.md) for the keys and more examples.
+Put your FASTQ files in `data/raw`, or go to a project folder that has some, then type `fastp ` and press ++tab++. See [Usage](../usage/index.md) for the keys and more examples.
 
 ## If something looks wrong
 

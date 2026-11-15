@@ -20,4 +20,4 @@ warnings = false             # no live warning of biopilot check in this project
 
 ## How a project is found
 
-From the current folder upwards, the first folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml` is the project root. `biopilot status` shows what was detected.
+From the current folder upwards, the first folder holding `.git`, `Snakefile`, `nextflow.config`, `environment.yml` or `.biopilot.toml`, or the folders `data/raw`, `metadata`, `reference` and `results` of the [`biopilot create`](../commands/create.md) layout, is the project root. `biopilot status` shows what was detected.

@@ -173,6 +173,31 @@ biopilot search "adapter"
 
 lists the options of the built-in and imported tools whose name or description contains every word. Add `--tool fastp` to search one tool, or `--json` for a machine-readable answer.
 
+### Start a new project
+
+```shell
+eval "$(biopilot create rnaseq-2026)"
+```
+
+creates a standard bioinformatics project and enters it (with fish: `biopilot create rnaseq-2026 | source`):
+
+```text
+rnaseq-2026/
+├── data/
+│   ├── raw/          the reads as received, never modified
+│   └── processed/    intermediate files: trimmed reads, alignments
+├── metadata/         sample sheets, experimental design
+├── reference/        genome, annotation, indexes
+├── results/          final outputs
+├── scripts/          analysis code
+├── logs/             the tools' logs
+├── envs/             conda environment files
+├── notebooks/        exploration, figures
+└── docs/             notes, protocols, reports
+```
+
+Without `eval`, `biopilot create rnaseq-2026` only prints the `mkdir -p … && cd rnaseq-2026` command, for you to read or change before running it; BioPilot never creates the folders itself. Right after, BioPilot recognises the project from any of its folders, without any hidden file: the reads you put in `data/raw` are paired, and output names are derived in `results/`. Put the reads directly in `data/raw`: BioPilot reads file names three levels deep.
+
 ## Stop BioPilot
 
 - **Hide the suggestions for a moment:** press Escape.

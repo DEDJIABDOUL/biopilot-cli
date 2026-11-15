@@ -1,5 +1,5 @@
 {% set name = "biopilot-cli" %}
-{% set version = "1.1.5" %}
+{% set version = "1.1.6" %}
 
 package:
   name: {{ name }}
@@ -10,13 +10,13 @@ package:
 # SHA256SUMS, itself signed by the BioPilot release key.
 source:
   - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-linux-x64.gz  # [linux and x86_64]
-    sha256: 77db55b589b762871886b9306d11d241c7c06a5714eb12cf7195c7871f0f97a3  # [linux and x86_64]
+    sha256: 742ef9d458474e5aaed206c5175d112bc5f9e5a5a77b354e69730c363f54e9e9  # [linux and x86_64]
   - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-linux-arm64.gz  # [linux and aarch64]
-    sha256: c60e87c5c58be02a68c0bb4f0c892778353d703b0be65a5d38c8f7050ba031e3  # [linux and aarch64]
+    sha256: 9227d736c309605db7c037c40e15ed79b90a6a2db14ca97bf48304e3fb5514f7  # [linux and aarch64]
   - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-darwin-x64.gz  # [osx and x86_64]
-    sha256: 9a2e87bb1b8b7d99e1fef8fce7df309c3b510560300fa44579a8a8b00937d0f6  # [osx and x86_64]
+    sha256: 1afe139c6c582f176656449d8b442e314e4d62dad060e6561d9233f4ff96ae25  # [osx and x86_64]
   - url: https://github.com/DEDJIABDOUL/biopilot-cli/releases/download/v{{ version }}/biopilot-darwin-arm64.gz  # [osx and arm64]
-    sha256: 7675b3281124ee64325ce69173e373055fb5479647d72eb041ba71bd1920c562  # [osx and arm64]
+    sha256: 66a42b33ecd363aeaac5aadd1dd96ea5f4645e73ddaf5947f96b9d9e335fa6e8  # [osx and arm64]
   - url: https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/v{{ version }}/LICENSE
     sha256: c0fe194341a79a1f5ea6227d847adcf53e54adb5b3d2015658df052d1435f61e
   - url: https://raw.githubusercontent.com/DEDJIABDOUL/biopilot-cli/v{{ version }}/NOTICE

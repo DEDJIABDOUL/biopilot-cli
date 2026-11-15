@@ -7,6 +7,7 @@
 | [`biopilot reinit`](reinit.md) | reinstall the resources after an update; your data is kept |
 | [`biopilot doctor`](doctor.md) | check the installation |
 | [`biopilot status`](status.md) | show the environment, the project and the tools detected |
+| [`biopilot create`](create.md) | print the command that creates a standard project layout, recognised at once |
 | [`biopilot sync`](sync.md) | read the real options of the active environment's tools |
 | [`biopilot check`](check.md) | warnings about a command before it runs |
 | [`biopilot info`](info.md) | what the Catalog knows about a tool, a subcommand or an option |

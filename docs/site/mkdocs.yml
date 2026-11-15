@@ -89,6 +89,7 @@ nav:
       - reinit: commands/reinit.md
       - doctor: commands/doctor.md
       - status: commands/status.md
+      - create: commands/create.md
       - sync: commands/sync.md
       - check: commands/check.md
       - info: commands/info.md

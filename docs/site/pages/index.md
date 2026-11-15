@@ -38,7 +38,7 @@ hide:
 -   <span class="bp-k">Project</span>
     **Knows your files**
 
-    Files of the expected format first, R1/R2 mates paired, output names derived from inputs.
+    Files of the expected format first, R1/R2 mates paired, output names derived from inputs. `biopilot create` lays out a new project in one command.
 
 -   <span class="bp-k">Careful</span>
     **Checks before you run**

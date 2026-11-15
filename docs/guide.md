@@ -7,6 +7,7 @@ BioPilot completes bioinformatics command lines as you type, in your own termina
 - [What the suggestions are based on](#what-the-suggestions-are-based-on)
 - [The status line](#the-status-line)
 - [Commands](#commands)
+- [Starting a project: `biopilot create`](#starting-a-project-biopilot-create)
 - [Project configuration: `.biopilot.toml`](#project-configuration-biopilottoml)
 - [Configuration: `rc.toml`](#configuration-rctoml)
 - [Privacy: what BioPilot reads, runs and stores](#privacy-what-biopilot-reads-runs-and-stores)

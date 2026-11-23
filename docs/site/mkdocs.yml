@@ -12,10 +12,10 @@ theme:
   logo: assets/logo.svg
   favicon: assets/logo.svg
   font:
-    text: Geist
-    code: Geist Mono
+    text: Ubuntu
+    code: Ubuntu Mono
   palette:
-    scheme: slate
+    scheme: default
     primary: custom
     accent: custom
   icon:

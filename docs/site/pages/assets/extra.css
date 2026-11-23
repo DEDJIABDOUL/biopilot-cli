@@ -1,54 +1,55 @@
-/* BioPilot documentation: light theme in the style of ubuntu.com.
-   White background, black text, rectangular buttons with sharp corners,
-   filled white (outlined) or dark green. */
+/* BioPilot documentation: the original dark background (#12100d), with sharp
+   corners and rectangular buttons filled white or dark green. */
 
 :root {
-  --bp-bg: #ffffff;
-  --bp-text: #000000;
-  --bp-muted: #4d4d4d;
-  --bp-dim: #666666;
-  --bp-border: #d9d9d9;
-  --bp-border-strong: #000000;
-  --bp-surface: #f7f7f7;
+  --bp-bg: #12100d;
+  --bp-text: #f5f1e8;
+  --bp-muted: #b9b1a2;
+  --bp-dim: #8a8273;
+  --bp-border: #374151;
+  --bp-border-strong: #f5f1e8;
+  --bp-surface: #1a1713;
   --bp-green: #0e8420;
   --bp-green-hover: #0c6d1a;
-  --bp-link: #0066cc;
-  --bp-error: #c7162b;
+  --bp-link: #d4a017;
+  --bp-error: #d64545;
 }
 
-[data-md-color-scheme="default"] {
-  --md-default-bg-color: #ffffff;
-  --md-default-fg-color: #000000;
-  --md-default-fg-color--light: #4d4d4d;
-  --md-default-fg-color--lighter: #666666;
-  --md-default-fg-color--lightest: #d9d9d9;
+[data-md-color-scheme="slate"] {
+  --md-hue: 36;
+  --md-default-bg-color: #12100d;
+  --md-default-bg-color--light: rgba(18,16,13,.7);
+  --md-default-fg-color: #f5f1e8;
+  --md-default-fg-color--light: #b9b1a2;
+  --md-default-fg-color--lighter: #8a8273;
+  --md-default-fg-color--lightest: #374151;
 
-  --md-primary-fg-color: #ffffff;
-  --md-primary-fg-color--light: #ffffff;
-  --md-primary-fg-color--dark: #ffffff;
-  --md-primary-bg-color: #000000;
-  --md-primary-bg-color--light: #4d4d4d;
+  --md-primary-fg-color: #12100d;
+  --md-primary-fg-color--light: #1a1713;
+  --md-primary-fg-color--dark: #12100d;
+  --md-primary-bg-color: #f5f1e8;
+  --md-primary-bg-color--light: #b9b1a2;
 
-  --md-accent-fg-color: #0e8420;
-  --md-accent-fg-color--transparent: rgba(14,132,32,.08);
+  --md-accent-fg-color: #d4a017;
+  --md-accent-fg-color--transparent: rgba(212,160,23,.12);
 
-  --md-typeset-color: #000000;
-  --md-typeset-a-color: #0066cc;
+  --md-typeset-color: #f5f1e8;
+  --md-typeset-a-color: #d4a017;
 
-  --md-code-bg-color: #f7f7f7;
-  --md-code-fg-color: #000000;
+  --md-code-bg-color: #1a1713;
+  --md-code-fg-color: #f5f1e8;
 
-  --md-footer-bg-color: #f7f7f7;
-  --md-footer-bg-color--dark: #ededed;
-  --md-footer-fg-color: #000000;
-  --md-footer-fg-color--light: #4d4d4d;
-  --md-footer-fg-color--lighter: #666666;
+  --md-footer-bg-color: #12100d;
+  --md-footer-bg-color--dark: #0d0b09;
+  --md-footer-fg-color: #f5f1e8;
+  --md-footer-fg-color--light: #b9b1a2;
+  --md-footer-fg-color--lighter: #8a8273;
 
-  --md-admonition-bg-color: #ffffff;
-  --md-typeset-table-color: #d9d9d9;
+  --md-admonition-bg-color: #1a1713;
+  --md-typeset-table-color: #374151;
   --md-shadow-z1: none;
   --md-shadow-z2: none;
-  --md-shadow-z3: 0 0 0 1px #d9d9d9;
+  --md-shadow-z3: 0 0 0 1px #374151;
 }
 
 body { background: var(--bp-bg); color: var(--bp-text); -webkit-font-smoothing: antialiased; }
@@ -66,7 +67,7 @@ body { background: var(--bp-bg); color: var(--bp-text); -webkit-font-smoothing: 
 
 /* Search: plain rectangular field */
 .md-search__form { background: var(--bp-surface); border: 1px solid var(--bp-border); }
-.md-search__form:hover { background: #efefef; }
+.md-search__form:hover { background: #221e19; }
 .md-search__input, .md-search__input::placeholder, .md-search__icon { color: var(--bp-text); }
 
 /* Navigation */
@@ -133,10 +134,10 @@ body { background: var(--bp-bg); color: var(--bp-text); -webkit-font-smoothing: 
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 200px; height: 44px; padding: 0 24px; margin: 0 8px 8px 0;
   border: 1px solid var(--bp-border-strong); font-weight: 400; font-size: .8rem;
-  text-decoration: none; background: var(--bp-bg); color: var(--bp-text);
+  text-decoration: none; background: var(--bp-text); color: var(--bp-bg);
   transition: background-color .1s;
 }
-.md-typeset .md-button:hover, .md-typeset .md-button:focus { background: #f2f2f2; color: var(--bp-text); border-color: var(--bp-border-strong); text-decoration: none; }
+.md-typeset .md-button:hover, .md-typeset .md-button:focus { background: #e2ddd3; color: var(--bp-bg); border-color: #e2ddd3; text-decoration: none; }
 .md-typeset .md-button--primary { background: var(--bp-green); color: #ffffff; border-color: var(--bp-green); }
 .md-typeset .md-button--primary:hover, .md-typeset .md-button--primary:focus { background: var(--bp-green-hover); color: #ffffff; border-color: var(--bp-green-hover); }
 .md-clipboard, .md-top { border-radius: 0; }
@@ -153,9 +154,9 @@ body { background: var(--bp-bg); color: var(--bp-text); -webkit-font-smoothing: 
 .md-typeset .bp-eyebrow { color: var(--bp-muted); font-size: .75rem; margin: 0 0 1rem; }
 .md-typeset .bp-hero h1 { font-size: clamp(2.2rem, 6vw, 4.4rem); font-weight: 300; line-height: 1.1; margin: 0 0 1.5rem; max-width: 18ch; }
 .md-typeset .bp-lede { font-size: 1rem; line-height: 1.5; color: var(--bp-muted); max-width: 36rem; margin-bottom: 1.6rem; }
-.bp-demo { margin: 2.5rem 0 1rem; border: 1px solid var(--bp-border); overflow: hidden; background: #2d2d2d; }
-.bp-demo .bp-bar { display: flex; gap: 6px; padding: 10px 14px; background: #ededed; border-bottom: 1px solid var(--bp-border); }
-.bp-demo .bp-bar i { width: 10px; height: 10px; border-radius: 50%; background: #bdbdbd; }
+.bp-demo { margin: 2.5rem 0 1rem; border: 1px solid var(--bp-border); overflow: hidden; background: var(--bp-surface); }
+.bp-demo .bp-bar { display: flex; gap: 6px; padding: 10px 14px; background: var(--bp-surface); border-bottom: 1px solid var(--bp-border); }
+.bp-demo .bp-bar i { width: 10px; height: 10px; border-radius: 50%; background: #4a4337; }
 .bp-demo img { display: block; width: 100%; height: auto; }
 .md-typeset .bp-k { display: block; font-size: 1.3rem; font-weight: 300; line-height: 1.2; color: var(--bp-text); margin-bottom: .3rem; }
 
